@@ -25,6 +25,8 @@ import {
   DebugInstructions,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import EncryptedStorage, {ImageHash} from "./EncryptedStorage";
+
 const multihash = require('multihashes');
 
 
@@ -40,11 +42,21 @@ class App extends Component{
     console.log(decoded);
   }
 
+  testDB(){
+    const date = new Date();
+    const newImageHash = new ImageHash( date,"here","hash","howdy");
+    console.log(newImageHash.timestamp);
+    EncryptedStorage.Save(newImageHash);
+  }
+
+  
+
   render() {
 
     return (
         <>
           {this.testHash()}
+          {this.testDB()}
           <StatusBar barStyle="dark-content"/>
           <SafeAreaView>
             <ScrollView
