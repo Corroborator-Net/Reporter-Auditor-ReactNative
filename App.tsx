@@ -8,7 +8,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {Component} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -25,56 +25,71 @@ import {
   DebugInstructions,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+const multihash = require('multihashes');
+
 
 declare var global: {HermesInternal: null | {}};
 
-const App = () => {
-  return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.tsx</Text> to change
-                this screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
-  );
-};
+class App extends Component{
+
+  testHash(){
+    let buf = new Buffer('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', 'hex');
+    let encoded = multihash.encode(buf, 'sha2-256');
+    console.log(encoded);
+    let decoded = multihash.decode(encoded);
+    console.log(decoded);
+  }
+
+  render() {
+
+    return (
+        <>
+          {this.testHash()}
+          <StatusBar barStyle="dark-content"/>
+          <SafeAreaView>
+            <ScrollView
+                contentInsetAdjustmentBehavior="automatic"
+                style={styles.scrollView}>
+              <Header/>
+              {global.HermesInternal == null ? null : (
+                  <View style={styles.engine}>
+                    <Text style={styles.footer}>Engine: Hermes</Text>
+                  </View>
+              )}
+              <View style={styles.body}>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Step One</Text>
+                  <Text style={styles.sectionDescription}>
+                    Edit <Text style={styles.highlight}>App.tsx</Text> to change
+                    this screen and then come back to see your edits.
+                  </Text>
+                </View>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>See Your Changes</Text>
+                  <Text style={styles.sectionDescription}>
+                    <ReloadInstructions/>
+                  </Text>
+                </View>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Debug</Text>
+                  <Text style={styles.sectionDescription}>
+                    <DebugInstructions/>
+                  </Text>
+                </View>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Learn More</Text>
+                  <Text style={styles.sectionDescription}>
+                    Read the docs to discover what to do next:
+                  </Text>
+                </View>
+                <LearnMoreLinks/>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </>
+    );
+  };
+}
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -115,4 +130,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default  App
