@@ -22,7 +22,8 @@ import EncryptedStorage, {ImageHash} from "./EncryptedStorage";
 'use strict';
 import { TouchableOpacity } from 'react-native';
 import { RNCamera } from 'react-native-camera';
-import {requestCameraPermission} from "./RequestPermissions";
+import {requestCameraPermission, requestLocationPermission} from "./RequestPermissions";
+import Geolocation from 'react-native-geolocation-service';
 const multihash = require('multihashes');
 
 
@@ -55,10 +56,27 @@ class App extends PureComponent<{}, State>{
     requestCameraPermission()
   }
 
+  async testGPS(){
+    await requestLocationPermission();
+    Geolocation.getCurrentPosition(
+        (position) => {
+          console.log(position);
+
+        },
+        (error) => {
+          // See error code charts below.
+          console.log(error.code, error.message);
+        },
+
+        { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000}
+    );
+  }
+
   componentDidMount(): void {
     this.testCamera();
-    this.testHash();
-    this.testDB();
+    this.testGPS()
+    // this.testHash();
+    // this.testDB();
   }
 
   render() {
@@ -70,9 +88,10 @@ class App extends PureComponent<{}, State>{
                   camera:ref
                 })
               }}
+
               style={styles.preview}
               type={RNCamera.Constants.Type.back}
-              flashMode={RNCamera.Constants.FlashMode.on}
+              flashMode={RNCamera.Constants.FlashMode.auto}
               androidCameraPermissionOptions={{
                 title: 'Permission to use camera',
                 message: 'We need your permission to use your camera',
@@ -100,9 +119,12 @@ class App extends PureComponent<{}, State>{
 
   takePicture = async() => {
     if (this.state.camera) {
-      const options = { quality: 0.5, base64: true };
+      const exifAppend = {"GPSLatitude": 10.21, "GPSLongitude": 1.02, "UserComment":"Hi!"};
+      const options = { quality: 1.0, base64: true, writeExif: exifAppend, exif:true };
       const data = await this.state.camera.takePictureAsync(options);
+      console.log(data.exif);
       console.log(data.uri);
+
     }
   };
 

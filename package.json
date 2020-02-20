@@ -20,6 +20,7 @@
     "react-native": "0.61.5",
     "react-native-android-ipfs": "file:./react-native-android-ipfs/",
     "react-native-camera": "^3.18.0",
+    "react-native-geolocation-service": "^4.0.0",
     "realm": "^3.6.4"
   },
   "devDependencies": {
