@@ -3,10 +3,6 @@ import Realm from 'realm';
 export class ImageHash  {
     constructor( public timestamp:Date, public location:string, public multiHash:string, public transactionHash:string|null) {
     }
-    // timestamp:Date;
-    // location:string;
-    // multiHash:string;
-    // transactionHash:string | null;
 }
 
 const ImageHashSchema = {
@@ -29,14 +25,17 @@ export default class EncryptedStorage{
                     const newHash = realm.create('ImageHash',
                         newImageHash
                     );
+                    console.log(newHash.multiHash);
                 });
 
                 // Query Realm for all unsynced image hashes
-                const imageHashes = realm.objects('ImageHash').filtered('transactionHash == null');
+                const imageHashes = realm.objects('ImageHash').filtered('transactionHash != null');
 
                 console.log(imageHashes.length);
-                // Remember to close the realm when finished.
-                realm.close();
+                // // Remember to close the realm when finished.
+                // if (!realm.isClosed) {
+                //     realm.close();
+                // }
             })
             .catch((error) => {
                 console.log(error);

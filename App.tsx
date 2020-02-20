@@ -8,7 +8,7 @@
  * @format
  */
 
-import React, {Component} from 'react';
+import React, {Component, PureComponent} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -18,23 +18,24 @@ import {
   StatusBar,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
 import EncryptedStorage, {ImageHash} from "./EncryptedStorage";
-
+'use strict';
+import { TouchableOpacity } from 'react-native';
+import { RNCamera } from 'react-native-camera';
+import {requestCameraPermission} from "./RequestPermissions";
 const multihash = require('multihashes');
 
 
 declare var global: {HermesInternal: null | {}};
 
-class App extends Component{
+type State={
+  camera:any
+}
+
+class App extends PureComponent<{}, State>{
 
   testHash(){
+    // @ts-ignore
     let buf = new Buffer('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', 'hex');
     let encoded = multihash.encode(buf, 'sha2-256');
     console.log(encoded);
@@ -43,102 +44,89 @@ class App extends Component{
   }
 
   testDB(){
+    // const date = new Date();
     const date = new Date();
-    const newImageHash = new ImageHash( date,"here","hash","howdy");
+    const newImageHash = new ImageHash( date,"here","hash1","howdy");
     console.log(newImageHash.timestamp);
     EncryptedStorage.Save(newImageHash);
   }
 
-  
+  testCamera(){
+    requestCameraPermission()
+  }
+
+  componentDidMount(): void {
+    this.testCamera();
+    this.testHash();
+    this.testDB();
+  }
 
   render() {
-
     return (
-        <>
-          {this.testHash()}
-          {this.testDB()}
-          <StatusBar barStyle="dark-content"/>
-          <SafeAreaView>
-            <ScrollView
-                contentInsetAdjustmentBehavior="automatic"
-                style={styles.scrollView}>
-              <Header/>
-              {global.HermesInternal == null ? null : (
-                  <View style={styles.engine}>
-                    <Text style={styles.footer}>Engine: Hermes</Text>
-                  </View>
-              )}
-              <View style={styles.body}>
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Step One</Text>
-                  <Text style={styles.sectionDescription}>
-                    Edit <Text style={styles.highlight}>App.tsx</Text> to change
-                    this screen and then come back to see your edits.
-                  </Text>
-                </View>
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>See Your Changes</Text>
-                  <Text style={styles.sectionDescription}>
-                    <ReloadInstructions/>
-                  </Text>
-                </View>
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Debug</Text>
-                  <Text style={styles.sectionDescription}>
-                    <DebugInstructions/>
-                  </Text>
-                </View>
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Learn More</Text>
-                  <Text style={styles.sectionDescription}>
-                    Read the docs to discover what to do next:
-                  </Text>
-                </View>
-                <LearnMoreLinks/>
-              </View>
-            </ScrollView>
-          </SafeAreaView>
-        </>
+        <View style={styles.container}>
+          <RNCamera
+              ref={ref => {
+                this.setState({
+                  camera:ref
+                })
+              }}
+              style={styles.preview}
+              type={RNCamera.Constants.Type.back}
+              flashMode={RNCamera.Constants.FlashMode.on}
+              androidCameraPermissionOptions={{
+                title: 'Permission to use camera',
+                message: 'We need your permission to use your camera',
+                buttonPositive: 'Ok',
+                buttonNegative: 'Cancel',
+              }}
+              androidRecordAudioPermissionOptions={{
+                title: 'Permission to use audio recording',
+                message: 'We need your permission to use your audio',
+                buttonPositive: 'Ok',
+                buttonNegative: 'Cancel',
+              }}
+              onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                console.log(barcodes);
+              }}
+          />
+          <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
+              <Text style={{ fontSize: 14 }}> SNAP </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
     );
-  };
-}
+  }
 
+  takePicture = async() => {
+    if (this.state.camera) {
+      const options = { quality: 0.5, base64: true };
+      const data = await this.state.camera.takePictureAsync(options);
+      console.log(data.uri);
+    }
+  };
+
+
+}
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: 'black',
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
+  preview: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
+  capture: {
+    flex: 0,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 15,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
+    margin: 20,
   },
 });
 
