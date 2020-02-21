@@ -8,32 +8,54 @@
  * @format
  */
 
-import React, {Component, PureComponent} from 'react';
+import React, { PureComponent} from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
-  ScrollView,
   View,
   Text,
-  StatusBar,
 } from 'react-native';
 
-import EncryptedStorage, {ImageHash} from "./EncryptedStorage";
 'use strict';
 import { TouchableOpacity } from 'react-native';
-import { RNCamera } from 'react-native-camera';
+import {RNCamera} from 'react-native-camera';
 import {requestCameraPermission, requestLocationPermission} from "./RequestPermissions";
 import Geolocation from 'react-native-geolocation-service';
+import {ImageDatabase, ImageRecord} from "./Models";
+import EncryptedStorage from "./EncryptedStorage";
+import {DatabaseSource} from "./Constants";
 const multihash = require('multihashes');
-
 
 declare var global: {HermesInternal: null | {}};
 
 type State={
   camera:any
+  imageDatabase:ImageDatabase;
+
 }
 
 class App extends PureComponent<{}, State>{
+
+  // TODO: move this out of this class
+  determineDependencies(){
+    let imageDatabase = new EncryptedStorage();
+    if (DatabaseSource !== "local"){
+      //setup to read from block explorer here
+    }
+
+    this.setState({
+          imageDatabase:imageDatabase
+        },
+        this.testDB
+    )
+  }
+
+  componentDidMount(): void {
+    this.determineDependencies();
+    this.testCamera();
+    // this.testGPS()
+    // this.testHash();
+    // this.testDB();
+  }
 
   testHash(){
     // @ts-ignore
@@ -43,15 +65,6 @@ class App extends PureComponent<{}, State>{
     let decoded = multihash.decode(encoded);
     console.log(decoded);
   }
-
-  testDB(){
-    // const date = new Date();
-    const date = new Date();
-    const newImageHash = new ImageHash( date,"here","hash1","howdy");
-    console.log(newImageHash.timestamp);
-    EncryptedStorage.Save(newImageHash);
-  }
-
   testCamera(){
     requestCameraPermission()
   }
@@ -67,17 +80,25 @@ class App extends PureComponent<{}, State>{
           // See error code charts below.
           console.log(error.code, error.message);
         },
-
         { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000}
     );
   }
 
-  componentDidMount(): void {
-    this.testCamera();
-    this.testGPS()
-    // this.testHash();
-    // this.testDB();
+  testDB(){
+    console.log("hello!")
+    const date = new Date();
+    // const date = new Date();
+    const newImageHash = new ImageRecord( date,"here",
+        "imageData",
+        1,
+        2,
+        {"hash1":"hi"},
+        "howdy"
+    );
+    console.log(newImageHash.timestamp);
+    this.state.imageDatabase.add(newImageHash);
   }
+
 
   render() {
     return (

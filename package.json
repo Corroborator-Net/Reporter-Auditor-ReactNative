@@ -10,8 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "engines": {
-    "node": "10.16.0",
-    "engineStrict": "true"
+    "node": "10.16.0"
   },
   "dependencies": {
     "multihashes": "^0.4.15",
