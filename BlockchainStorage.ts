@@ -1,13 +1,14 @@
-import {ImageDatabase, ImageRecord} from "./Models";
+import {LogbookDatabase, LogTransaction} from "./Models";
 
-export default class BlockchainStorage implements ImageDatabase {
-    add(picture: ImageRecord): Promise<string> {
-        return fetch("explorer").then(
-            () => {
-                return ""
-            }
-        ).catch(error=>{
-            return error
-        })
+export default class BlockchainStorage implements LogbookDatabase {
+    // @ts-ignore
+    addNewRecord(logBookAddress: string, newRecord: LogTransaction): Promise<string> {
+        return null;
     }
+
+    getRecordsFor(logBookAddress: string): [LogTransaction] {
+        // @ts-ignore
+        return [undefined];
+    }
+
 }

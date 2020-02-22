@@ -7,50 +7,29 @@
  *
  * @format
  */
-
+import 'react-native-gesture-handler';
+import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-} from 'react-native';
-
 'use strict';
-import { TouchableOpacity } from 'react-native';
-import {RNCamera} from 'react-native-camera';
 import {requestCameraPermission, requestLocationPermission} from "./RequestPermissions";
 import Geolocation from 'react-native-geolocation-service';
-import {ImageDatabase, ImageRecord} from "./Models";
 import EncryptedStorage from "./EncryptedStorage";
-import {DatabaseSource} from "./Constants";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { FontAwesome } from 'react-native-vector-icons';
+
+import CameraView from "./CameraView";
+import LogbookView from "./LogbookView";
+import {Image} from "react-native";
+
 const multihash = require('multihashes');
 
 declare var global: {HermesInternal: null | {}};
 
-type State={
-  camera:any
-  imageDatabase:ImageDatabase;
 
-}
-
-class App extends PureComponent<{}, State>{
-
-  // TODO: move this out of this class
-  determineDependencies(){
-    let imageDatabase = new EncryptedStorage();
-    if (DatabaseSource !== "local"){
-      //setup to read from block explorer here
-    }
-
-    this.setState({
-          imageDatabase:imageDatabase
-        },
-        this.testDB
-    )
-  }
+const Tab = createBottomTabNavigator();
+class App extends PureComponent{
 
   componentDidMount(): void {
-    this.determineDependencies();
     this.testCamera();
     // this.testGPS()
     // this.testHash();
@@ -84,93 +63,41 @@ class App extends PureComponent<{}, State>{
     );
   }
 
-  testDB(){
-    console.log("hello!")
-    const date = new Date();
-    // const date = new Date();
-    const newImageHash = new ImageRecord( date,"here",
-        "imageData",
-        1,
-        2,
-        {"hash1":"hi"},
-        "howdy"
-    );
-    console.log(newImageHash.timestamp);
-    this.state.imageDatabase.add(newImageHash);
-  }
 
 
   render() {
     return (
-        <View style={styles.container}>
-          <RNCamera
-              ref={ref => {
-                this.setState({
-                  camera:ref
-                })
-              }}
+        <NavigationContainer>
+          <Tab.Navigator initialRouteName="Camera"
+              tabBarOptions={{
+                activeTintColor: '#e91e63',
+              }}>
+            <Tab.Screen name="Camera" options={{
+              tabBarLabel: 'Camera',
+              // tabBarIcon:({focused,color,size})=>(
+              //     <FontAwesome name={"envelope"} color={'black'}  />
+              // )
+              // tabBarIcon: ({ color, size }) => (
+              //     <MaterialCommunityIcons name="bell" color={color} size={size} />
+              // ),
+            }}>
+              {props => <CameraView {...props} imageDatabase={new EncryptedStorage()} /> }
+            </Tab.Screen>
+            <Tab.Screen name="Logs" component={LogbookView} options={{
+              tabBarLabel: 'Logs',
 
-              style={styles.preview}
-              type={RNCamera.Constants.Type.back}
-              flashMode={RNCamera.Constants.FlashMode.auto}
-              androidCameraPermissionOptions={{
-                title: 'Permission to use camera',
-                message: 'We need your permission to use your camera',
-                buttonPositive: 'Ok',
-                buttonNegative: 'Cancel',
-              }}
-              androidRecordAudioPermissionOptions={{
-                title: 'Permission to use audio recording',
-                message: 'We need your permission to use your audio',
-                buttonPositive: 'Ok',
-                buttonNegative: 'Cancel',
-              }}
-              onGoogleVisionBarcodesDetected={({ barcodes }) => {
-                console.log(barcodes);
-              }}
-          />
-          <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
-            <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
-              <Text style={{ fontSize: 14 }}> SNAP </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              // tabBarIcon: ({ color, size }) => (
+              //     <MaterialCommunityIcons name="home" color={color} size={size} />
+              // ),
+            }}/>
+          </Tab.Navigator>
+        </NavigationContainer>
     );
   }
 
-  takePicture = async() => {
-    if (this.state.camera) {
-      const exifAppend = {"GPSLatitude": 10.21, "GPSLongitude": 1.02, "UserComment":"Hi!"};
-      const options = { quality: 1.0, base64: true, writeExif: exifAppend, exif:true };
-      const data = await this.state.camera.takePictureAsync(options);
-      console.log(data.exif);
-      console.log(data.uri);
 
-    }
-  };
 
 
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: 'black',
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  capture: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 15,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    margin: 20,
-  },
-});
 
 export default  App
