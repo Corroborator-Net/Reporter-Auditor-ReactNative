@@ -1,4 +1,4 @@
-import {LogbookDatabase, LogTransaction} from "./Models";
+import {LogbookDatabase, LogTransaction} from "./interfaces/Storage";
 
 export default class BlockchainStorage implements LogbookDatabase {
     // @ts-ignore

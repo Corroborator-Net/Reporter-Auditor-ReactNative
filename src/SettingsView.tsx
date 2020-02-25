@@ -1,7 +1,14 @@
 import React from "react";
 import {Text} from "react-native";
 
-export default class LogbookView extends React.PureComponent {
+type State={
+
+}
+type Props={
+
+}
+
+export default class SettingsView extends React.PureComponent<Props, State> {
 
     render(){
         return(

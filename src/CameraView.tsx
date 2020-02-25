@@ -1,18 +1,26 @@
 import {RNCamera} from "react-native-camera";
 import { StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import React from "react";
-import {ImageDatabase, ImageRecord} from "./Models";
+import {ImageDatabase} from "./interfaces/Storage";
+import { ImageRecord} from "./interfaces/Data";
+import HashManager from "./HashManager";
 
 type State={
     camera:any
 }
 type Props={
     imageDatabase:ImageDatabase
+    hashManager:HashManager
 }
-export default class CameraView extends React.PureComponent<Props, State>{
+
+export default class CameraView extends React.PureComponent<Props, State> {
+
+    constructor(props:Props) {
+        super(props);
+    }
 
     testDB(){
-        console.log("hello!")
+        console.log("hello!");
         const date = new Date();
         // const date = new Date();
         const newImageHash = new ImageRecord( date,"here",
@@ -66,6 +74,7 @@ export default class CameraView extends React.PureComponent<Props, State>{
 
         )
     }
+
     takePicture = async() => {
         if (this.state.camera) {
             const exifAppend = {"GPSLatitude": 10.21, "GPSLongitude": 1.02, "UserComment":"Hi!"};
@@ -74,9 +83,16 @@ export default class CameraView extends React.PureComponent<Props, State>{
             console.log(data.exif);
             console.log(data.uri);
 
+            // construct image record here
+            const imageData = new ImageRecord(new Date,data.base64,"",data.pictureOrientation,data.deviceOrientation,
+                data.exif,null);
+            this.props.hashManager.OnDataProduced(imageData)
+
         }
     };
 }
+
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
