@@ -49,3 +49,48 @@ export async function requestLocationPermission() {
     }
 }
 
+export async function requestStoragePermission() {
+    try {
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            {
+                title: 'Corroborator Read Photos Permission',
+                message:
+                    'Corroborator would like to read images from your photo roll',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+            },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('You can use the camera');
+        } else {
+            console.log('Location permission denied');
+        }
+    } catch (err) {
+        console.warn(err);
+    }
+}
+export async function requestWritePermission() {
+    try {
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+                title: 'Corroborator Write Photos Permission',
+                message:
+                    'Corroborator would like to write to your photo roll',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+            },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('You can use the camera');
+        } else {
+            console.log('Location permission denied');
+        }
+    } catch (err) {
+        console.warn(err);
+    }
+}
+

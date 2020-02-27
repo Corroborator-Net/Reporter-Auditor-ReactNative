@@ -2,6 +2,7 @@ import {HashData, Log} from "./Data";
 
 export interface LogbookDatabase {
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
+    getAllRecords(reporterAddress:string): Promise<Log[]>;
     // TODO what should the returned promise contain?
     addNewRecord(newRecord:Log) : Promise<string>;
 }

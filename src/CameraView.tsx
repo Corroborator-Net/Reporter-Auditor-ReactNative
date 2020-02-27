@@ -1,5 +1,6 @@
 import {RNCamera} from "react-native-camera";
-import { StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "./interfaces/Storage";
 import { ImageRecord} from "./interfaces/Data";
@@ -78,15 +79,20 @@ export default class CameraView extends React.PureComponent<Props, State> {
     takePicture = async() => {
         if (this.state.camera) {
             const exifAppend = {"GPSLatitude": 10.21, "GPSLongitude": 1.02, "UserComment":"Hi!"};
-            const options = { quality: 1.0, base64: true, writeExif: exifAppend, exif:true };
+            const options = { quality: 0.2, base64: true, writeExif: exifAppend, exif:true }; // base64: true, TODO do we want the base64 rep?
             const data = await this.state.camera.takePictureAsync(options);
-            console.log(data.exif);
-            console.log(data.uri);
-
+            console.log("file is here: " + data.uri);
+            const saved = await CameraRoll.saveToCameraRoll(data.uri, "photo");
+            console.log("file saved to camera roll: " + saved);
             // construct image record here
-            const imageData = new ImageRecord(new Date,data.base64,"",data.pictureOrientation,data.deviceOrientation,
-                data.exif,null);
-            this.props.hashManager.OnDataProduced(imageData)
+            const imageData = new ImageRecord(new Date,
+                saved,
+                "",
+                data.pictureOrientation,
+                data.deviceOrientation,
+                data.exif,
+                null);
+            this.props.hashManager.OnDataProduced(imageData, data.base64)
 
         }
     };

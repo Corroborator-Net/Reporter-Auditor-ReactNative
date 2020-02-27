@@ -11,7 +11,12 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
 'use strict';
-import {requestCameraPermission, requestLocationPermission} from "./RequestPermissions";
+import {
+    requestCameraPermission,
+    requestLocationPermission,
+    requestStoragePermission,
+    requestWritePermission
+} from "./RequestPermissions";
 import Geolocation from 'react-native-geolocation-service';
 import EncryptedStorage from "./EncryptedStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -35,7 +40,7 @@ const Tab = createBottomTabNavigator();
 
 class App extends PureComponent{
 
-    hashManager = new HashManager(require('multihashes'));
+    hashManager = new HashManager();
     storage = new EncryptedStorage();
     identity = new DID();
     peerCorroborators = new Mesh();
@@ -46,10 +51,16 @@ class App extends PureComponent{
         this.hashManager
     );
 
+    async getNecessaryPermissions(){
+        await requestStoragePermission();
+        await requestWritePermission();
+        await requestCameraPermission();
+        await requestLocationPermission();
+
+    }
     componentDidMount(): void {
-    this.testCamera();
+        this.getNecessaryPermissions();
     // this.testGPS()
-    // this.testDB();
       /*
     1. hash module
     2. storage module local and/or cloud
@@ -67,12 +78,8 @@ class App extends PureComponent{
       * */
   }
 
-  testCamera(){
-    requestCameraPermission()
-  }
 
   async testGPS(){
-    await requestLocationPermission();
     Geolocation.getCurrentPosition(
         (position) => {
           console.log(position);
@@ -92,40 +99,39 @@ class App extends PureComponent{
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Logs"
-              tabBarOptions={{
-                activeTintColor: '#0000FF',
-              }}>
-            <Tab.Screen name="Camera" options={{
-              tabBarLabel: 'Camera',
-              tabBarIcon:(({focused,color,size})=>
-                  <Icon name={"camera"} color={color} size={size} />
-              )}}>
-              {props => <CameraView {...props}
-                                    imageDatabase={this.storage}
-                                    hashManager={this.hashManager}
-              /> }
+          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0000FF', }}>
 
-            </Tab.Screen>
-
-            <Tab.Screen name="Logs" options={{
-              tabBarLabel: 'Logs',
+                <Tab.Screen name="Settings" options={{
+                tabBarLabel: 'Settings',
                 tabBarIcon:(({focused,color,size})=>
-                        <Icon name={"file-cabinet"} color={color} size={size} />
-                )
-            }}>
-            {props => <LogbookView {...props}
-                        logSource={this.storage}
-            /> }
-            </Tab.Screen>
+                  <Icon name={"settings"} color={color} size={size} />
+                )}}>
+                {props => <SettingsView {...props} /> }
+                </Tab.Screen>
 
-            <Tab.Screen name="Settings" options={{
-                  tabBarLabel: 'Settings',
+                <Tab.Screen name="Camera" options={{
+                  tabBarLabel: 'Camera',
                   tabBarIcon:(({focused,color,size})=>
-                          <Icon name={"settings"} color={color} size={size} />
+                      <Icon name={"camera"} color={color} size={size} />
                   )}}>
-                  {props => <SettingsView {...props} /> }
-              </Tab.Screen>
+                  {props => <CameraView {...props}
+                                        imageDatabase={this.storage}
+                                        hashManager={this.hashManager}
+                  /> }
+                </Tab.Screen>
+
+                <Tab.Screen name="Logs" options={{
+                  tabBarLabel: 'Logs',
+                    tabBarIcon:(({focused,color,size})=>
+                            <Icon name={"file-cabinet"} color={color} size={size} />
+                    )
+                }}>
+                {props => <LogbookView {...props}
+                            logSource={this.storage}
+                /> }
+                </Tab.Screen>
+
+
 
           </Tab.Navigator>
         </NavigationContainer>

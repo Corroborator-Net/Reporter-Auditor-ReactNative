@@ -1,11 +1,12 @@
 export interface HashData{
     multiHash:string;
     transactionHash:string | null;
-    base64Data:string;
+    location:string;
 }
 
 export class Log {
     constructor(public logBookAddress:string,
+                public reporterAddress:string,
                 public dataMultiHash:string, //  // raw multihash
                 public signedHashes:string[],  // signed by each other corroborator's private ID key + Hq's public key
                 public signedMetadata:string[]  // signed by each other corroborator's private ID key + Hq's public key
@@ -21,6 +22,7 @@ export const LogSchema = {
     name:"LogSchema",
     properties:{
         logBookAddress:'string',
+        reporterAddress:'string',
         dataMultiHash:'string',
         signedHashes:'string[]',
         signedMetadata:'string[]',
@@ -30,22 +32,26 @@ export const LogSchema = {
 
 
 class exif {
-    [name: string]: any
+
 }
 
 export class ImageRecord implements HashData {
     public exif:string;
     constructor( public timestamp:Date,
-                 public base64Data:string,
+                 public location:string,
                  public multiHash:string,
                  public pictureOrientation: number,
                  public deviceOrientation: number,
-                 exif: exif,
+                 exif:any,
                  public transactionHash:string | null,
     ) {
-        // TODO concatenate all the exif data into a string for now
-        this.exif = exif.toString();
-        console.log("exif is: " + this.exif);
+        let exifString = "";
+        const keys = Object.keys(exif);
+        for (const key of keys){
+            exifString+= key +":"+exif[key]+", "
+        }
+        this.exif = exifString.trim();
+        console.log("exif data: " + this.exif);
     }
 }
 
@@ -54,7 +60,7 @@ export const ImageRecordSchema = {
     properties: {
         timestamp:  'date',
         multiHash: 'string',
-        base64ImageData:'string',
+        location:'string',
         pictureOrientation:'int',
         deviceOrientation:'int',
         exif:'string',

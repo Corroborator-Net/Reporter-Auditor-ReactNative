@@ -1,68 +1,104 @@
 import React from "react";
-import {Text, View} from "react-native";
+import {Image, ScrollView, Text, View} from "react-native";
 import {LogbookDatabase} from "./interfaces/Storage";
 import {Log} from "./interfaces/Data";
+import {LogManager} from "./LogManager";
+import CameraRoll from "@react-native-community/cameraroll";
 
 
 type State={
     logs:Log[]|null
+    photos:any
 }
 type Props={
     logSource:LogbookDatabase;
+    navigation:any;
 }
 
 export default class LogbookView extends React.PureComponent<Props, State> {
 
-    // constructor(props:Props){
-    //     super(props);
-    //
-    //    this.setState({
-    //        logs:null,
-    //    })
-    // }
-
     state={
-        logs:null
+        logs:null,
+        photos:null
     }
 
     componentDidMount(): void {
-            this.getLogs();
+        this.getLogs();
+        // this.props.navigation.addListener('willFocus', this.load);
     }
 
+    load = () => {
+        console.log("hi!")
+    }
+
+
+
     async getLogs(){
-        const logs = await this.props.logSource.getRecordsFor("666");
+        this.loadImagesFromCameraRoll();
+        // get all of our reporters' logs
+        const logs = await this.props.logSource.getAllRecords(LogManager.CurrentAddress);
+        // const logs = await this.props.logSource.getRecordsFor("666");
         this.setState({
             logs:logs
         })
 
     }
 
-    renderRow(text:string) {
-        return (
-            <Text style={{ flex: 1, alignSelf: 'stretch', flexDirection: 'row' }}>
-                {text}
-            </Text>
-        );
+    loadImagesFromCameraRoll = () => {
+        CameraRoll.getPhotos({
+            first: 5,
+            assetType: 'Photos',
+        })
+            .then(r => {
+                this.setState({ photos: r.edges },
+                    this.listPhotos);
+            })
+            .catch((err) => {
+                //Error Loading Images
+            });
+    };
+    listPhotos(){
+        //@ts-ignore
+        this.state.photos.map((p, i) => {
+            console.log(p.node.image.uri)
+        });
+
     }
 
+
     render() {
-        // const data = [1, 2, 3, 4, 5];
         return (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                { this.state.logs != null ?
+            <ScrollView>
+             { this.state.logs!=null && this.state.logs.map((log: Log) => {
+                return (
                     <>
-                        {console.log("logs: " + this.state.logs)}
-                        {
-                            // @ts-ignore
-                            this.state.logs.map((log: Log) => {
-                                return this.renderRow(log.dataMultiHash);
-                            })
-                        }
+                    {/*{console.log("key is: " + i)}*/}
+                    {/*{console.log("uri is: " + p.node.image.uri)}*/}
+                    <Text style={{ flex: 1, alignSelf: 'stretch', flexDirection: 'row' }} key={log.dataMultiHash}>
+                        {log.dataMultiHash}
+                    </Text>
                     </>
-                    :
-                    <View/>
-                }
-            </View>
+                );
+            })}
+        </ScrollView>
+        // {/*<ScrollView>*/}
+        // {/*     { this.state.photos!=null && this.state.photos.map((p, i) => {*/}
+        // {/*        return (*/}
+        // {/*            <>*/}
+        // {/*            {console.log("key is: " + i)}*/}
+        // {/*            {console.log("uri is: " + p.node.image.uri)}*/}
+        // {/*            <Image*/}
+        // {/*                key={i}*/}
+        // {/*                style={{*/}
+        // {/*                    width: 300,*/}
+        // {/*                    height: 100,*/}
+        // {/*                }}*/}
+        // {/*                source={{ uri: p.node.image.uri }}*/}
+        // {/*            />*/}
+        // {/*            </>*/}
+        // {/*        );*/}
+        // {/*    })}*/}
+        // {/*</ScrollView>*/}
         );
     }
 

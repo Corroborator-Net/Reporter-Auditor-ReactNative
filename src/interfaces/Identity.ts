@@ -8,6 +8,7 @@
 export interface Identity{
     sign(base64Data:string):string
     addTrustedPeerAttestation(did:string):string;
+    getMyAddress():string,
 }
 
 export default class DID implements Identity{
@@ -17,6 +18,10 @@ export default class DID implements Identity{
 
     sign(base64Data: string): string {
         return "";
+    }
+
+    getMyAddress(): string {
+        return "123456";
     }
 
 
