@@ -1,6 +1,6 @@
 import {LogbookDatabase} from "../interfaces/Storage";
 import {Log} from "../interfaces/Data";
-import { FirstReporterPublicKey} from "../Constants";
+import { FirstReporterPublicKey} from "../utils/Constants";
 //@ts-ignore
 import { AtraApiKey } from 'react-native-dotenv'
 

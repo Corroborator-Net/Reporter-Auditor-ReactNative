@@ -1,9 +1,9 @@
 import React from "react";
 import {Image, ScrollView, Text, View} from "react-native";
-import {ImageDatabase, LogbookDatabase} from "./interfaces/Storage";
-import {Log} from "./interfaces/Data";
-import {LogManager} from "./LogManager";
-import {requestStoragePermission, requestWritePermission} from "./RequestPermissions";
+import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {Log} from "../interfaces/Data";
+import {LogManager} from "../LogManager";
+import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 
 
 type State={

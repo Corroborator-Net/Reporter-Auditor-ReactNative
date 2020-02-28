@@ -2,11 +2,11 @@ import {RNCamera} from "react-native-camera";
 import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
-import {ImageDatabase} from "./interfaces/Storage";
-import { ImageRecord} from "./interfaces/Data";
-import HashManager from "./HashManager";
-import {LogManager} from "./LogManager";
-import {requestStoragePermission, requestWritePermission} from "./RequestPermissions";
+import {ImageDatabase} from "../interfaces/Storage";
+import { ImageRecord} from "../interfaces/Data";
+import HashManager from "../HashManager";
+import {LogManager} from "../LogManager";
+import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 
 type State={
     camera:any

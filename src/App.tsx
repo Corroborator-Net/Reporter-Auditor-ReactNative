@@ -16,7 +16,7 @@ import {
     requestLocationPermission,
     requestStoragePermission,
     requestWritePermission
-} from "./RequestPermissions";
+} from "./utils/RequestPermissions";
 import Geolocation from 'react-native-geolocation-service';
 import NativeEncryptedLogbookStorage from "./NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -25,14 +25,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import CameraView from "./CameraView";
-import LogbookView from "./LogbookView";
-import SettingsView from "./SettingsView";
+import CameraView from "./views/CameraView";
+import LogbookView from "./views/LogbookView";
+import SettingsView from "./views/SettingsView";
 import HashManager from "./HashManager";
 import {LogManager} from "./LogManager";
 import {Mesh} from "./interfaces/PeerCorroborators";
 import {NativeAtraManager} from "./NativeAtraManager";
-import NativeImageManager from "./NativeImageManager";
+import NativeImageStorage from "./NativeImageStorage";
 import NativeDID from "./NativeDID";
 
 declare var global: {HermesInternal: null | {}};
@@ -46,7 +46,7 @@ class App extends PureComponent{
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
     peerCorroborators = new Mesh();
-    imageManager = new NativeImageManager();
+    imageManager = new NativeImageStorage();
     blockchainManager = new NativeAtraManager();
     logManager = new LogManager(
         this.storage,

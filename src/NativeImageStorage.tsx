@@ -3,10 +3,10 @@ import CameraRoll, {PhotoIdentifier} from "@react-native-community/cameraroll";
 import {ImageDatabase} from "./interfaces/Storage";
 import {ImageRecord, RealmSchemas} from "./interfaces/Data";
 import Realm from "realm";
-import {StorageSchemaVersion} from "./Constants"
+import {StorageSchemaVersion} from "./utils/Constants"
 
 // NATIVE IMPLEMENTATION
-export default class NativeImageManager implements ImageDatabase{
+export default class NativeImageStorage implements ImageDatabase{
 
     public async add(picture:ImageRecord): Promise<string>{
         const schemaName = 'ImageHash';

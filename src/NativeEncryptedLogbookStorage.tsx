@@ -1,7 +1,7 @@
 import Realm from 'realm';
 import {LocalLogbookDatabase, LogbookDatabase} from "./interfaces/Storage";
 import {Log, RealmSchemas} from "./interfaces/Data";
-import {StorageSchemaVersion} from "./Constants"
+import {StorageSchemaVersion} from "./utils/Constants"
 
 
 // TODO: encrypt each record
