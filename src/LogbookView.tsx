@@ -1,9 +1,8 @@
 import React from "react";
 import {Image, ScrollView, Text, View} from "react-native";
-import {LogbookDatabase} from "./interfaces/Storage";
+import {ImageDatabase, LogbookDatabase} from "./interfaces/Storage";
 import {Log} from "./interfaces/Data";
 import {LogManager} from "./LogManager";
-import ImageManager from "./ImageManager";
 import {requestStoragePermission, requestWritePermission} from "./RequestPermissions";
 
 
@@ -13,6 +12,7 @@ type State={
 }
 type Props={
     logSource:LogbookDatabase;
+    imageSource:ImageDatabase;
     navigation:any;
 }
 
@@ -40,10 +40,9 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
 
     async getLogs(){
-        console.log("getlogs!");
-        // get all of our reporters' logs
+        // get all of our reporters' logs - this will either be local storage or blockchain storage
         const logs = await this.props.logSource.getAllRecords(LogManager.CurrentAddress);
-        const photos = await ImageManager.LoadImagesFromCameraRoll(10);
+        const photos = await this.props.imageSource.getImages(10);
         this.setState({
             logs:logs,
             photos:photos,

@@ -11,18 +11,3 @@ export interface Identity{
     getMyAddress():string,
 }
 
-export default class DID implements Identity{
-    addTrustedPeerAttestation(did: string): string {
-        return "";
-    }
-
-    sign(base64Data: string): string {
-        return "";
-    }
-
-    getMyAddress(): string {
-        return "123456";
-    }
-
-
-}

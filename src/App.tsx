@@ -18,7 +18,7 @@ import {
     requestWritePermission
 } from "./RequestPermissions";
 import Geolocation from 'react-native-geolocation-service';
-import EncryptedStorage from "./EncryptedStorage";
+import NativeEncryptedLogbookStorage from "./NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
@@ -30,8 +30,10 @@ import LogbookView from "./LogbookView";
 import SettingsView from "./SettingsView";
 import HashManager from "./HashManager";
 import {LogManager} from "./LogManager";
-import DID from "./interfaces/Identity";
 import {Mesh} from "./interfaces/PeerCorroborators";
+import {NativeAtraManager} from "./NativeAtraManager";
+import NativeImageManager from "./NativeImageManager";
+import NativeDID from "./NativeDID";
 
 declare var global: {HermesInternal: null | {}};
 const Tab = createBottomTabNavigator();
@@ -41,14 +43,17 @@ const Tab = createBottomTabNavigator();
 class App extends PureComponent{
 
     hashManager = new HashManager();
-    storage = new EncryptedStorage();
-    identity = new DID();
+    storage = new NativeEncryptedLogbookStorage();
+    identity = new NativeDID();
     peerCorroborators = new Mesh();
+    imageManager = new NativeImageManager();
+    blockchainManager = new NativeAtraManager();
     logManager = new LogManager(
         this.storage,
         this.identity,
         this.peerCorroborators,
-        this.hashManager
+        this.hashManager,
+        this.blockchainManager,
     );
 
     async getNecessaryPermissions(){
@@ -58,22 +63,7 @@ class App extends PureComponent{
     }
     componentDidMount(): void {
         this.getNecessaryPermissions();
-    // this.testGPS()
-      /*
-    1. hash module
-    2. storage module local and/or cloud
-    3. DID/Signing module:
-    1. optional: log who are your trusted peers - accepting from, pushing to. Quasi credential layer - e.g. "I trust this person"
-    5. corroborator peers module:
-        1. hash receipt and/or file receipt
-        2. corroborator opt-in supply:
-            3. mesh
-            4. chat
-    6. web3 publish module
-    7. Trusted/trust peers module
-        1. which users you will accept validation requests from
-        2. need a request trust peer method
-      * */
+        // this.testGPS()
   }
 
 
@@ -113,7 +103,7 @@ class App extends PureComponent{
                       <Icon name={"camera"} color={color} size={size} />
                   )}}>
                   {props => <CameraView {...props}
-                                        imageDatabase={this.storage}
+                                        imageDatabase={this.imageManager}
                                         logManager={this.logManager}
                   /> }
                 </Tab.Screen>
@@ -125,7 +115,8 @@ class App extends PureComponent{
                     )
                 }}>
                 {props => <LogbookView {...props}
-                            logSource={this.storage}
+                            logSource={this.storage} imageSource={this.imageManager}
+
                 /> }
                 </Tab.Screen>
 
