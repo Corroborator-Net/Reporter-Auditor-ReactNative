@@ -52,8 +52,6 @@ class App extends PureComponent{
     );
 
     async getNecessaryPermissions(){
-        await requestStoragePermission();
-        await requestWritePermission();
         await requestCameraPermission();
         await requestLocationPermission();
 
@@ -116,7 +114,7 @@ class App extends PureComponent{
                   )}}>
                   {props => <CameraView {...props}
                                         imageDatabase={this.storage}
-                                        hashManager={this.hashManager}
+                                        logManager={this.logManager}
                   /> }
                 </Tab.Screen>
 

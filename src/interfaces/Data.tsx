@@ -7,6 +7,7 @@ export interface HashData{
 export class Log {
     constructor(public logBookAddress:string,
                 public reporterAddress:string,
+                public location:string,
                 public dataMultiHash:string, //  // raw multihash
                 public signedHashes:string[],  // signed by each other corroborator's private ID key + Hq's public key
                 public signedMetadata:string[]  // signed by each other corroborator's private ID key + Hq's public key
@@ -23,6 +24,7 @@ export const LogSchema = {
     properties:{
         logBookAddress:'string',
         reporterAddress:'string',
+        location:'string',
         dataMultiHash:'string',
         signedHashes:'string[]',
         signedMetadata:'string[]',

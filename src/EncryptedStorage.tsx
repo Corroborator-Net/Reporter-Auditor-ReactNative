@@ -2,7 +2,7 @@ import Realm from 'realm';
 import {ImageDatabase, LogbookDatabase } from "./interfaces/Storage";
 import {ImageRecord, ImageRecordSchema, Log, LogSchema} from "./interfaces/Data";
 
-const schemaVersion = 4;
+const schemaVersion = 5;
 // TODO: encrypt each record
 export default class EncryptedStorage implements ImageDatabase, LogbookDatabase{
 

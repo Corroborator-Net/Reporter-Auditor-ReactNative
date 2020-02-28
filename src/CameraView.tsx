@@ -5,19 +5,28 @@ import React from "react";
 import {ImageDatabase} from "./interfaces/Storage";
 import { ImageRecord} from "./interfaces/Data";
 import HashManager from "./HashManager";
+import {LogManager} from "./LogManager";
+import {requestStoragePermission, requestWritePermission} from "./RequestPermissions";
 
 type State={
     camera:any
 }
 type Props={
     imageDatabase:ImageDatabase
-    hashManager:HashManager
+    logManager:LogManager
 }
 
 export default class CameraView extends React.PureComponent<Props, State> {
 
     constructor(props:Props) {
         super(props);
+    }
+    async getPermission(){
+        await requestStoragePermission();
+        await requestWritePermission();
+    }
+    componentDidMount(): void {
+        this.getPermission();
     }
 
     testDB(){
@@ -86,13 +95,13 @@ export default class CameraView extends React.PureComponent<Props, State> {
             console.log("file saved to camera roll: " + saved);
             // construct image record here
             const imageData = new ImageRecord(new Date,
-                saved,
+                data.uri,
                 "",
                 data.pictureOrientation,
                 data.deviceOrientation,
                 data.exif,
                 null);
-            this.props.hashManager.OnDataProduced(imageData, data.base64)
+            this.props.logManager.OnDataProduced(imageData, data.base64)
 
         }
     };

@@ -16,7 +16,7 @@ export async function requestCameraPermission() {
             },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log('You can use the CAMERA');
         } else {
             console.log('Camera permission denied');
         }
@@ -40,7 +40,7 @@ export async function requestLocationPermission() {
             },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log('You can use the ACCESS_FINE_LOCATION');
         } else {
             console.log('Location permission denied');
         }
@@ -63,7 +63,7 @@ export async function requestStoragePermission() {
             },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log('You can use the READ_EXTERNAL_STORAGE');
         } else {
             console.log('Location permission denied');
         }
@@ -85,7 +85,7 @@ export async function requestWritePermission() {
             },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log('You can use the WRITE_EXTERNAL_STORAGE');
         } else {
             console.log('Location permission denied');
         }
