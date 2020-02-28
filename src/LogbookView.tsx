@@ -8,7 +8,7 @@ import {requestStoragePermission, requestWritePermission} from "./RequestPermiss
 
 
 type State={
-    logs:Log[]|null
+    logs:Log[]
     photos:any
 }
 type Props={
@@ -19,8 +19,8 @@ type Props={
 export default class LogbookView extends React.PureComponent<Props, State> {
 
     state={
-        logs:null,
-        photos:null
+        logs:new Array<Log>(),
+        photos:new Array<any>()
     };
 
     async getPermission(){
@@ -29,7 +29,8 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     }
 
     componentDidMount(): void {
-       this.getPermission();
+        this.getPermission();
+        this.getLogs();
         this.props.navigation.addListener('focus', this.onScreenFocus)
     }
 
@@ -55,10 +56,11 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     render() {
         return (
             <ScrollView>
-             { this.state.logs!=null && this.state.photos!=null && this.state.logs.map((log: Log, i:number) => {
-                return (
+                { this.state.logs.length!=0  && this.state.logs.map((log: Log, i:number) => {
+                // @ts-ignore
+                 return (
                     <View key={log.dataMultiHash}>
-                        {this.state.photos[i] != null ?
+                        {this.state.photos.length > i ?
                     <Image
                         style={{
                             width: 100,
@@ -73,7 +75,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
                         {log.dataMultiHash}
                     </Text>
                         <Text style={{ flex: 1, alignSelf: 'stretch', flexDirection: 'row' }} >
-                            {log.location}
+                            {}
                         </Text>
                     </View>
                 );

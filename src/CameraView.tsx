@@ -29,21 +29,6 @@ export default class CameraView extends React.PureComponent<Props, State> {
         this.getPermission();
     }
 
-    testDB(){
-        console.log("hello!");
-        const date = new Date();
-        // const date = new Date();
-        const newImageHash = new ImageRecord( date,"here",
-            "imageData",
-            1,
-            2,
-            {"hash1":"hi"},
-            "howdy"
-        );
-        console.log(newImageHash.timestamp);
-        this.props.imageDatabase.add(newImageHash);
-    }
-
     render(){
         return(
             <>
