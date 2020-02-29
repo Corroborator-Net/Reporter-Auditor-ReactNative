@@ -6,7 +6,9 @@ import {HashData, HashReceiver, Log} from "./interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "./interfaces/BlockchainInterface";
 import {NativeAtraManager} from "./NativeAtraManager";
-
+import NetInfo, {NetInfoChangeHandler, NetInfoState} from "@react-native-community/netinfo";
+import State from "@react-native-community/netinfo/src/internal/state";
+import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 //@ts-ignore
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -14,6 +16,8 @@ export class LogManager implements HashReceiver{
 
     static CurrentLogBookAddress = NativeAtraManager.firstTableId;
     static CurrentAddress = "";
+    syncingLogs = false;
+    currentlyConnectedToNetwork = false;
 
     constructor(public logStorage:LogbookDatabase,
                 public didModule:Identity,
@@ -23,7 +27,8 @@ export class LogManager implements HashReceiver{
                 ) {
         hashManager.hashReceivers.push(this);
         LogManager.CurrentAddress = didModule.getMyAddress();
-        this.startBackgroundUploadManager();
+        NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
+        this.checkForUnsyncedLogs();
     }
 
 
@@ -61,31 +66,69 @@ export class LogManager implements HashReceiver{
             LogManager.CurrentLogBookAddress,
             LogManager.CurrentAddress,
             hashData.storageLocation,
-            "",
+            Log.blankEntryToSatisfyAtra,
             hashData.multiHash,
-            [""],
-            [""]
+            Log.blankEntryToSatisfyAtra,
+            Log.blankEntryToSatisfyAtra
         );
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog);
-        this.backgroundUploadToBlockchain(newLog);
+        this.uploadToBlockchain(newLog);
     }
 
     // TODO execute every x seconds in background, find logs without transaction hashes
-    async startBackgroundUploadManager(){
+    async startBackgroundUploadManager(connected:boolean, wasConnected:boolean){
+        if (!wasConnected && connected){
+            this.checkForUnsyncedLogs();
+        }
+
+    }
+
+    async checkForUnsyncedLogs(){
+        if (this.syncingLogs){
+            return;
+        }
+
         if (isLocal(this.logStorage)) {
-            // TODO check if we're online
-            while (true) {
-                await delay(5000);
-                const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
-                console.log("unsynced logs is of length: " + unsyncedLogs.length);
+            this.syncingLogs = true;
+            // TODO: the returned logs have their string arrays set to indexed objects. Weird!
+            const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
+            console.log("unsynced logs is of length: " + unsyncedLogs.length);
+            for (const log of unsyncedLogs){
+                const newLog = new Log(
+                    log.logBookAddress,
+                    log.reporterAddress,
+                    log.storageLocation,
+                    log.transactionHash,
+                    log.dataMultiHash,
+                    log.signedHashes,
+                    log.signedMetadata
+                );
+                console.log(newLog);
+                await this.uploadToBlockchain(newLog);
             }
+            this.syncingLogs = false;
         }
     }
 
 
-    async backgroundUploadToBlockchain(log:Log){
-        // TODO check if we're online
+    onNetworkConnectionChange(state:NetInfoState){
+        console.log("Connection type", state.type);
+        if (state.type === NetInfoStateType.cellular){
+            return;
+        }
+        console.log("Is connected?", state.isConnected);
+        this.startBackgroundUploadManager(state.isConnected, this.currentlyConnectedToNetwork);
+        this.currentlyConnectedToNetwork = state.isConnected;
+    }
+
+
+    async uploadToBlockchain(log:Log){
+
+        if (!this.currentlyConnectedToNetwork){
+            return ;
+        }
+
         const txn = this.blockchainManager.formTransaction(log);
         const recordID = await this.blockchainManager.publishTransaction(txn);
         console.log("got blockchain transaction hash/ record ID for atra: " + recordID);

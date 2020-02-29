@@ -5,18 +5,15 @@ export class Log {
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
                 public transactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
-                public signedHashes:string[],  // signed by each other corroborator's private ID key + Hq's public key
-                public signedMetadata:string[]  // signed by each other corroborator's private ID key + Hq's public key
+                public signedHashes:string,  // signed by each other corroborator's private ID key + Hq's public key
+                public signedMetadata:string  // signed by each other corroborator's private ID key + Hq's public key
     ) {
     }
-    public getHashes():string{
-        return convertListToCSV(this.signedHashes);
-    }
-    public getLocations():string{
-        return convertListToCSV(this.signedMetadata);
-    }
-    public getTimestamps():string{
-        return convertListToCSV(this.signedMetadata);
+
+    static blankEntryToSatisfyAtra=",";
+    // TODO: implement me
+    public appendSignedData(signedHash:string, signedMetadata:string){
+
     }
 }
 
@@ -33,8 +30,8 @@ export const LogSchema = {
         storageLocation:'string',
         transactionHash:'string',
         dataMultiHash:'string',
-        signedHashes:'string[]',
-        signedMetadata:'string[]',
+        signedHashes:'string',
+        signedMetadata:'string',
     }
 };
 

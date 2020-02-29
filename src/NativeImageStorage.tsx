@@ -25,7 +25,6 @@ export default class NativeImageStorage implements ImageDatabase{
                     );
                     // console.log(newHash.multiHash);
                 });
-                realm.close();
                 return  ""; // no error
             })
             .catch((error) => {

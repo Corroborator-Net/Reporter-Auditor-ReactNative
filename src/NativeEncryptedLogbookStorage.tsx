@@ -19,7 +19,6 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
                         Realm.UpdateMode.Modified
                     );
                 });
-                realm.close();
             })
             .catch((error) => {
                 console.log(error);
@@ -31,7 +30,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Query Realm for all unsynced image hashes
-                return realm.objects(NativeEncryptedLogbookStorage.schemaName).filtered('transactionHash == ""');
+                return realm.objects(NativeEncryptedLogbookStorage.schemaName).filtered('transactionHash == "' + Log.blankEntryToSatisfyAtra + '"');
             })
             .catch((error) => {
                 console.log(error);
@@ -43,15 +42,18 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
     addNewRecord(newRecord: Log): Promise<string> {
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
+                console.log("saving log as follows:");
+                console.log(newRecord);
                 // Create Realm objects and write to local storage
                 realm.write(() => {
                     const newLog = realm.create(NativeEncryptedLogbookStorage.schemaName,
                         newRecord
                     );
-                    console.log(newLog.dataMultiHash);
+                    console.log("saved log as follows:");
+                    console.log(newLog);
                 });
 
-                return  "" && realm.close(); // no error
+                return  ""; // no error
             })
             .catch((error) => {
                 console.log("add record error: " + error);

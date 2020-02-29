@@ -75,7 +75,7 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
                 "TBD",
                 hash,
                 signedHashes,
-                [signedLocations, signedTimeStamps]
+                signedLocations +", timestamps: " +signedTimeStamps
             );
 
             response.push(newEntry);
