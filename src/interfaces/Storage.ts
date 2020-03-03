@@ -1,8 +1,10 @@
-import {HashData, ImageRecord, Log} from "./Data";
+import {HashData, Log} from "./Data";
 
 export interface LogbookDatabase {
+    // BOTH
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
-    getAllRecords(reporterAddress:string): Promise<Log[]>;
+    // getMostRecentRecord(logBookAddress: string):Promise<Log>;
+
     // TODO what should the returned promise contain?
     addNewRecord(newRecord:Log) : Promise<string>;
 }
@@ -16,7 +18,7 @@ export interface LocalLogbookDatabase extends LogbookDatabase{
 
 export interface ImageDatabase {
     add(data:HashData): Promise<string>;
-    getImages(logs:Log[]):Promise<ImageRecord[]>;
+    getImages(logs:Log[]):Promise<string[]>;
 }
 
 

@@ -6,16 +6,17 @@ import {HashData, HashReceiver, Log} from "./interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "./interfaces/BlockchainInterface";
 import {NativeAtraManager} from "./NativeAtraManager";
-import NetInfo, {NetInfoChangeHandler, NetInfoState} from "@react-native-community/netinfo";
-import State from "@react-native-community/netinfo/src/internal/state";
+import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
+import LogbookView from "./views/LogbookView";
+
 //@ts-ignore
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export class LogManager implements HashReceiver{
 
     static CurrentLogBookAddress = NativeAtraManager.firstTableId;
-    static CurrentAddress = "";
+    // static CurrentAddress = "";
     syncingLogs = false;
     currentlyConnectedToNetwork = false;
 
@@ -26,7 +27,7 @@ export class LogManager implements HashReceiver{
                 public blockchainManager:BlockchainInterface,
                 ) {
         hashManager.hashReceivers.push(this);
-        LogManager.CurrentAddress = didModule.getMyAddress();
+        // LogManager.CurrentAddress = didModule.getMyAddress();
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
         this.checkForUnsyncedLogs();
     }
@@ -35,7 +36,7 @@ export class LogManager implements HashReceiver{
     // TODO how can we make this deterministic?
     public async OnDataProduced(hashData:HashData) : Promise<void> {
         await delay(100);
-        console.log("Waited before reading to produce hash");
+        // console.log("Waited before reading to produce hash");
 
         // TODO make full path depend on OS
         const fileName = hashData.storageLocation.slice(hashData.storageLocation.lastIndexOf("/") + 1,hashData.storageLocation.length);
@@ -61,19 +62,23 @@ export class LogManager implements HashReceiver{
         //     peer.requestSignature(hashData.multiHash);
         // }
 
-        console.log("storing log with hash: " + hashData.multiHash);
+        // console.log("storing log with hash: " + hashData.multiHash);
         const newLog = new Log(
             LogManager.CurrentLogBookAddress,
-            LogManager.CurrentAddress,
             hashData.storageLocation,
             Log.blankEntryToSatisfyAtra,
             hashData.multiHash,
             Log.blankEntryToSatisfyAtra,
-            Log.blankEntryToSatisfyAtra
+            new Date,
+            "lat:0 long:0",
+             null
         );
+        // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog);
-        this.uploadToBlockchain(newLog);
+        if (this.currentlyConnectedToNetwork){
+            this.uploadToBlockchain(newLog);
+        }
     }
 
 
@@ -95,18 +100,12 @@ export class LogManager implements HashReceiver{
             const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
             console.log("unsynced logs is of length: " + unsyncedLogs.length);
             for (const log of unsyncedLogs){
-                const newLog = new Log(
-                    log.logBookAddress,
-                    log.reporterAddress,
-                    log.storageLocation,
-                    log.transactionHash,
-                    log.dataMultiHash,
-                    log.signedHashes,
-                    log.signedMetadata
-                );
-                console.log(newLog);
-                await this.uploadToBlockchain(newLog);
+                const trueLog = Object.setPrototypeOf(log, Log.prototype);
+                const logToUpdate = {...trueLog};
+                console.log("previously unsynced log to update: ", logToUpdate);
+                await this.uploadToBlockchain(logToUpdate);
             }
+            LogbookView.ShouldUpdateLogbookView = true;
             this.syncingLogs = false;
         }
     }
@@ -128,15 +127,19 @@ export class LogManager implements HashReceiver{
         if (!this.currentlyConnectedToNetwork){
             return ;
         }
-
         const txn = this.blockchainManager.formTransaction(log);
-        const recordID = await this.blockchainManager.publishTransaction(txn);
-        console.log("got blockchain transaction hash/ record ID for atra: " + recordID);
-        console.log("TODO: use record id to get transaction hash? keeping as record id for now.");
-        if (isLocal(this.logStorage)){
-            log.transactionHash = recordID;
-            this.logStorage.updateRecord(log);
-        }
+        this.blockchainManager.publishTransaction(txn).then(
+            (recordID)=>{
+                console.log("TODO: use record id to get transaction hash? keeping as record id for now: ", recordID);
+                if (isLocal(this.logStorage)){
+                    log.transactionHash = recordID;
+                    this.logStorage.updateRecord(log);
+                }
+            }).catch((err)=>{
+            console.log("error on submit to blockchain:", err);
+            return null;
+        })
+
     }
 }
 

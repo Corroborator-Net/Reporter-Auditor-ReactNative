@@ -24,8 +24,7 @@ export class NativeAtraManager implements BlockchainInterface {
     publishTransaction(txn: string): Promise<string> {
         return postData("https://api.atra.io/prod/v1/dtables/records",txn).then(
             (json)=>{
-                console.log("atra response to new transaction follows: ");
-                console.log(json);
+                console.log("atra response to new transaction follows: ", json);
                 return json.recordId;
             }).catch((err)=>{
                 console.log(err);
@@ -38,7 +37,7 @@ export class NativeAtraManager implements BlockchainInterface {
 // Example POST method implementation:
 async function postData(url = '', data = {}) {
     // Default options are marked with *
-    console.log(AtraApiKey);
+    // console.log(AtraApiKey);
     const response = await fetch(url, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         mode: 'cors', // no-cors, *cors, same-origin

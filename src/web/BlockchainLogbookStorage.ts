@@ -1,6 +1,5 @@
 import {LogbookDatabase} from "../interfaces/Storage";
 import {Log} from "../interfaces/Data";
-import { FirstReporterPublicKey} from "../utils/Constants";
 //@ts-ignore
 import { AtraApiKey } from 'react-native-dotenv'
 
@@ -9,12 +8,6 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
 
     // REPORTER ONLY
     addNewRecord(newRecord: Log): Promise<string> {
-        //@ts-ignore
-        return null;
-    }
-
-    // REPORTER ONLY
-    getAllRecords(reporterAddress: string): Promise<Log[]> {
         //@ts-ignore
         return null;
     }
@@ -58,7 +51,7 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
 
             let date="";
             if (BlockchainLogbookStorage.isValidDate(preDate)) {
-                date = BlockchainLogbookStorage.getFormattedDateString(preDate);
+                date = Log.getFormattedDateString(preDate);
             } else {
                 date = "Pending..."
             }
@@ -70,11 +63,12 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
 
             const newEntry = new Log(
                 tableID,
-                FirstReporterPublicKey,
                 storageLocation,
                 "TBD",
                 hash,
                 signedHashes,
+                null,
+                null,
                 signedLocations +", timestamps: " +signedTimeStamps
             );
 
@@ -89,23 +83,5 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
         return d instanceof Date && !isNaN(d);
     }
 
-    static getFormattedDateString(date:Date) {
-        // 12 Nov 2019 23:16:01
-        const day = date.toLocaleString('default', {
-            day: 'numeric',
-            timeZone: "UTC"
-        });
-        const mon = date.toLocaleString('default', {
-            month: 'short',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            // hc: "h24",
-            hour12: false,
-            timeZone: "UTC"
-        }).replace(',', '');
 
-        return day + " " + mon
-    }
 }

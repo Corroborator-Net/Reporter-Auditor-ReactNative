@@ -21,7 +21,7 @@ export default class HashManager{
         let buf = Buffer.from(base64Data, 'base64');
         let encoding = 'hex';
         const hash = crypto.createHash('sha256').update(buf).digest(encoding);
-        console.log("setting hash");
+        // console.log("setting hash");
         hashData.multiHash = hash;
 
         for (const hashReceiver of this.hashReceivers){

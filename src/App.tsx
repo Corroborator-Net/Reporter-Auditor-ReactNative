@@ -56,14 +56,8 @@ class App extends PureComponent{
         this.blockchainManager,
     );
 
-    async getNecessaryPermissions(){
-        await requestCameraPermission();
-        await requestLocationPermission();
-
-    }
     componentDidMount(): void {
-        this.getNecessaryPermissions();
-        // this.testGPS()
+        this.testGPS()
   }
 
 
@@ -76,8 +70,14 @@ class App extends PureComponent{
         (error) => {
           // See error code charts below.
           console.log(error.code, error.message);
+
         },
-        { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000}
+        { enableHighAccuracy: true,
+            timeout: 1000,
+            maximumAge: 10000,
+            forceRequestLocation:true,
+            showLocationDialog: false
+        }
     );
   }
 
