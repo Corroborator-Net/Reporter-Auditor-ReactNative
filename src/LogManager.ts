@@ -76,13 +76,13 @@ export class LogManager implements HashReceiver{
         this.uploadToBlockchain(newLog);
     }
 
-    // TODO execute every x seconds in background, find logs without transaction hashes
+
     async startBackgroundUploadManager(connected:boolean, wasConnected:boolean){
         if (!wasConnected && connected){
             this.checkForUnsyncedLogs();
         }
-
     }
+
 
     async checkForUnsyncedLogs(){
         if (this.syncingLogs){

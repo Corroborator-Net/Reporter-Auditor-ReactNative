@@ -47,7 +47,8 @@ export class ImageRecord implements HashData {
                  public multiHash:string,
                  public pictureOrientation: number,
                  public deviceOrientation: number,
-                 exif:any
+                 public thumbnail:string,
+                 exif:any,
     ) {
         let exifString = "";
         const keys = Object.keys(exif);
@@ -68,6 +69,7 @@ export const ImageRecordSchema = {
         storageLocation:'string',
         pictureOrientation:'int',
         deviceOrientation:'int',
+        thumbnail:'string',
         exif:'string',
     }
 };

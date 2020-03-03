@@ -1,7 +1,7 @@
 import React from "react";
 import {Image, ScrollView, Text, View} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log} from "../interfaces/Data";
+import {ImageRecord, Log} from "../interfaces/Data";
 import {LogManager} from "../LogManager";
 import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 
@@ -20,7 +20,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
     state={
         logs:new Array<Log>(),
-        photos:new Array<any>()
+        photos:new Array<ImageRecord>()
     };
 
     async getPermission(){
@@ -42,14 +42,12 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     async getLogs(){
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         const logs = await this.props.logSource.getAllRecords(LogManager.CurrentAddress);
-        const photos = await this.props.imageSource.getImages(10);
+        const photos = await this.props.imageSource.getImages(logs.slice(0,10));
         this.setState({
             logs:logs,
             photos:photos,
         })
     }
-
-
 
 
     render() {
@@ -61,17 +59,19 @@ export default class LogbookView extends React.PureComponent<Props, State> {
                     <View key={log.dataMultiHash}>
                         {this.state.photos.length > i ?
                     <Image
+
                         style={{
                             width: 100,
                             height: 100,
                         }}
-                        source={{ uri:  this.state.photos[i].node.image.uri}}
+                        source={{ uri:  `data:image/jpeg;base64,${this.state.photos[i].thumbnail}` }}
                     />
                     :
                     <></>
                         }
                     <Text style={{ flex: 1, alignSelf: 'stretch', flexDirection: 'row' }} >
                         {log.dataMultiHash}
+                        {/*{console.log(this.state.photos[i].thumbnail)}*/}
                     </Text>
                         <Text style={{ flex: 1, alignSelf: 'stretch', flexDirection: 'row' }} >
                             {}

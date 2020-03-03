@@ -1,4 +1,4 @@
-import {HashData, Log} from "./Data";
+import {HashData, ImageRecord, Log} from "./Data";
 
 export interface LogbookDatabase {
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
@@ -16,32 +16,9 @@ export interface LocalLogbookDatabase extends LogbookDatabase{
 
 export interface ImageDatabase {
     add(data:HashData): Promise<string>;
-    getImages(first:number):Promise<Array<PhotoIdentifier>>;
+    getImages(logs:Log[]):Promise<ImageRecord[]>;
 }
 
 
-// TODO: we don't need all this, but this is what the camera roll library returns. Let's simplify it
-interface PhotoIdentifier {
-    node: {
-        type: string,
-        group_name: string,
-        image: {
-            filename: string,
-            uri: string,
-            height: number,
-            width: number,
-            isStored?: boolean,
-            playableDuration: number,
-        },
-        timestamp: number,
-        location?: {
-            latitude?: number,
-            longitude?: number,
-            altitude?: number,
-            heading?: number,
-            speed?: number,
-        },
-    }
-};
 
 
