@@ -11,12 +11,7 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
 'use strict';
-import {
-    requestCameraPermission,
-    requestLocationPermission,
-    requestStoragePermission,
-    requestWritePermission
-} from "./utils/RequestPermissions";
+
 import Geolocation from 'react-native-geolocation-service';
 import NativeEncryptedLogbookStorage from "./NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -87,7 +82,7 @@ class App extends PureComponent{
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0000FF', }}>
+          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0077FF', }}>
 
                 <Tab.Screen name="Settings" options={{
                 tabBarLabel: 'Settings',

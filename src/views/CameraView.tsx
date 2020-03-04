@@ -1,9 +1,12 @@
 import {RNCamera} from "react-native-camera";
-import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {StyleSheet, TouchableOpacity, View} from "react-native";
+// @ts-ignore
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord, Log, LogMetadata} from "../interfaces/Data";
+import {ImageRecord,  LogMetadata} from "../interfaces/Data";
 import {LogManager} from "../LogManager";
 import {
     requestCameraPermission,
@@ -67,8 +70,8 @@ export default class CameraView extends React.PureComponent<Props, State> {
                     }}
                 />
                 <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
-                    <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
-                        <Text style={{ fontSize: 14 }}> SNAP </Text>
+                    <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture} >
+                        <Icon name={"checkbox-blank-circle"} color={"white"} size={60} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -82,15 +85,15 @@ export default class CameraView extends React.PureComponent<Props, State> {
         if (this.state.camera) {
             // TODO: find npm package that finds gps coords even when in airplane mode
             // see: https://github.com/airtonazevedo/react-native-geolocation-offline-and-airplanemode
-            const exifAppend = {
-                "UserComment": "hello",
-            };
+            const exifAppend = {};
             //@ts-ignore
             exifAppend[LogMetadata.GPSLat] = 39.7722476;
             //@ts-ignore
             exifAppend[LogMetadata.GPSLong] = -105.0464564;
             //@ts-ignore
             exifAppend[LogMetadata.GPSAcc] = 16.913999557495117;
+            //@ts-ignore
+            exifAppend[LogMetadata.Comment] = "Hello";
 
             // TODO we can pass doNotSave:boolean if we can just use the base64
             const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
@@ -127,11 +130,11 @@ const styles = StyleSheet.create({
     },
     capture: {
         flex: 0,
-        backgroundColor: '#fff',
+        backgroundColor: 'black',
         borderRadius: 5,
-        padding: 15,
+        padding: 5,
         paddingHorizontal: 20,
         alignSelf: 'center',
-        margin: 20,
+        margin: 10,
     },
 });

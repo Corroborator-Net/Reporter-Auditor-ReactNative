@@ -6,7 +6,7 @@ export class LogMetadata {
     public static GPSAcc = "GPSAccuracy";
     public static DateTag = "DateTime";
     public static Comment = "UserComment";
-    public static SignedHash = "SignedHash";
+    private static SignedHash = "SignedHash";
     public static MetadataTags = [LogMetadata.GPSAcc, LogMetadata.GPSLat, LogMetadata.GPSLong, LogMetadata.DateTag,
         LogMetadata.Comment, LogMetadata.SignedHash];
 
@@ -54,9 +54,8 @@ export class Log {
                 public dataMultiHash:string, //  // raw multihash
                 public signedMetadataJson:string, // this will include signed Hashes
     ) {
-       console.log("signed metadata: ", this.signedMetadataJson);
+       // console.log("signed metadata: ", this.signedMetadataJson);
     }
-
 
 
     // TODO: implement me
