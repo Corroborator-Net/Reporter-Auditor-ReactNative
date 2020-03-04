@@ -14,20 +14,22 @@ type Props={
 export default class SettingsView extends React.PureComponent<Props, State> {
 
     UserSettings = new Map<string,string>();
+
     state={
         checked:false,
     }
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
+
     }
 
     render(){
         return(
             <ScrollView style={styles.container}>
             <Text h4 style={styles.title}> Settings </Text>
-                {this.InputCell("Name","Name","account")}
-                {this.InputCell("Department","Department","account-group")}
-                {this.InputCell("Photo Details","Photo Details","folder-multiple-image")}
+                {this.InputCell("Name","account")}
+                {this.InputCell("Department","account-group")}
+                {this.InputCell("Photo Details","folder-multiple-image")}
                 <View style={styles.input}>
                     <ListItem
                         key={100}
@@ -56,11 +58,11 @@ export default class SettingsView extends React.PureComponent<Props, State> {
         );
     }
 
-    InputCell ( placeholder:string, label:string, icon:string) {
+    InputCell (label:string, icon:string) {
         return (
             <View style={styles.input}>
             <Input
-                placeholder={placeholder}
+                placeholder={label}
                 label={label}
                 onChangeText={text => {this.onChangeUserSettings(label,text)}}
                 leftIcon={

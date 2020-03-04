@@ -82,7 +82,7 @@ class App extends PureComponent{
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Settings" tabBarOptions={{ activeTintColor: '#0077FF', }}>
+          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0077FF', }}>
 
                 <Tab.Screen name="Settings" options={{
                 tabBarLabel: 'Settings',

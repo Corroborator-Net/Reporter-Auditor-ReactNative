@@ -96,27 +96,23 @@ export default class LogbookView extends React.PureComponent<Props, State> {
             <SafeAreaView style={styles.container}>
                 {this.state.logs.length != 0 ?
                     <FlatList
+                        removeClippedSubviews={true}
                         ref={ (ref) => this.FlatList = ref }
                         data={this.state.logs}
                         renderItem={({item}) =>
-                            <View style={{
-                                backgroundColor: this.getColorForLog(item),
-                                padding: 20,
-                                marginVertical: 8,
-                                marginHorizontal: 16,
-                                flexDirection: 'row'}} >
                             <LogRowCell
-                            hash={item.dataMultiHash}
                             src={ `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
-                            meta={item.signedMetadataJson}
+                            item={item}
                             />
-                            </View>
                         }
                         keyExtractor={item => item.dataMultiHash}
-                    refreshControl={<RefreshControl
-                        refreshing={this.state.refreshing}
-                        onRefresh={() => this.refresh()}
-                    />} />
+                        refreshControl={
+                            <RefreshControl
+                            refreshing={this.state.refreshing}
+                            onRefresh={() => this.refresh()}
+                            />
+                        }
+                    />
                     :
                     <></>
                 }
@@ -133,6 +129,30 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 // solo icon: the data is local only
 // network icon: the data is backed up
 
+
+}
+
+class LogRowCell extends React.Component<{ src: string, item:Log }> {
+    render() {
+        let {src, item} = this.props;
+        return (
+            <View style={{
+                backgroundColor: this.getColorForLog(item),
+                padding: 20,
+                marginVertical: 8,
+                marginHorizontal: 16,
+                flexDirection: 'row'}}
+            >
+                <Image source={{uri: src}} style={{
+                    width: 50,
+                    height: 50,
+                }}/>
+                <Text style={styles.title}>{item.dataMultiHash.slice(0,5) + "..." +
+                item.dataMultiHash.slice(item.dataMultiHash.length-5,item.dataMultiHash.length)}</Text>
+                <Text style={styles.title}>{JSON.parse(item.signedMetadataJson)["0"][LogMetadata.DateTag]} </Text>
+            </View>
+        );
+    }
     getColorForLog(log:Log):string{
         if (log.transactionHash.length<=1){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
@@ -148,22 +168,6 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         }
 
         return 'green';
-    }
-}
-
-class LogRowCell extends React.Component<{ hash: string, src: string, meta: string }> {
-    render() {
-        let {hash, src, meta} = this.props;
-        return (
-            <>
-                <Image source={{uri: src}} style={{
-                    width: 100,
-                    height: 100,
-                }}/>
-                <Text style={styles.title}>{hash.slice(0,5) + "..." + hash.slice(hash.length-5,hash.length)}</Text>
-                <Text style={styles.title}>{JSON.parse(meta)["0"][LogMetadata.DateTag]} </Text>
-            </>
-        );
     }
 }
 

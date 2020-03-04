@@ -108,6 +108,7 @@ export default class CameraView extends React.PureComponent<Props, State> {
                 data.deviceOrientation,
                 data.base64,
                 data.exif);
+            console.log("length of base64 img: " + data.base64.length);
             // add image to image database
             this.props.imageDatabase.add(imageData);
             // tell log manager we produced data to hash

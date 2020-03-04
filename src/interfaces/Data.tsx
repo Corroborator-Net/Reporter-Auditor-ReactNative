@@ -24,7 +24,6 @@ export class LogMetadata {
         // starting from scratch
         this.jsonObj= {"0": {} };
         for (const tag of LogMetadata.MetadataTags){
-            console.log("tag: ", tag);
             // @ts-ignore
             this.jsonObj["0"][tag]=metadata[tag];
         }

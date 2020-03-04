@@ -22,10 +22,9 @@ export class NativeAtraManager implements BlockchainInterface {
     publishTransaction(txn: string): Promise<string> {
         return postData("https://api.atra.io/prod/v1/dtables/records",txn).then(
             (json)=>{
-                console.log("atra response to new transaction follows: ", json);
                 return json.recordId;
             }).catch((err)=>{
-                console.log(err);
+                console.log("atra error to new transaction: ", err);
                 return err;
         })
     }
