@@ -57,19 +57,19 @@ class App extends PureComponent{
     );
 
     componentDidMount(): void {
-        this.testGPS()
+        // this.testGPS()
   }
 
 
   async testGPS(){
     Geolocation.getCurrentPosition(
         (position) => {
-          console.log(position);
+          console.log("position: ", position);
 
         },
         (error) => {
           // See error code charts below.
-          console.log(error.code, error.message);
+          console.log("gps error: ", error.code, error.message);
 
         },
         { enableHighAccuracy: true,

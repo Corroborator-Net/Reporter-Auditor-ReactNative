@@ -9,10 +9,13 @@ import {NativeAtraManager} from "./NativeAtraManager";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import LogbookView from "./views/LogbookView";
+// import {GPSAcc, GPSLat, GPSLong} from "./utils/Constants";
+import * as Constants from "./utils/Constants";
 
 //@ts-ignore
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
+// TODO: make singleton
 export class LogManager implements HashReceiver{
 
     static CurrentLogBookAddress = NativeAtraManager.firstTableId;
@@ -61,17 +64,25 @@ export class LogManager implements HashReceiver{
         // for (const peer of peers){
         //     peer.requestSignature(hashData.multiHash);
         // }
+        const jsonMetadata = JSON.parse(hashData.metadata);
+        const logToBlockchainMetadata = {
+            "Date": Log.getFormattedDateString(new Date())
+        };
 
-        // console.log("storing log with hash: " + hashData.multiHash);
+        //@ts-ignore
+        logToBlockchainMetadata[Constants.GPSLat] = jsonMetadata[Constants.GPSLat];
+        //@ts-ignore
+        logToBlockchainMetadata[Constants.GPSLong] = jsonMetadata[Constants.GPSLong];
+        //@ts-ignore
+        logToBlockchainMetadata[Constants.GPSAcc] = jsonMetadata[Constants.GPSAcc];
+
         const newLog = new Log(
             LogManager.CurrentLogBookAddress,
             hashData.storageLocation,
-            Log.blankEntryToSatisfyAtra,
+            "",
             hashData.multiHash,
-            Log.blankEntryToSatisfyAtra,
-            new Date,
-            "lat:0 long:0",
-             null
+            logToBlockchainMetadata,
+            null
         );
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
@@ -93,9 +104,8 @@ export class LogManager implements HashReceiver{
         if (this.syncingLogs){
             return;
         }
-
+        this.syncingLogs = true;
         if (isLocal(this.logStorage)) {
-            this.syncingLogs = true;
             // TODO: the returned logs have their string arrays set to indexed objects. Weird!
             const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
             console.log("unsynced logs is of length: " + unsyncedLogs.length);
@@ -105,9 +115,10 @@ export class LogManager implements HashReceiver{
                 console.log("previously unsynced log to update: ", logToUpdate);
                 await this.uploadToBlockchain(logToUpdate);
             }
+            console.log("finished syncing");
             LogbookView.ShouldUpdateLogbookView = true;
-            this.syncingLogs = false;
         }
+        this.syncingLogs = false;
     }
 
 

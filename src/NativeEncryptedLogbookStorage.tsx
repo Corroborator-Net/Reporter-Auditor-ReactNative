@@ -31,7 +31,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
             .then(realm => {
                 // Query Realm for all unsynced image hashes
                 return realm.objects(NativeEncryptedLogbookStorage.schemaName).
-                filtered('transactionHash = "' + Log.blankEntryToSatisfyAtra + '"');
+                filtered('transactionHash = ""');
             })
             .catch((error) => {
                 console.log(error);

@@ -56,20 +56,16 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
                 date = "Pending..."
             }
             const hash = record[0];
-            const signedHashes=record[1];
-            const signedLocations = record[2];
-            const signedTimeStamps = record[3];
-            const storageLocation=record[4];
+            const storageLocation=record[1];
+            const signedMetadata = record[2];
 
             const newEntry = new Log(
                 tableID,
                 storageLocation,
                 "TBD",
                 hash,
-                signedHashes,
                 null,
-                null,
-                signedLocations +", timestamps: " +signedTimeStamps
+                signedMetadata,
             );
 
             response.push(newEntry);

@@ -4,7 +4,6 @@ import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
 import { ImageRecord} from "../interfaces/Data";
-import HashManager from "../HashManager";
 import {LogManager} from "../LogManager";
 import {
     requestCameraPermission,
@@ -12,7 +11,7 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
-import Geolocation, {GeoPosition} from "react-native-geolocation-service";
+import * as Constants from "../utils/Constants";
 
 type State={
     camera:any
@@ -64,9 +63,9 @@ export default class CameraView extends React.PureComponent<Props, State> {
                         buttonPositive: 'Ok',
                         buttonNegative: 'Cancel',
                     }}
-                    // onGoogleVisionBarcodesDetected={({ barcodes }) => {
-                    //     // console.log(barcodes);
-                    // }}
+                    onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                        // console.log(barcodes);
+                    }}
                 />
                 <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
                     <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
@@ -80,44 +79,39 @@ export default class CameraView extends React.PureComponent<Props, State> {
     }
 
     takePicture = async() => {
-        if (!this.state.camera) {
-            return;
-        }
-        Geolocation.getCurrentPosition(
-             (position) => {
-                 const loadLocation = async (position:GeoPosition) => {
-                     const exifAppend = {
-                         "GPSLatitude": position.coords.latitude,
-                         "GPSLongitude": position.coords.longitude,
-                         "UserComment":"Hi!"
-                     };
-                     // TODO we can pass doNotSave:boolean if we can just use the base64
-                     const options = { quality: 0.2, base64: true, writeExif: exifAppend, exif:true };
-                     const data = await this.state.camera.takePictureAsync(options);
-                     await CameraRoll.saveToCameraRoll(data.uri, "photo");
-                     // construct image record here
-                     const imageData = new ImageRecord(new Date,
-                         data.uri,
-                         "",
-                         data.pictureOrientation,
-                         data.deviceOrientation,
-                         data.base64,
-                         data.exif);
-                     // add image to image database
-                     this.props.imageDatabase.add(imageData);
-                     // tell log manager we produced data to hash
-                     this.props.logManager.OnDataProduced(imageData)
-                 }
-                 loadLocation(position)
-             },
-            (error) => {
-                // See error code charts below.
-                console.log("error on get location:", error.message);
-                return;
-            },
-            { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000}
-        );
 
+        if (this.state.camera) {
+            // TODO: find npm package that finds gps coords even when in airplane mode
+            // see: https://github.com/airtonazevedo/react-native-geolocation-offline-and-airplanemode
+            const exifAppend = {
+                "UserComment": "hello",
+            };
+            //@ts-ignore
+            exifAppend[Constants.GPSLat] = 39.7722476;
+            //@ts-ignore
+            exifAppend[Constants.GPSLong] = -105.0464564;
+            //@ts-ignore
+            exifAppend[Constants.GPSAcc] = 16.913999557495117;
+
+            // TODO we can pass doNotSave:boolean if we can just use the base64
+            const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
+            const data = await this.state.camera.takePictureAsync(options);
+
+            await CameraRoll.saveToCameraRoll(data.uri, "photo");
+            // construct image record here
+            const imageData = new ImageRecord(new Date,
+                data.uri,
+                "",
+                data.pictureOrientation,
+                data.deviceOrientation,
+                data.base64,
+                data.exif);
+
+            // add image to image database
+            this.props.imageDatabase.add(imageData);
+            // tell log manager we produced data to hash
+            this.props.logManager.OnDataProduced(imageData)
+        }
     }
 }
 

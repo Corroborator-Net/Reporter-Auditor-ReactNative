@@ -61,6 +61,11 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let newMap = new Map<string, string>();
         let logs = await this.props.logSource.getRecordsFor(LogbookView.DefaultLogAddress);
+
+        if (logs.length<1){
+            return;
+        }
+
         const photos = await this.props.imageSource.getImages(logs.slice(0,20));
         photos.map((photo:string,i:number) => {
             newMap.set(logs[i].dataMultiHash, photo);
@@ -156,7 +161,7 @@ class LogRowCell extends React.Component<{ hash: string, src: string, meta: stri
                     height: 100,
                 }}/>
                 <Text style={styles.title}>{hash}</Text>
-                <Text style={styles.title}>{meta}</Text>
+                <Text style={styles.title}>{JSON.parse(meta)["0"]}</Text>
             </>
         );
     }

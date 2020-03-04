@@ -1,51 +1,52 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
 
+
 export class Log {
 
-    static metadataItemSeparator= "&";
-    static metadataReportSeparator=",";
-    static blankEntryToSatisfyAtra=",";
-
     public signedMetadata:string;
+    // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
     constructor(public logBookAddress:string,
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
                 public transactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
-                public signedHashes:string,  // signed by each other corroborator's private ID key + Hq's public key
-                signedDate:Date|null,
-                signedLocation:string|null,  // signed by each other corroborator's private ID key + Hq's public key
-                signedMetadata:string|null
+                signedMetadataObj:object|null, // this will include signed Hashes
+                signedMetadataJson:string|null
     ) {
-        if (signedMetadata != null){
-            // TODO: parse data from blockchain for auditor
-            this.signedMetadata = signedMetadata;
+
+        // gotten from atra
+        // @ts-ignore
+        if (signedMetadataJson && signedMetadataJson["0"] != null){
+            this.signedMetadata = signedMetadataJson;
         }
-        if (signedDate != null) {
-            this.signedMetadata =
-                Log.getFormattedDateString(signedDate) +
-                Log.metadataItemSeparator +
-                signedLocation +
-                Log.metadataReportSeparator;
-            // console.log("new log metadata: ", this.signedMetadata);
+        // sending to atra
+        else {
+            this.signedMetadata = JSON.stringify({
+                "0": JSON.stringify(signedMetadataObj)
+            });
         }
-        else{
-            console.log("setting metadata blank");
-            this.signedMetadata = Log.blankEntryToSatisfyAtra;
-        }
+       console.log("signed metadata: ", this.signedMetadata);
+    }
+
+    // TODO: implement me by adding an index to the metadata, i.e. {"0":{}, "1":{}, "2":{}}
+    public appendSignedData(signedMetadata:string){
+
     }
 
     // TODO: implement me
-    public appendSignedData(signedHash:string, signedMetadata:string){
-
-    }
-
     public getTimestampsMappedToReporterKeys():Map<string,string[]>{
-        return convertCSVToList(this.signedMetadata);
+        const metaObj = JSON.parse(this.signedMetadata);
+        const returnMap = new Map<string,string[]>();
+        returnMap.set(FirstReporterPublicKey, metaObj["0"]);
+        return returnMap;
 
     }
 
+    // TODO: implement me
     public getLocations():Map<string,string[]>{
-        return convertCSVToList(this.signedMetadata);
+        const metaObj = JSON.parse(this.signedMetadata);
+        const returnMap = new Map<string,string[]>();
+        returnMap.set(FirstReporterPublicKey, metaObj["0"]);
+        return returnMap;
     }
 
     static getFormattedDateString(date:Date) {
@@ -71,6 +72,8 @@ export class Log {
     }
 }
 
+
+
 export interface HashReceiver{
     OnHashProduced(hashData:HashData):void;
 }
@@ -80,11 +83,9 @@ export const LogSchema = {
     primaryKey: 'dataMultiHash',
     properties:{
         logBookAddress:'string',
-        // reporterAddress:'string',
         storageLocation:'string',
         transactionHash:'string',
         dataMultiHash:'string',
-        signedHashes:'string',
         signedMetadata:'string',
     }
 };
@@ -92,10 +93,11 @@ export const LogSchema = {
 export interface HashData{
     multiHash:string;
     storageLocation:string;
+    metadata:string;
 }
 
 export class ImageRecord implements HashData {
-    public exif:string;
+    public metadata:string;
     constructor( public timestamp:Date,
                  public storageLocation:string,
                  public multiHash:string,
@@ -104,13 +106,9 @@ export class ImageRecord implements HashData {
                  public thumbnail:string,
                  exif:any,
     ) {
-        let exifString = "";
-        const keys = Object.keys(exif);
-        for (const key of keys){
-            exifString+= key +":"+exif[key]+", "
-        }
-        this.exif = exifString.trim();
-        // console.log("exif data: " + this.exif);
+
+        this.metadata = JSON.stringify(exif);
+        // console.log("exif data: " + this.metadata);
     }
 }
 
@@ -124,24 +122,24 @@ export const ImageRecordSchema = {
         pictureOrientation:'int',
         deviceOrientation:'int',
         thumbnail:'string',
-        exif:'string',
+        metadata:'string',
     }
 };
 
-export function convertListToCSV(list:string[]):string{
-        let csvString = "";
-        for (const item of list){
-            csvString += item +", "
-        }
-        return csvString.trim();
-}
-
-export function convertCSVToList(csv:string):Map<string,string[]>{
-    let returnMap = new Map<string, string[]>();
-    //TODO: split based on peer signatures
-    let splitList = csv.split(Log.metadataItemSeparator);
-    console.log("metadata split by item separator:", splitList);
-    returnMap.set(FirstReporterPublicKey,splitList);
-    return returnMap;
-}
+// export function convertListToCSV(list:string[]):string{
+//         let csvString = "";
+//         for (const item of list){
+//             csvString += item +", "
+//         }
+//         return csvString.trim();
+// }
+//
+// export function convertCSVToList(csv:string):Map<string,string[]>{
+//     let returnMap = new Map<string, string[]>();
+//     //TODO: split based on peer signatures
+//     let splitList = csv.split(Log.metadataItemSeparator);
+//     console.log("metadata split by item separator:", splitList);
+//     returnMap.set(FirstReporterPublicKey,splitList);
+//     return returnMap;
+// }
 export const RealmSchemas = [LogSchema, ImageRecordSchema];
