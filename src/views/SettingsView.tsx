@@ -68,7 +68,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
                 leftIcon={
                     <Icon
                         name={icon}
-                        size={24}
+                        size={20}
                         color='grey'
                         style={styles.icons}
                     />

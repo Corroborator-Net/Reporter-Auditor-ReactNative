@@ -103,17 +103,18 @@ class App extends PureComponent{
                   /> }
                 </Tab.Screen>
 
-                <Tab.Screen name="Logs" options={{
-                  tabBarLabel: 'Logs',
-                    tabBarIcon:(({focused,color,size})=>
-                            <Icon name={"file-cabinet"} color={color} size={size} />
-                    )
-                }}>
-                {props => <LogbookView {...props}
-                            logSource={this.storage} imageSource={this.imageManager}
+              <Tab.Screen name="Logs" options={{
+                tabBarLabel: 'Logs',
+                  tabBarIcon:(({focused,color,size})=>
+                          <Icon name={"file-cabinet"} color={color} size={size} />
+                  )
+              }}>
+              {props => <LogbookView {...props}
+                          logSource={this.storage} imageSource={this.imageManager}
 
-                /> }
-                </Tab.Screen>
+              /> }
+              </Tab.Screen>
+
 
 
 
