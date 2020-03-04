@@ -1,7 +1,7 @@
 import React from "react";
 import {FlatList, Image, RefreshControl, SafeAreaView, StyleSheet, Text, View} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log} from "../interfaces/Data";
+import {Log, LogMetadata} from "../interfaces/Data";
 import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 import {NativeAtraManager} from "../NativeAtraManager";
 
@@ -108,7 +108,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
                             <LogRowCell
                             hash={item.dataMultiHash}
                             src={ `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
-                            meta={item.signedMetadata}
+                            meta={item.signedMetadataJson}
                             />
                             </View>
                         }
@@ -160,8 +160,8 @@ class LogRowCell extends React.Component<{ hash: string, src: string, meta: stri
                     width: 100,
                     height: 100,
                 }}/>
-                <Text style={styles.title}>{hash}</Text>
-                <Text style={styles.title}>{JSON.parse(meta)["0"]}</Text>
+                <Text style={styles.title}>{hash.slice(0,5) + "..." + hash.slice(hash.length-5,hash.length)}</Text>
+                <Text style={styles.title}>{JSON.parse(meta)["0"][LogMetadata.DateTag]} </Text>
             </>
         );
     }
@@ -175,8 +175,8 @@ const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 14,
-        paddingLeft:10,
+        fontSize: 13,
+        paddingLeft:5,
         flex:1,
         flexWrap: 'wrap',
         alignSelf: "center",

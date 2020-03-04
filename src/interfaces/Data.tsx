@@ -1,40 +1,67 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
 
+export class LogMetadata {
+    public static GPSLat = "GPSLatitude";
+    public static GPSLong = "GPSLongitude";
+    public static GPSAcc = "GPSAccuracy";
+    public static DateTag = "DateTime";
+    public static Comment = "UserComment";
+    public static SignedHash = "SignedHash";
+    public static MetadataTags = [LogMetadata.GPSAcc, LogMetadata.GPSLat, LogMetadata.GPSLong, LogMetadata.DateTag,
+        LogMetadata.Comment, LogMetadata.SignedHash];
 
+    public jsonObj:object;
+    // retrieve from blockchain or image exif, turn into json that we want
+    constructor(jsonData:string, signedHash:string|null) {
+        const metadata = JSON.parse(jsonData);
+
+        // parsing data gotten from atra
+        if (metadata["0"] != null){
+            this.jsonObj = metadata;
+            return
+        }
+
+        // starting from scratch
+        this.jsonObj= {"0": {} };
+        for (const tag of LogMetadata.MetadataTags){
+            console.log("tag: ", tag);
+            // @ts-ignore
+            this.jsonObj["0"][tag]=metadata[tag];
+        }
+        if (signedHash!=null){
+            // @ts-ignore
+            this.jsonObj["0"][LogMetadata.SignedHashes] = signedHash;
+        }
+    }
+
+    public JsonData():string{
+        return (JSON.stringify(this.jsonObj));
+    }
+
+    // TODO: implement me by adding an index to the metadata, i.e. {"0":{}, "1":{}, "2":{}}
+    public appendSignedData(signedMetadata:LogMetadata){
+
+    }
+
+
+}
 export class Log {
 
-    public signedMetadata:string;
     // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
     constructor(public logBookAddress:string,
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
                 public transactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
-                signedMetadataObj:object|null, // this will include signed Hashes
-                signedMetadataJson:string|null
+                public signedMetadataJson:string, // this will include signed Hashes
     ) {
-
-        // gotten from atra
-        // @ts-ignore
-        if (signedMetadataJson && signedMetadataJson["0"] != null){
-            this.signedMetadata = signedMetadataJson;
-        }
-        // sending to atra
-        else {
-            this.signedMetadata = JSON.stringify({
-                "0": JSON.stringify(signedMetadataObj)
-            });
-        }
-       console.log("signed metadata: ", this.signedMetadata);
+       console.log("signed metadata: ", this.signedMetadataJson);
     }
 
-    // TODO: implement me by adding an index to the metadata, i.e. {"0":{}, "1":{}, "2":{}}
-    public appendSignedData(signedMetadata:string){
 
-    }
 
     // TODO: implement me
     public getTimestampsMappedToReporterKeys():Map<string,string[]>{
-        const metaObj = JSON.parse(this.signedMetadata);
+        const metaObj = JSON.parse(this.signedMetadataJson);
         const returnMap = new Map<string,string[]>();
         returnMap.set(FirstReporterPublicKey, metaObj["0"]);
         return returnMap;
@@ -43,7 +70,7 @@ export class Log {
 
     // TODO: implement me
     public getLocations():Map<string,string[]>{
-        const metaObj = JSON.parse(this.signedMetadata);
+        const metaObj = JSON.parse(this.signedMetadataJson);
         const returnMap = new Map<string,string[]>();
         returnMap.set(FirstReporterPublicKey, metaObj["0"]);
         return returnMap;
@@ -86,7 +113,7 @@ export const LogSchema = {
         storageLocation:'string',
         transactionHash:'string',
         dataMultiHash:'string',
-        signedMetadata:'string',
+        signedMetadataJson:'string',
     }
 };
 
@@ -106,9 +133,7 @@ export class ImageRecord implements HashData {
                  public thumbnail:string,
                  exif:any,
     ) {
-
         this.metadata = JSON.stringify(exif);
-        // console.log("exif data: " + this.metadata);
     }
 }
 
@@ -126,20 +151,5 @@ export const ImageRecordSchema = {
     }
 };
 
-// export function convertListToCSV(list:string[]):string{
-//         let csvString = "";
-//         for (const item of list){
-//             csvString += item +", "
-//         }
-//         return csvString.trim();
-// }
-//
-// export function convertCSVToList(csv:string):Map<string,string[]>{
-//     let returnMap = new Map<string, string[]>();
-//     //TODO: split based on peer signatures
-//     let splitList = csv.split(Log.metadataItemSeparator);
-//     console.log("metadata split by item separator:", splitList);
-//     returnMap.set(FirstReporterPublicKey,splitList);
-//     return returnMap;
-// }
+
 export const RealmSchemas = [LogSchema, ImageRecordSchema];

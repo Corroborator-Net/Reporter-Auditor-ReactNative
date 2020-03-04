@@ -1,5 +1,5 @@
 import {LogbookDatabase} from "../interfaces/Storage";
-import {Log} from "../interfaces/Data";
+import {Log, LogMetadata} from "../interfaces/Data";
 //@ts-ignore
 import { AtraApiKey } from 'react-native-dotenv'
 
@@ -64,8 +64,7 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
                 storageLocation,
                 "TBD",
                 hash,
-                null,
-                signedMetadata,
+                new LogMetadata(signedMetadata, null).JsonData()
             );
 
             response.push(newEntry);

@@ -2,15 +2,13 @@ import {LocalLogbookDatabase, LogbookDatabase} from "./interfaces/Storage";
 import {Identity} from "./interfaces/Identity";
 import { PeerCorroborators} from "./interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log} from "./interfaces/Data";
+import {HashData, HashReceiver, Log, LogMetadata} from "./interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "./interfaces/BlockchainInterface";
 import {NativeAtraManager} from "./NativeAtraManager";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import LogbookView from "./views/LogbookView";
-// import {GPSAcc, GPSLat, GPSLong} from "./utils/Constants";
-import * as Constants from "./utils/Constants";
 
 //@ts-ignore
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -55,6 +53,7 @@ export class LogManager implements HashReceiver{
 
 
     OnHashProduced(hashData: HashData): void {
+
         // TODO get signature from our did module
         // const signedHash = this.didModule.sign(hashData.multiHash);
         // const signedMetaData = this.didModule.sign(hashData.timeStamp);
@@ -64,25 +63,18 @@ export class LogManager implements HashReceiver{
         // for (const peer of peers){
         //     peer.requestSignature(hashData.multiHash);
         // }
-        const jsonMetadata = JSON.parse(hashData.metadata);
-        const logToBlockchainMetadata = {
-            "Date": Log.getFormattedDateString(new Date())
-        };
 
-        //@ts-ignore
-        logToBlockchainMetadata[Constants.GPSLat] = jsonMetadata[Constants.GPSLat];
-        //@ts-ignore
-        logToBlockchainMetadata[Constants.GPSLong] = jsonMetadata[Constants.GPSLong];
-        //@ts-ignore
-        logToBlockchainMetadata[Constants.GPSAcc] = jsonMetadata[Constants.GPSAcc];
+        const logMetadata = new LogMetadata(
+            hashData.metadata,
+            "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
+        );
 
         const newLog = new Log(
             LogManager.CurrentLogBookAddress,
             hashData.storageLocation,
             "",
             hashData.multiHash,
-            logToBlockchainMetadata,
-            null
+            logMetadata.JsonData()
         );
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
