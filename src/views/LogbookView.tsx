@@ -24,7 +24,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
     // TODO AUDTIOR: The user should input this
     static DefaultLogAddress = defaultAtraTableId;
-
+    static LogsPerPage = 20;
     static ShouldUpdateLogbookView = false;
     previousLogLength = 0;
     FlatList:any=null;
@@ -75,7 +75,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
             return;
         }
 
-        const photos = await this.props.imageSource.getImages(logs.slice(0,20));
+        const photos = await this.props.imageSource.getImages(logs.slice(0,LogbookView.LogsPerPage));
         photos.map((photo:string,i:number) => {
             newMap.set(logs[i].dataMultiHash, photo);
         });
