@@ -132,6 +132,7 @@ class LogRowCell extends React.Component<CellProps,CellState> {
         metaList:this.getMetadata()
     };
 
+    // TODO: if the cell doesn't have a transaction hash on creation, it should check for an updated one
     getMetadata():Array<Element>{
         let metaList = new Array<Element>();
         const obj = JSON.parse(this.props.item.signedMetadataJson)["0"];
