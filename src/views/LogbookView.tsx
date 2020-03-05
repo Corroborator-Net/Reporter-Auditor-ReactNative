@@ -132,11 +132,6 @@ class LogRowCell extends React.Component<CellProps,CellState> {
         metaList:this.getMetadata()
     };
 
-    expand(){
-        const prevState = !this.state.expanded;
-        this.setState({expanded: prevState})
-    }
-
     getMetadata():Array<Element>{
         let metaList = new Array<Element>();
         const obj = JSON.parse(this.props.item.signedMetadataJson)["0"];
@@ -162,7 +157,7 @@ class LogRowCell extends React.Component<CellProps,CellState> {
                     marginHorizontal: 16,
                     flexDirection: 'column'
                 }}
-                onPress={(event => {this.expand()})}
+                onPress={(event => {this.setState({expanded: !this.state.expanded})})}
                 // TODO: must decrypt here
                 title={JSON.parse(this.props.item.signedMetadataJson)["0"][LogMetadata.DateTag]}
                 leftIcon={
@@ -175,15 +170,16 @@ class LogRowCell extends React.Component<CellProps,CellState> {
                         }}
                     />
                 }
-                subtitle={<View>
-                    {this.state.expanded ?
-                        <>
-                            {this.state.metaList}
-                        </>
-                    :
-                    <></>
-                    }
-                </View>
+                subtitle={
+                    <View>
+                        {this.state.expanded ?
+                            <>
+                                {this.state.metaList}
+                            </>
+                            :
+                            <></>
+                        }
+                    </View>
                 }
                 chevron={this.state.expanded?
                     <Icon name={"chevron-up"} size={20} color={"grey"}/>
