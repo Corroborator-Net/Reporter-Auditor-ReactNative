@@ -2,7 +2,6 @@ import React from "react";
 import {FlatList, Image, RefreshControl, SafeAreaView, StyleSheet, View} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogMetadata} from "../interfaces/Data";
-import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 import {ListItem, Text} from "react-native-elements";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {defaultAtraTableId} from "../utils/Constants";
@@ -10,7 +9,7 @@ import {defaultAtraTableId} from "../utils/Constants";
 
 type State={
     logs:Log[]
-    photos:any
+    photos:Map<string, string>
     refreshing:boolean
 }
 
@@ -34,21 +33,10 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         refreshing:false
     };
 
-    // TODO: move this outside of this view to the app with a trivial read/write to prompt user
-    async getPermission(){
-        await requestStoragePermission();
-        await requestWritePermission();
-    }
 
 
     componentDidMount(): void {
         this.FlatList = React.createRef();
-
-        //@ts-ignore - only need permission if we're react native
-        if (typeof navigator != 'undefined' && navigator.product == 'ReactNative') {
-            this.getPermission();
-        }
-
         this.getLogs();
         this.props.navigation.addListener('focus', this.onScreenFocus)
     }
@@ -86,9 +74,6 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         this.previousLogLength = logs.length;
     }
 
-    refresh() {
-        this.getLogs();
-    }
 
     render() {
         return (
@@ -109,7 +94,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
                         refreshControl={
                             <RefreshControl
                                 refreshing={this.state.refreshing}
-                                onRefresh={() => this.refresh()}/>
+                                onRefresh={() => this.getLogs()}/>
                         }
                 />
             </SafeAreaView>
@@ -117,14 +102,17 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     }
 }
 
+
 type CellProps = {
     src: string;
     item:Log;
 }
+
 type CellState = {
     expanded:boolean
     metaList:Array<Element>
 }
+
 class LogRowCell extends React.Component<CellProps,CellState> {
 
     state = {
