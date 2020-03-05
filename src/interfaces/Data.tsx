@@ -7,8 +7,8 @@ export class LogMetadata {
     public static DateTag = "DateTime";
     public static Comment = "UserComment";
     private static SignedHash = "SignedHash";
-    public static MetadataTags = [LogMetadata.GPSAcc, LogMetadata.GPSLat, LogMetadata.GPSLong, LogMetadata.DateTag,
-        LogMetadata.Comment, LogMetadata.SignedHash];
+    public static MetadataTags = [ LogMetadata.DateTag, LogMetadata.Comment, LogMetadata.GPSLat,
+        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.SignedHash];
 
     public jsonObj:object;
     // retrieve from blockchain or image exif, turn into json that we want
@@ -29,7 +29,7 @@ export class LogMetadata {
         }
         if (signedHash!=null){
             // @ts-ignore
-            this.jsonObj["0"][LogMetadata.SignedHashes] = signedHash;
+            this.jsonObj["0"][LogMetadata.SignedHash] = signedHash;
         }
     }
 

@@ -5,10 +5,10 @@ import HashManager from "./HashManager";
 import {HashData, HashReceiver, Log, LogMetadata} from "./interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "./interfaces/BlockchainInterface";
-import {NativeAtraManager} from "./NativeAtraManager";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import LogbookView from "./views/LogbookView";
+import {defaultAtraTableId} from "./utils/Constants";
 
 //@ts-ignore
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -16,7 +16,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 // TODO: make singleton
 export class LogManager implements HashReceiver{
 
-    static CurrentLogBookAddress = NativeAtraManager.firstTableId;
+    static CurrentLogBookAddress = defaultAtraTableId;
     // static CurrentAddress = "";
     syncingLogs = false;
     currentlyConnectedToNetwork = false;

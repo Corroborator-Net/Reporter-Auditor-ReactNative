@@ -1,16 +1,19 @@
 import React from "react";
-import {FlatList, Image, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {FlatList, Image, RefreshControl, SafeAreaView, StyleSheet, View} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogMetadata} from "../interfaces/Data";
 import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
-import {NativeAtraManager} from "../NativeAtraManager";
-import {ListItem} from "react-native-elements";
+import {ListItem, Text} from "react-native-elements";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {defaultAtraTableId} from "../utils/Constants";
+
 
 type State={
     logs:Log[]
     photos:any
     refreshing:boolean
 }
+
 type Props={
     logSource:LogbookDatabase;
     imageSource:ImageDatabase;
@@ -19,9 +22,9 @@ type Props={
 
 export default class LogbookView extends React.PureComponent<Props, State> {
 
+    // TODO AUDTIOR: The user should input this
+    static DefaultLogAddress = defaultAtraTableId;
 
-    // AUDTIOR TODO: The user will input this for the auditor side
-    static DefaultLogAddress = NativeAtraManager.firstTableId;
     static ShouldUpdateLogbookView = false;
     previousLogLength = 0;
     FlatList:any=null;
@@ -40,7 +43,12 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
     componentDidMount(): void {
         this.FlatList = React.createRef();
-        this.getPermission();
+
+        //@ts-ignore - only need permission if we're react native
+        if (typeof navigator != 'undefined' && navigator.product == 'ReactNative') {
+            this.getPermission();
+        }
+
         this.getLogs();
         this.props.navigation.addListener('focus', this.onScreenFocus)
     }
@@ -85,8 +93,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     render() {
         return (
             <SafeAreaView style={styles.container}>
-                {this.state.logs.length != 0 ?
-                    <FlatList
+                <FlatList
                         removeClippedSubviews={true}
                         ref={ (ref) => this.FlatList = ref }
                         initialNumToRender={8}
@@ -102,41 +109,86 @@ export default class LogbookView extends React.PureComponent<Props, State> {
                         refreshControl={
                             <RefreshControl
                                 refreshing={this.state.refreshing}
-                                onRefresh={() => this.refresh()}
-                            />
+                                onRefresh={() => this.refresh()}/>
                         }
-                    />
-                    :
-                    <></>
-                }
+                />
             </SafeAreaView>
         );
     }
 }
 
-class LogRowCell extends React.Component<{ src: string, item:Log }> {
-    render() {
-        let {src, item} = this.props;
+type CellProps = {
+    src: string;
+    item:Log;
+}
+type CellState = {
+    expanded:boolean
+    metaList:Array<Element>
+}
+class LogRowCell extends React.Component<CellProps,CellState> {
+
+    state = {
+        expanded:false,
+        metaList:this.getMetadata()
+    };
+
+    expand(){
+        const prevState = !this.state.expanded;
+        this.setState({expanded: prevState})
+    }
+
+    getMetadata():Array<Element>{
+        let metaList = new Array<Element>();
+        const obj = JSON.parse(this.props.item.signedMetadataJson)["0"];
+        // add extra bits from the log
+        obj["Hash"]=this.props.item.dataMultiHash;
+        obj["Transaction Hash"]=this.props.item.transactionHash;
+
+        Object.keys(obj).
+        forEach(function eachKey(key)
+        {
+            metaList.push(<Text> <Text style={{fontWeight:"bold"}}> {key} </Text> : {obj[key]}</Text>);
+        });
+        return metaList;
+    }
+
+    render(){
         return (
             <ListItem
                 style={{
-                    backgroundColor: this.getColorForLog(item),
+                    backgroundColor: this.getColorForLog(this.props.item),
                     padding: 5,
                     marginVertical: 8,
                     marginHorizontal: 16,
-                    flexDirection: 'column'}}
-                chevron
+                    flexDirection: 'column'
+                }}
+                onPress={(event => {this.expand()})}
                 // TODO: must decrypt here
-                title={JSON.parse(item.signedMetadataJson)["0"][LogMetadata.DateTag]}
+                title={JSON.parse(this.props.item.signedMetadataJson)["0"][LogMetadata.DateTag]}
                 leftIcon={
                     <Image
-                        source={{uri: src}}
+                        source={{uri: this.props.src}}
                         resizeMethod={"resize"}
                         style={{
                             width: 50,
                             height: 50,
                         }}
                     />
+                }
+                subtitle={<View>
+                    {this.state.expanded ?
+                        <>
+                            {this.state.metaList}
+                        </>
+                    :
+                    <></>
+                    }
+                </View>
+                }
+                chevron={this.state.expanded?
+                    <Icon name={"chevron-up"} size={20} color={"grey"}/>
+                    :
+                    <Icon name={"chevron-down"} size={20} color={"grey"}/>
                 }
                 />
         );

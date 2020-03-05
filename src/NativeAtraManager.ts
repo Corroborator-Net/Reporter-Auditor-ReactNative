@@ -5,7 +5,6 @@ import {Log} from "./interfaces/Data";
 import { AtraApiKey } from 'react-native-dotenv'
 export class NativeAtraManager implements BlockchainInterface {
 
-    static firstTableId="93bc7f28-2a29-4489-9a0d-65cc7fee1b32";
 
     formTransaction(log: Log): string {
         const jsonTransaction = {
