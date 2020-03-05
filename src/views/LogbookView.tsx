@@ -65,7 +65,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         }
     };
 
-
+    // TODO: implement pages or infinite scroll
     async getLogs(){
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let newMap = new Map<string, string>();
