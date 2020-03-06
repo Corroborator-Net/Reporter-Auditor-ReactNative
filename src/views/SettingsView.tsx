@@ -13,14 +13,14 @@ type Props={
 
 export default class SettingsView extends React.PureComponent<Props, State> {
 
-    UserSettings = new Map<string,string>();
+    public static UserSettings = new Map<string,string>();
 
     state={
         checked:false,
     }
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
-
+        SettingsView.UserSettings.set(key,value);
     }
 
     render(){

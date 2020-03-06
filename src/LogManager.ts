@@ -8,10 +8,7 @@ import {BlockchainInterface} from "./interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import LogbookView from "./views/LogbookView";
-import {defaultAtraTableId} from "./utils/Constants";
-
-//@ts-ignore
-const delay = ms => new Promise(res => setTimeout(res, ms));
+import {AndroidFileStorageLocation, defaultAtraTableId, waitMS} from "./utils/Constants";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -36,12 +33,11 @@ export class LogManager implements HashReceiver{
 
     // TODO how can we make this deterministic?
     public async OnDataProduced(hashData:HashData) : Promise<void> {
-        await delay(100);
+        await waitMS(100);
         // console.log("Waited before reading to produce hash");
-
-        // TODO make full path depend on OS
-        const fileName = hashData.storageLocation.slice(hashData.storageLocation.lastIndexOf("/") + 1,hashData.storageLocation.length);
-        const fullPath = "file:///storage/emulated/0/Pictures/" + fileName;
+        // TODO: assumption: assumes all metadata includes a LogMetadata.FileName key
+        const fileName =  JSON.parse(hashData.metadata)[LogMetadata.FileName];
+        const fullPath = AndroidFileStorageLocation +fileName;
 
         RNFetchBlob.fs.readFile(fullPath, 'base64')
             .then((data) => {
@@ -142,7 +138,6 @@ export class LogManager implements HashReceiver{
             console.log("error on submit to blockchain:", err);
             return null;
         })
-
     }
 }
 

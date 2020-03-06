@@ -2,7 +2,7 @@ import {RNCamera} from "react-native-camera";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
@@ -14,9 +14,12 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
+import SettingsView from "./SettingsView";
+import {waitMS} from "../utils/Constants";
 
 type State={
     camera:any
+    position:GeoPosition
 }
 type Props={
     imageDatabase:ImageDatabase
@@ -29,13 +32,59 @@ export default class CameraView extends React.PureComponent<Props, State> {
         super(props);
     }
     async getPermission(){
+        await waitMS(1000);
+
         await requestStoragePermission();
         await requestWritePermission();
         await requestCameraPermission();
-        await requestLocationPermission();
     }
+
+
+    async startWatchingGPS(){
+        await waitMS(4000);
+        await requestLocationPermission();
+        Geolocation.watchPosition((position => {
+            this.setState({position:position})
+        }), (error => {
+            console.log("gps error: ", error.code, error.message);
+        }), {
+            enableHighAccuracy: true,
+            forceRequestLocation:true,
+            showLocationDialog: false,
+            distanceFilter:80,
+            interval:10000,
+            fastestInterval:5000,
+        })
+    }
+
+    async getStartingGPSCoords(){
+        await requestLocationPermission();
+        Geolocation.getCurrentPosition(
+          (position) => {
+              this.setState({position:position})
+
+          },
+          (error) => {
+            // See error code charts below.
+            console.log("gps error: ", error.code, error.message);
+          },
+          {
+              enableHighAccuracy: true,
+              timeout: 1000,
+              maximumAge: 10000,
+              forceRequestLocation:true,
+              showLocationDialog: false
+          }
+      );
+    }
+
+
+
+
     componentDidMount(): void {
         this.getPermission();
+        this.startWatchingGPS();
+        this.getStartingGPSCoords();
     }
 
 
@@ -80,40 +129,44 @@ export default class CameraView extends React.PureComponent<Props, State> {
         )
     }
 
+
+
     takePicture = async() => {
 
-        if (this.state.camera) {
-            // TODO: find npm package that finds gps coords even when in airplane mode
-            // see: https://github.com/airtonazevedo/react-native-geolocation-offline-and-airplanemode
-            const exifAppend = {};
-            //@ts-ignore
-            exifAppend[LogMetadata.GPSLat] = 39.7722476;
-            //@ts-ignore
-            exifAppend[LogMetadata.GPSLong] = -105.0464564;
-            //@ts-ignore
-            exifAppend[LogMetadata.GPSAcc] = 16.913999557495117;
-            //@ts-ignore
-            exifAppend[LogMetadata.Comment] = "Hello";
-
-            // TODO we can pass doNotSave:boolean if we can just use the base64
-            const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
-            const data = await this.state.camera.takePictureAsync(options);
-
-            await CameraRoll.saveToCameraRoll(data.uri, "photo");
-            // construct image record here
-            const imageData = new ImageRecord(new Date(),
-                data.uri,
-                "",
-                data.pictureOrientation,
-                data.deviceOrientation,
-                data.base64,
-                data.exif);
-            console.log("length of base64 img: " + data.base64.length);
-            // add image to image database
-            this.props.imageDatabase.add(imageData);
-            // tell log manager we produced data to hash
-            this.props.logManager.OnDataProduced(imageData)
+        if (!this.state.camera) {
+            return;
         }
+
+        const exifAppend: { [name: string]: any } = {};
+        exifAppend[LogMetadata.GPSLat] = this.state.position.coords.latitude;
+        exifAppend[LogMetadata.GPSLong] = this.state.position.coords.longitude;
+        exifAppend[LogMetadata.GPSAlt] = this.state.position.coords.altitude;
+        exifAppend[LogMetadata.GPSSpeed] = this.state.position.coords.speed;
+        exifAppend[LogMetadata.GPSAcc] = this.state.position.coords.accuracy;
+        exifAppend[LogMetadata.Comment] = SettingsView.UserSettings.get("Photo Details");
+
+        // TODO we can pass doNotSave:boolean if we can just use the base64
+        const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
+        const data = await this.state.camera.takePictureAsync(options);
+
+        // Add filename to metadata
+        data.exif[LogMetadata.FileName] = data.uri.slice(data.uri.lastIndexOf("/") + 1,data.uri.length);
+
+        await CameraRoll.saveToCameraRoll(data.uri, "photo");
+        // construct image record here
+        const imageData = new ImageRecord(new Date(),
+            data.uri,
+            "",
+            data.pictureOrientation,
+            data.deviceOrientation,
+            data.base64,
+            data.exif);
+        console.log("length of base64 img: " + data.base64.length);
+        // add image to image database
+        this.props.imageDatabase.add(imageData);
+        // tell log manager we produced data to hash
+        this.props.logManager.OnDataProduced(imageData)
+
     }
 }
 

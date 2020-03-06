@@ -3,9 +3,8 @@ import {HashData, Log} from "./Data";
 export interface LogbookDatabase {
     // BOTH
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
-    // getMostRecentRecord(logBookAddress: string):Promise<Log>;
 
-    // TODO what should the returned promise contain?
+    // Reporter only
     addNewRecord(newRecord:Log) : Promise<string>;
 }
 

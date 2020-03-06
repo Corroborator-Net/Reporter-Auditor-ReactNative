@@ -23,6 +23,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
     // TODO AUDTIOR: The user should input this
     static DefaultLogAddress = defaultAtraTableId;
+
     static LogsPerPage = 20;
     static ShouldUpdateLogbookView = false;
     previousLogLength = 0;
@@ -131,7 +132,7 @@ class LogRowCell extends React.Component<CellProps,CellState> {
         Object.keys(obj).
         forEach(function eachKey(key)
         {
-            metaList.push(<Text> <Text style={{fontWeight:"bold"}}> {key} </Text> : {obj[key]}</Text>);
+            metaList.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {obj[key]}</Text>);
         });
         return metaList;
     }

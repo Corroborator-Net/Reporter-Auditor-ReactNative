@@ -1,16 +1,23 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
 
 export class LogMetadata {
-    public static GPSLat = "GPSLatitude";
-    public static GPSLong = "GPSLongitude";
-    public static GPSAcc = "GPSAccuracy";
-    public static DateTag = "DateTime";
-    public static Comment = "UserComment";
-    private static SignedHash = "SignedHash";
-    public static MetadataTags = [ LogMetadata.DateTag, LogMetadata.Comment, LogMetadata.GPSLat,
-        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.SignedHash];
+    // custom metadata tags:
+    public static readonly DateTag = "DateTime";
+    public static readonly GPSLat = "GPSLatitude";
+    public static readonly GPSLong = "GPSLongitude";
+    public static readonly GPSAcc = "GPSAccuracy";
+    public static readonly GPSAlt = "GPSAltitude";
+    public static readonly GPSSpeed = "GPSSpeed";
+    public static readonly Comment = "UserComment";
+    public static readonly BlockTime = "BlockTime";
+    public static readonly FileName = "FileName";
+    private static readonly SignedHash = "SignedHash";
+    public static readonly MetadataTags = [ LogMetadata.DateTag, LogMetadata.Comment, LogMetadata.GPSLat,
+        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName,
+        LogMetadata.SignedHash, LogMetadata.BlockTime];
 
-    public jsonObj:object;
+
+    public jsonObj: { [name: string]: any };
     // retrieve from blockchain or image exif, turn into json that we want
     constructor(jsonData:string, signedHash:string|null) {
         const metadata = JSON.parse(jsonData);
@@ -22,13 +29,11 @@ export class LogMetadata {
         }
 
         // starting from scratch
-        this.jsonObj= {"0": {} };
+        this.jsonObj = {"0": {} };
         for (const tag of LogMetadata.MetadataTags){
-            // @ts-ignore
             this.jsonObj["0"][tag]=metadata[tag];
         }
         if (signedHash!=null){
-            // @ts-ignore
             this.jsonObj["0"][LogMetadata.SignedHash] = signedHash;
         }
     }
@@ -96,8 +101,6 @@ export class Log {
         return  formattedDate
     }
 }
-
-
 
 export interface HashReceiver{
     OnHashProduced(hashData:HashData):void;

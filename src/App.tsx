@@ -12,7 +12,6 @@ import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
 'use strict';
 
-import Geolocation from 'react-native-geolocation-service';
 import NativeEncryptedLogbookStorage from "./NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -51,38 +50,11 @@ class App extends PureComponent{
         this.blockchainManager,
     );
 
-    componentDidMount(): void {
-        // this.testGPS()
-  }
-
-
-  async testGPS(){
-    Geolocation.getCurrentPosition(
-        (position) => {
-          console.log("position: ", position);
-
-        },
-        (error) => {
-          // See error code charts below.
-          console.log("gps error: ", error.code, error.message);
-
-        },
-        { enableHighAccuracy: true,
-            timeout: 1000,
-            maximumAge: 10000,
-            forceRequestLocation:true,
-            showLocationDialog: false
-        }
-    );
-  }
-
-
-
   render() {
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0077FF', }}>
+          <Tab.Navigator initialRouteName="Camera" tabBarOptions={{ activeTintColor: '#0077FF', }}>
 
                 <Tab.Screen name="Settings" options={{
                 tabBarLabel: 'Settings',
@@ -110,13 +82,11 @@ class App extends PureComponent{
                   )
               }}>
               {props => <LogbookView {...props}
-                          logSource={this.storage} imageSource={this.imageManager}
-
-              /> }
+                            logSource={this.storage}
+                            imageSource={this.imageManager}
+                        />
+              }
               </Tab.Screen>
-
-
-
 
           </Tab.Navigator>
         </NavigationContainer>
