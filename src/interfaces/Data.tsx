@@ -8,11 +8,11 @@ export class LogMetadata {
     public static readonly GPSAcc = "GPSAccuracy";
     public static readonly GPSAlt = "GPSAltitude";
     public static readonly GPSSpeed = "GPSSpeed";
-    public static readonly Comment = "UserComment";
+    public static readonly ImageDescription = "ImageDescription";
     public static readonly BlockTime = "BlockTime";
     public static readonly FileName = "FileName";
     private static readonly SignedHash = "SignedHash";
-    public static readonly MetadataTags = [ LogMetadata.DateTag, LogMetadata.Comment, LogMetadata.GPSLat,
+    public static readonly MetadataTags = [ LogMetadata.DateTag, LogMetadata.ImageDescription, LogMetadata.GPSLat,
         LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName,
         LogMetadata.SignedHash, LogMetadata.BlockTime];
 

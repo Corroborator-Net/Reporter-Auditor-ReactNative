@@ -143,7 +143,8 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         exifAppend[LogMetadata.GPSAlt] = this.state.position.coords.altitude;
         exifAppend[LogMetadata.GPSSpeed] = this.state.position.coords.speed;
         exifAppend[LogMetadata.GPSAcc] = this.state.position.coords.accuracy;
-        exifAppend[LogMetadata.Comment] = SettingsView.UserSettings.get("Photo Details");
+        exifAppend[LogMetadata.ImageDescription] = SettingsView.CurrentUserSettings.
+        get(SettingsView.CustomImageDescriptionLabel);
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
         const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
@@ -161,6 +162,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             data.deviceOrientation,
             data.base64,
             data.exif);
+        console.log(data.exif);
         console.log("length of base64 img: " + data.base64.length);
         // add image to image database
         this.props.imageDatabase.add(imageData);

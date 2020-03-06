@@ -13,14 +13,17 @@ type Props={
 
 export default class SettingsView extends React.PureComponent<Props, State> {
 
-    public static UserSettings = new Map<string,string>();
+    // TODO: map all the labels to static vars in order to reference them elsewhere
+    public static CurrentUserSettings = new Map<string,string>();
+    public static readonly CustomImageDescriptionLabel = "Image Description";
 
     state={
         checked:false,
-    }
+    };
+
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
-        SettingsView.UserSettings.set(key,value);
+        SettingsView.CurrentUserSettings.set(key,value);
     }
 
     render(){
@@ -29,7 +32,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <Text h4 style={styles.title}> Settings </Text>
                 {this.InputCell("Name","account")}
                 {this.InputCell("Department","account-group")}
-                {this.InputCell("Photo Details","folder-multiple-image")}
+                {this.InputCell(SettingsView.CustomImageDescriptionLabel,"folder-multiple-image")}
                 <View style={styles.input}>
                     <ListItem
                         key={100}
