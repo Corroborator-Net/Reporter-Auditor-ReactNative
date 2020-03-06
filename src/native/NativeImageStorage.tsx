@@ -1,8 +1,8 @@
 import React from "react";
-import {ImageDatabase} from "./interfaces/Storage";
-import {ImageRecord, Log, RealmSchemas} from "./interfaces/Data";
+import {ImageDatabase} from "../interfaces/Storage";
+import {ImageRecord, Log, RealmSchemas} from "../interfaces/Data";
 import Realm from "realm";
-import {StorageSchemaVersion} from "./utils/Constants"
+import {StorageSchemaVersion} from "../utils/Constants"
 const schemaName = 'ImageHash';
 
 // NATIVE IMPLEMENTATION

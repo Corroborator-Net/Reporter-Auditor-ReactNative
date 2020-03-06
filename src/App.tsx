@@ -12,22 +12,22 @@ import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
 'use strict';
 
-import NativeEncryptedLogbookStorage from "./NativeEncryptedLogbookStorage";
+import NativeEncryptedLogbookStorage from "./native/NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import CameraView from "./views/CameraView";
+import NativeCameraView from "./views/NativeCameraView";
 import LogbookView from "./views/LogbookView";
 import SettingsView from "./views/SettingsView";
-import HashManager from "./HashManager";
-import {LogManager} from "./LogManager";
+import HashManager from "./native/HashManager";
+import {LogManager} from "./native/LogManager";
 import {Mesh} from "./interfaces/PeerCorroborators";
-import {NativeAtraManager} from "./NativeAtraManager";
-import NativeImageStorage from "./NativeImageStorage";
-import NativeDID from "./NativeDID";
+import {NativeAtraManager} from "./native/NativeAtraManager";
+import NativeImageStorage from "./native/NativeImageStorage";
+import NativeDID from "./native/NativeDID";
 
 declare var global: {HermesInternal: null | {}};
 const Tab = createBottomTabNavigator();
@@ -69,9 +69,9 @@ class App extends PureComponent{
                   tabBarIcon:(({focused,color,size})=>
                       <Icon name={"camera"} color={color} size={size} />
                   )}}>
-                  {props => <CameraView {...props}
-                                        imageDatabase={this.imageManager}
-                                        logManager={this.logManager}
+                  {props => <NativeCameraView {...props}
+                                              imageDatabase={this.imageManager}
+                                              logManager={this.logManager}
                   /> }
                 </Tab.Screen>
 

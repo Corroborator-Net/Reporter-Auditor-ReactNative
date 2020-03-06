@@ -7,7 +7,7 @@ import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
 import {ImageRecord,  LogMetadata} from "../interfaces/Data";
-import {LogManager} from "../LogManager";
+import {LogManager} from "../native/LogManager";
 import {
     requestCameraPermission,
     requestLocationPermission,
@@ -26,7 +26,7 @@ type Props={
     logManager:LogManager
 }
 
-export default class CameraView extends React.PureComponent<Props, State> {
+export default class NativeCameraView extends React.PureComponent<Props, State> {
 
     constructor(props:Props) {
         super(props);

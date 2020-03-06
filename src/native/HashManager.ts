@@ -1,5 +1,4 @@
-import {MultiHash} from "./interfaces/Hash";
-import {HashData, HashReceiver} from "./interfaces/Data";
+import {HashData, HashReceiver} from "../interfaces/Data";
 const crypto = require('crypto');
 
 

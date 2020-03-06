@@ -1,14 +1,14 @@
-import {LocalLogbookDatabase, LogbookDatabase} from "./interfaces/Storage";
-import {Identity} from "./interfaces/Identity";
-import { PeerCorroborators} from "./interfaces/PeerCorroborators";
+import {LocalLogbookDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {Identity} from "../interfaces/Identity";
+import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log, LogMetadata} from "./interfaces/Data";
+import {HashData, HashReceiver, Log, LogMetadata} from "../interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
-import {BlockchainInterface} from "./interfaces/BlockchainInterface";
+import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
-import LogbookView from "./views/LogbookView";
-import {AndroidFileStorageLocation, defaultAtraTableId, waitMS} from "./utils/Constants";
+import LogbookView from "../views/LogbookView";
+import {AndroidFileStorageLocation, defaultAtraTableId, waitMS} from "../utils/Constants";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{

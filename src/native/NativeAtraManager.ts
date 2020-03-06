@@ -1,5 +1,5 @@
-import {BlockchainInterface} from "./interfaces/BlockchainInterface";
-import {Log} from "./interfaces/Data";
+import {BlockchainInterface} from "../interfaces/BlockchainInterface";
+import {Log} from "../interfaces/Data";
 
 //@ts-ignore
 import { AtraApiKey } from 'react-native-dotenv'

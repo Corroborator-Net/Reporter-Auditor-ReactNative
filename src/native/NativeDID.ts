@@ -1,5 +1,5 @@
-import {Identity} from "./interfaces/Identity";
-import {FirstReporterPublicKey} from "./utils/Constants";
+import {Identity} from "../interfaces/Identity";
+import {FirstReporterPublicKey} from "../utils/Constants";
 
 export default class NativeDID implements Identity{
     addTrustedPeerAttestation(did: string): string {
