@@ -66,6 +66,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
 
     // TODO: implement pages or infinite scroll
     async getLogs(){
+        // this.setState({refreshing:true});
         const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
         console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
@@ -78,6 +79,7 @@ export default class LogbookView extends React.PureComponent<Props, State> {
         this.setState({
             logs:logs,
             photos:newMap,
+            // refreshing:false,
         });
         this.previousLogLength = logs.length;
     }

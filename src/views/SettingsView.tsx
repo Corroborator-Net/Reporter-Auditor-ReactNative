@@ -19,7 +19,6 @@ type Props={
 
 export default class SettingsView extends React.PureComponent<Props, State> {
 
-
     state={
         checked:false,
         showLogbooks:false,
@@ -87,8 +86,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             bottomDivider
             onPress={event => {
                 this.setState({refreshingLogs:true},
-                this.AddNewLogbook)
-            }
+                this.AddNewLogbook) }
             }
         />)
     }

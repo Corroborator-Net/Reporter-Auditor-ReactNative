@@ -9,7 +9,7 @@ import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import LogbookView from "../views/LogbookView";
 import {AndroidFileStorageLocation, defaultAtraTableId, waitMS} from "../utils/Constants";
-import SettingsView from "../views/SettingsView";
+import UserPreferences from "../utils/UserPreferences";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -66,7 +66,7 @@ export class LogManager implements HashReceiver{
         );
 
         const newLog = new Log(
-            SettingsView.CurrentUserSettings.get(SettingsView.LogbookLabel),
+            UserPreferences.GetCurrentLogbook(),
             hashData.storageLocation,
             "",
             hashData.multiHash,
