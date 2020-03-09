@@ -1,5 +1,14 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
 
+export interface LogbookStateKeeper {
+    CurrentLogbook:string
+    // LogbookChanged:Callback
+}
+// TODO:
+// export interface Callback {
+//     callbackExecuted(): void;
+// }
+
 export class LogMetadata {
     // custom metadata tags:
     public static readonly DateTag = "DateTime";

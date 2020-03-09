@@ -2,28 +2,35 @@ import React from "react";
 import { Input, Text, CheckBox, ListItem } from 'react-native-elements';
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {ScrollView, StyleSheet, View} from "react-native";
+import {RefreshControl, ScrollView, StyleSheet, View} from "react-native";
+import UserPreferences from "../utils/UserPreferences";
+import {BlockchainInterface} from "../interfaces/BlockchainInterface";
+
 
 type State={
     checked:boolean
+    showLogbooks:boolean
+    logbooks:string[]
+    refreshingLogs:boolean
 }
 type Props={
-
+    blockchainInterface:BlockchainInterface
 }
 
 export default class SettingsView extends React.PureComponent<Props, State> {
 
-    // TODO: map all the labels to static vars in order to reference them elsewhere
-    public static CurrentUserSettings = new Map<string,string>();
-    public static readonly CustomImageDescriptionLabel = "Image Description";
 
     state={
         checked:false,
+        showLogbooks:false,
+        logbooks:UserPreferences.UserSettingOrDefault(UserPreferences.LogbooksKey),
+        refreshingLogs:false,
     };
+
 
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
-        SettingsView.CurrentUserSettings.set(key,value);
+        UserPreferences.CurrentUserSettings.set(key,[value]);
     }
 
     render(){
@@ -32,18 +39,72 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <Text h4 style={styles.title}> Settings </Text>
                 {this.InputCell("Name","account")}
                 {this.InputCell("Department","account-group")}
-                {this.InputCell(SettingsView.CustomImageDescriptionLabel,"folder-multiple-image")}
-                <View style={styles.input}>
+                {this.InputCell(UserPreferences.CustomImageDescriptionLabel,"folder-multiple-image")}
+                <ScrollView style={styles.input}>
                     <ListItem
                         key={100}
                         title={"Logbooks"}
                         leftIcon={{ name: "view-list" }}
                         chevron
+                        onPress={(event => {this.setState({showLogbooks:!this.state.showLogbooks})})}
                     />
-                </View>
+                    {this.state.showLogbooks ?
+                        <ScrollView refreshControl={
+                            <RefreshControl
+                                refreshing={this.state.refreshingLogs}
+                                onRefresh={() => this.setState({showLogbooks: true})}/>
+                        }
+                        >
+                            { this.AddNewLogbookButton() }
+                            {this.state.logbooks.map((label, i) => (
+                                <ListItem
+                                    key={i}
+                                    title={label}
+                                    titleStyle={{color: this.determineIsActive(label), fontWeight: 'bold'}}
+                                    bottomDivider
+                                    onPress={event => {
+                                        this.onChangeUserSettings(UserPreferences.CurrentLogbookKey, label);
+                                        this.setState({showLogbooks: !this.state.showLogbooks})
+                                    }
+                                    }
+                                />))
+                        }</ScrollView>
+                            :
+                        <></>
+                    }
+                </ScrollView>
                 {this.InputToggle("Sync Data with Department","sync", "sync-off")}
             </ScrollView>
         )
+    }
+
+    AddNewLogbookButton():HTMLElement{
+        return (<ListItem
+            key={"Add New Logbook"}
+            title={"Add New Logbook"}
+            leftIcon={<Icon name={"plus"} size={15} color={"blue"} />}
+            titleStyle={{color: "black", fontWeight: 'bold'}}
+            bottomDivider
+            onPress={event => {
+                this.setState({refreshingLogs:true},
+                this.AddNewLogbook)
+            }
+            }
+        />)
+    }
+
+    async AddNewLogbook(){
+        const response = await this.props.blockchainInterface.getNewLogbook();
+        this.state.logbooks.unshift(response);
+        this.setState({refreshingLogs:false})
+
+    }
+
+    determineIsActive(label:string){
+        if ( UserPreferences.UserSettingOrDefault(UserPreferences.CurrentLogbookKey)[0] == label){
+            return "green"
+        }
+        return "black"
     }
 
     InputToggle (label:string, iconOn:string, iconOff:string) {

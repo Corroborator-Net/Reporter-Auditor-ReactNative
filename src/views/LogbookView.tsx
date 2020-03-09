@@ -1,11 +1,9 @@
 import React from "react";
 import {FlatList, Image, RefreshControl, SafeAreaView, StyleSheet, View} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log, LogMetadata} from "../interfaces/Data";
+import {Log, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import {ListItem, Text} from "react-native-elements";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {defaultAtraTableId} from "../utils/Constants";
-
 
 type State={
     logs:Log[]
@@ -15,6 +13,7 @@ type State={
 
 type Props={
     logSource:LogbookDatabase;
+    logbookStateKeeper:LogbookStateKeeper;
     imageSource:ImageDatabase;
     navigation:any;
 }
@@ -22,18 +21,19 @@ type Props={
 export default class LogbookView extends React.PureComponent<Props, State> {
 
     // TODO AUDTIOR: The user should input this
-    static DefaultLogAddress = defaultAtraTableId;
+
 
     static LogsPerPage = 20;
     static ShouldUpdateLogbookView = false;
     previousLogLength = 0;
+    previousLogbook = "";
+
     FlatList:any=null;
     state={
         logs:new Array<Log>(),
         photos:new Map<string, string>(),
         refreshing:false
     };
-
 
 
     componentDidMount(): void {
@@ -43,8 +43,16 @@ export default class LogbookView extends React.PureComponent<Props, State> {
     }
 
 
+    // TODO: maybe add a callback to the logbook state keeper interface?
+    logbookChanged() : boolean{
+        return this.previousLogbook != this.props.logbookStateKeeper.CurrentLogbook
+    }
+
+
     onScreenFocus = () => {
-        if (this.previousLogLength < this.state.logs.length){
+        if (this.previousLogLength < this.state.logs.length ||
+            (this.logbookChanged())
+        ){
             console.log("refreshing!");
             this.getLogs();
         }
@@ -52,18 +60,17 @@ export default class LogbookView extends React.PureComponent<Props, State> {
             this.getLogs();
             LogbookView.ShouldUpdateLogbookView = false;
         }
+        this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
     };
+
 
     // TODO: implement pages or infinite scroll
     async getLogs(){
+        const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
+        console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let newMap = new Map<string, string>();
-        let logs = await this.props.logSource.getRecordsFor(LogbookView.DefaultLogAddress);
-
-        if (logs.length<1){
-            return;
-        }
-
+        let logs = await this.props.logSource.getRecordsFor(currentLogbook);
         const photos = await this.props.imageSource.getImages(logs.slice(0,LogbookView.LogsPerPage));
         photos.map((photo:string,i:number) => {
             newMap.set(logs[i].dataMultiHash, photo);

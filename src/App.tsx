@@ -28,6 +28,7 @@ import {Mesh} from "./interfaces/PeerCorroborators";
 import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import NativeDID from "./native/NativeDID";
+import UserPreferences from "./utils/UserPreferences";
 
 declare var global: {HermesInternal: null | {}};
 const Tab = createBottomTabNavigator();
@@ -35,13 +36,14 @@ const Tab = createBottomTabNavigator();
 
 
 class App extends PureComponent{
-
+    userPreferences = new UserPreferences();
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
     peerCorroborators = new Mesh();
     imageManager = new NativeImageStorage();
     blockchainManager = new NativeAtraManager();
+
     logManager = new LogManager(
         this.storage,
         this.identity,
@@ -61,7 +63,9 @@ class App extends PureComponent{
                 tabBarIcon:(({focused,color,size})=>
                   <Icon name={"settings"} color={color} size={size} />
                 )}}>
-                {props => <SettingsView {...props} /> }
+                {props => <SettingsView {...props}
+                    blockchainInterface={this.blockchainManager}
+                /> }
                 </Tab.Screen>
 
                 <Tab.Screen name="Camera" options={{
@@ -84,6 +88,7 @@ class App extends PureComponent{
               {props => <LogbookView {...props}
                             logSource={this.storage}
                             imageSource={this.imageManager}
+                            logbookStateKeeper={this.userPreferences}
                         />
               }
               </Tab.Screen>

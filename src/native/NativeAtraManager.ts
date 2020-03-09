@@ -5,6 +5,37 @@ import {Log} from "../interfaces/Data";
 import { AtraApiKey } from 'react-native-dotenv'
 export class NativeAtraManager implements BlockchainInterface {
 
+    getNewLogbook():Promise<string>{
+
+        const newTable={
+            "name":"ReactNativeCorro" + makeID(5),
+            "columns":[
+                {
+                    "name":"Hash",
+                    "type":"text",
+                },
+                {
+                    "name":"StorageLocation",
+                    "type":"text",
+                },
+                {
+                    "name":"SignedMetadata",
+                    "type":"text",
+                }
+
+            ]
+        };
+        const jsonBody = JSON.stringify(newTable);
+        console.log("new table json: ", jsonBody);
+        return postAtraData("https://api.atra.io/prod/v1/dtables",jsonBody).then(
+            (json)=>{
+                console.log("new table json:", json);
+                return json.id;
+            }).catch((err)=>{
+            console.log("atra error to new table post: ", err);
+            return err;
+        })
+    }
 
     formTransaction(log: Log): string {
         const jsonTransaction = {
@@ -19,7 +50,7 @@ export class NativeAtraManager implements BlockchainInterface {
     }
 
     publishTransaction(txn: string): Promise<string> {
-        return postData("https://api.atra.io/prod/v1/dtables/records",txn).then(
+        return postAtraData("https://api.atra.io/prod/v1/dtables/records",txn).then(
             (json)=>{
                 return json.recordId;
             }).catch((err)=>{
@@ -30,8 +61,18 @@ export class NativeAtraManager implements BlockchainInterface {
 
 }
 
+function makeID(length:number):string {
+    let result           = '';
+    let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
 // Example POST method implementation:
-async function postData(url = '', data = {}) {
+async function postAtraData(url = '', data = {}) {
     // Default options are marked with *
     // console.log(AtraApiKey);
     const response = await fetch(url, {
