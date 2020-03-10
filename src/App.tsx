@@ -11,10 +11,8 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import React, { PureComponent} from 'react';
 'use strict';
-
 import NativeEncryptedLogbookStorage from "./native/NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
 
 // @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -29,11 +27,14 @@ import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import NativeDID from "./native/NativeDID";
 import UserPreferences from "./utils/UserPreferences";
+import DetailsScreen from "./components/LogDetailScreen";
+import {createStackNavigator } from '@react-navigation/stack';
+import {DetailsScreenName} from "./utils/Constants";
 
 declare var global: {HermesInternal: null | {}};
+
 const Tab = createBottomTabNavigator();
-
-
+const Stack = createStackNavigator();
 
 class App extends PureComponent{
     userPreferences = new UserPreferences();
@@ -56,7 +57,7 @@ class App extends PureComponent{
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Camera" tabBarOptions={{ activeTintColor: '#0077FF', }}>
+          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0077FF', }}>
 
                 <Tab.Screen name="Settings" options={{
                 tabBarLabel: 'Settings',
@@ -85,11 +86,19 @@ class App extends PureComponent{
                           <Icon name={"file-cabinet"} color={color} size={size} />
                   )
               }}>
-              {props => <LogbookView {...props}
-                            logSource={this.storage}
-                            imageSource={this.imageManager}
-                            logbookStateKeeper={this.userPreferences}
-                        />
+              {props =>
+                  <Stack.Navigator>
+                      <Stack.Screen name={"Logs"}>
+                          {(props:any) =>
+                              <LogbookView {...props}
+                                           logSource={this.storage}
+                                           imageSource={this.imageManager}
+                                           logbookStateKeeper={this.userPreferences}
+                              />
+                          }
+                      </Stack.Screen>
+                      <Stack.Screen name={DetailsScreenName} component={DetailsScreen} />
+                  </Stack.Navigator>
               }
               </Tab.Screen>
 

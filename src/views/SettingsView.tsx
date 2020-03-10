@@ -84,10 +84,11 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             leftIcon={<Icon name={"plus"} size={15} color={"blue"} />}
             titleStyle={{color: "black", fontWeight: 'bold'}}
             bottomDivider
-            onPress={event => {
+            onPress={ event =>
+            {
                 this.setState({refreshingLogs:true},
-                this.AddNewLogbook) }
-            }
+                this.AddNewLogbook)
+            }}
         />)
     }
 

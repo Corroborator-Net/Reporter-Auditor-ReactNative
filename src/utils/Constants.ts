@@ -8,3 +8,9 @@ export const defaultAtraTableId="93bc7f28-2a29-4489-9a0d-65cc7fee1b32";
 export const AndroidFileStorageLocation="file:///storage/emulated/0/Pictures/";
 //@ts-ignore
 export const waitMS = ms => new Promise(res => setTimeout(res, ms));
+
+export const LocalOnly = "orange";
+export const CorroboratedUnsynced = 'yellow';
+export const Synced = 'lightgreen';
+
+export const DetailsScreenName = "Details";
