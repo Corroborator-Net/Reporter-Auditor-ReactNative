@@ -1,6 +1,5 @@
 import {RNCamera} from "react-native-camera";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
-// @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
@@ -163,8 +162,8 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             data.deviceOrientation,
             data.base64,
             data.exif);
-        console.log(data.exif);
-        console.log("length of base64 img: " + data.base64.length);
+        // console.log(data.exif);
+        // console.log("length of base64 img: " + data.base64.length);
         // add image to image database
         this.props.imageDatabase.add(imageData);
         // tell log manager we produced data to hash

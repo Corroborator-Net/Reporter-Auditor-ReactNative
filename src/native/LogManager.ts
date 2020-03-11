@@ -8,13 +8,12 @@ import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
-import {AndroidFileStorageLocation, waitMS} from "../utils/Constants";
+import {AndroidFileStorageLocation, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import NativeUserPreferences from "./NativeUserPreferences";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
 
-    // static CurrentAddress = "";
     syncingLogs = false;
     currentlyConnectedToNetwork = false;
 
@@ -25,7 +24,6 @@ export class LogManager implements HashReceiver{
                 public blockchainManager:BlockchainInterface,
                 ) {
         hashManager.hashReceivers.push(this);
-        // LogManager.CurrentAddress = didModule.getMyAddress();
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
         this.checkForUnsyncedLogs();
     }
@@ -76,7 +74,10 @@ export class LogManager implements HashReceiver{
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog);
-        if (this.currentlyConnectedToNetwork){
+
+
+        if (this.currentlyConnectedToNetwork &&
+            NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.AutoSyncLogs)[0] == "true" ) {
             this.uploadToBlockchain(newLog);
         }
     }

@@ -16,7 +16,15 @@ export default class SettingsView extends React.PureComponent<Props, State> {
 
     state={
         syncChecked:false
-    }
+    };
+
+    componentDidMount = async ()  => {
+        let shouldSync =
+            (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.AutoSyncLogs))[0];
+        this.setState({
+            syncChecked:(shouldSync == "true")
+        })
+    };
 
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
@@ -30,7 +38,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
                 {this.InputCell("Name","account")}
                 {this.InputCell("Department","account-group")}
                 {this.InputCell(UserPreferenceKeys.ImageDescription,"pencil")}
-                {this.InputToggle("Sync Data with Department","sync", "sync-off")}
+                {this.InputToggle(UserPreferenceKeys.AutoSyncLogs,"sync", "sync-off")}
             </ScrollView>
         )
     }
@@ -44,7 +52,10 @@ export default class SettingsView extends React.PureComponent<Props, State> {
                 checkedIcon={<Icon name={iconOn} size={15} color={"black"} />}
                 uncheckedIcon={<Icon name={iconOff} size={15} color={"red"} />}
                 checked={this.state.syncChecked}
-                onPress={() => this.setState({syncChecked: !this.state.syncChecked})}
+                onPress={() => {
+                    this.onChangeUserSettings(label,String(!this.state.syncChecked));
+                    this.setState({syncChecked: !this.state.syncChecked});
+                }}
             />
              </View>
         );

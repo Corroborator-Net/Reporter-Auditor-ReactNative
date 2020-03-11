@@ -13,17 +13,19 @@ import Realm from "realm";
 export default class NativeUserPreferences implements LogbookStateKeeper, UserPreferenceStorage{
     static get Instance(): NativeUserPreferences {
         if (NativeUserPreferences._Instance){
-            console.log("already an instance");
             return NativeUserPreferences._Instance;
         }
         const DefaultsDict:{[key:string]:string[]}={
             [UserPreferenceKeys.Logbooks]:[],
             [UserPreferenceKeys.CurrentLogbook]:[],
-            [UserPreferenceKeys.ImageDescription]:["none"]
+            [UserPreferenceKeys.ImageDescription]:["none"],
+            [UserPreferenceKeys.AutoSyncLogs]:["false"]
+
         };
 
         this._Instance = new NativeUserPreferences();
         this._Instance.CurrentUserSettings = DefaultsDict;
+        this._Instance.LoadAllSavedPreferences();
         return this._Instance;
     }
 
@@ -31,6 +33,12 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
 
     private CurrentUserSettings: {[key:string]:string[]} = {};
 
+
+    private async LoadAllSavedPreferences(){
+        for(const key of Object.keys(this.CurrentUserSettings)){
+            this.CurrentUserSettings[key] = await this.GetPersistentUserPreferenceOrDefault(key);
+        }
+    }
 
     public GetCachedUserPreference(key:string):string[]{
         return this.CurrentUserSettings[key];
@@ -78,7 +86,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
                 const currentUserPreferenceList:string[] =
                     Object.setPrototypeOf(Array.from(currentUserPreference)[0],UserPreference).Preference;
                 this.CurrentUserSettings[key] = currentUserPreferenceList;
-                console.log("current user setting: ", currentUserPreferenceList);
+                console.log("got current user setting: ", currentUserPreferenceList);
                 return currentUserPreferenceList;
 
             })
