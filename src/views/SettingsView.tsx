@@ -8,16 +8,16 @@ import {UserPreferenceKeys} from "../utils/Constants";
 
 
 type State={
-    checked:boolean
-    showLogbooks:boolean
-    logbooks:string[]
-    refreshingLogs:boolean
+    syncChecked:boolean
 }
 type Props={
 }
 
 export default class SettingsView extends React.PureComponent<Props, State> {
 
+    state={
+        syncChecked:false
+    }
 
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
@@ -41,11 +41,11 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <View style={styles.input}>
             <CheckBox
                 center
-                title={label + " - " + this.state.checked}
+                title={label + " - " + this.state.syncChecked}
                 checkedIcon={<Icon name={iconOn} size={15} color={"black"} />}
                 uncheckedIcon={<Icon name={iconOff} size={15} color={"red"} />}
-                checked={this.state.checked}
-                onPress={() => this.setState({checked: !this.state.checked})}
+                checked={this.state.syncChecked}
+                onPress={() => this.setState({syncChecked: !this.state.syncChecked})}
             />
              </View>
         );
@@ -71,13 +71,6 @@ export default class SettingsView extends React.PureComponent<Props, State> {
         );
     }
 
-    //
-    // determineIsActive(label:string){
-    //     if ( UserPreferences.UserSettingOrDefault(UserPreferences.CurrentLogbookKey)[0] == label){
-    //         return "green"
-    //     }
-    //     return "black"
-    // }
 }
 
 
