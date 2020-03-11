@@ -1,5 +1,10 @@
 import {HashData, Log} from "./Data";
 
+export interface UserPreferenceStorage {
+    SetNewPersistentUserPreference(key:string, value:string[]):void;
+    GetPersistentUserPreferenceOrDefault(key:string):Promise<string[]>;
+}
+
 export interface LogbookDatabase {
     // BOTH
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;

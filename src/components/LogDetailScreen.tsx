@@ -1,5 +1,5 @@
 import React from "react";
-import {View, Text, StyleSheet} from "react-native";
+import {View, Text, StyleSheet, Image, ScrollView} from "react-native";
 import {Log} from "../interfaces/Data";
 
 
@@ -28,19 +28,22 @@ export default class DetailsScreen extends React.Component<Props> {
         const logString = this.props.route.params.log;
         const log:Log = JSON.parse(logString);
         return (
-            <View style={styles.detailsList}>
+            <ScrollView>
+                <Image
+                    source={{uri: this.props.route.params.src}}
+                    resizeMethod={"resize"}
+                    style={styles.image}
+                />
                 {this.parseAndDisplayMetadata(log)}
-            </View>
+            </ScrollView>
         );
     }
 }
 
 const styles = StyleSheet.create({
-detailsList:{
-    flex: 1,
-    alignItems: 'flex-start',
-
-
-},
-
+    image:{
+        resizeMode:"contain",
+        height: 300,
+        margin:10
+    },
 });

@@ -7,9 +7,9 @@ import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
-import LogbookView from "../views/LogbookView";
-import {AndroidFileStorageLocation, defaultAtraTableId, waitMS} from "../utils/Constants";
-import UserPreferences from "../utils/UserPreferences";
+import SingleLogbookView from "../views/SingleLogbookView";
+import {AndroidFileStorageLocation, waitMS} from "../utils/Constants";
+import NativeUserPreferences from "./NativeUserPreferences";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -65,8 +65,9 @@ export class LogManager implements HashReceiver{
             "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
         );
 
+        // TODO: show user alert if no logbook selected!!
         const newLog = new Log(
-            UserPreferences.GetCurrentLogbook(),
+            NativeUserPreferences.Instance.CurrentLogbook,
             hashData.storageLocation,
             "",
             hashData.multiHash,
@@ -104,7 +105,7 @@ export class LogManager implements HashReceiver{
                 await this.uploadToBlockchain(logToUpdate);
             }
             console.log("finished syncing");
-            LogbookView.ShouldUpdateLogbookView = true;
+            SingleLogbookView.ShouldUpdateLogbookView = true;
         }
         this.syncingLogs = false;
     }

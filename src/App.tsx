@@ -13,12 +13,9 @@ import React, { PureComponent} from 'react';
 'use strict';
 import NativeEncryptedLogbookStorage from "./native/NativeEncryptedLogbookStorage";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-// @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
 import NativeCameraView from "./views/NativeCameraView";
-import LogbookView from "./views/LogbookView";
+import SingleLogbookView from "./views/SingleLogbookView";
 import SettingsView from "./views/SettingsView";
 import HashManager from "./native/HashManager";
 import {LogManager} from "./native/LogManager";
@@ -26,10 +23,11 @@ import {Mesh} from "./interfaces/PeerCorroborators";
 import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import NativeDID from "./native/NativeDID";
-import UserPreferences from "./utils/UserPreferences";
+import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailsScreen from "./components/LogDetailScreen";
 import {createStackNavigator } from '@react-navigation/stack';
 import {DetailsScreenName} from "./utils/Constants";
+import MultiLogbookView from "./views/MultiLogbookView";
 
 declare var global: {HermesInternal: null | {}};
 
@@ -37,7 +35,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 class App extends PureComponent{
-    userPreferences = new UserPreferences();
+    userPreferences = NativeUserPreferences.Instance;
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
@@ -65,7 +63,6 @@ class App extends PureComponent{
                   <Icon name={"settings"} color={color} size={size} />
                 )}}>
                 {props => <SettingsView {...props}
-                    blockchainInterface={this.blockchainManager}
                 /> }
                 </Tab.Screen>
 
@@ -88,12 +85,22 @@ class App extends PureComponent{
               }}>
               {props =>
                   <Stack.Navigator>
+                      <Stack.Screen name={"Logbooks"}>
+                          {(props:any) =>
+                              <MultiLogbookView {...props}
+                                                 imageSource={this.imageManager}
+                                                 logbookStateKeeper={this.userPreferences}
+                                                 blockchainInterface={this.blockchainManager}
+                                                 userPreferences={this.userPreferences}
+                              />
+                          }
+                      </Stack.Screen>
                       <Stack.Screen name={"Logs"}>
                           {(props:any) =>
-                              <LogbookView {...props}
-                                           logSource={this.storage}
-                                           imageSource={this.imageManager}
-                                           logbookStateKeeper={this.userPreferences}
+                              <SingleLogbookView {...props}
+                                                 logSource={this.storage}
+                                                 imageSource={this.imageManager}
+                                                 logbookStateKeeper={this.userPreferences}
                               />
                           }
                       </Stack.Screen>

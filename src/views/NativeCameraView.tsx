@@ -14,8 +14,8 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
-import {waitMS} from "../utils/Constants";
-import UserPreferences from "../utils/UserPreferences";
+import {UserPreferenceKeys, waitMS} from "../utils/Constants";
+import NativeUserPreferences from "../native/NativeUserPreferences";
 
 type State={
     camera:any
@@ -144,7 +144,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         exifAppend[LogMetadata.GPSSpeed] = this.state.position.coords.speed;
         exifAppend[LogMetadata.GPSAcc] = this.state.position.coords.accuracy;
         exifAppend[LogMetadata.ImageDescription] =
-            UserPreferences.UserSettingOrDefault(UserPreferences.CustomImageDescriptionLabel)[0];
+            NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0];
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
         const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
@@ -155,7 +155,8 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
 
         await CameraRoll.saveToCameraRoll(data.uri, "photo");
         // construct image record here
-        const imageData = new ImageRecord(new Date(),
+        const imageData = new ImageRecord(
+            new Date(),
             data.uri,
             "",
             data.pictureOrientation,

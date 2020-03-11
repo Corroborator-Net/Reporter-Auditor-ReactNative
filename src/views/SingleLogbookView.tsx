@@ -2,7 +2,7 @@ import React from "react";
 import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogbookStateKeeper} from "../interfaces/Data";
-import LogRowCell from "../components/LogRowCell";
+import LogCell from "../components/LogCell";
 
 type State={
     logs:Log[]
@@ -17,10 +17,7 @@ type LogbookViewProps={
     navigation: any;
 }
 
-export default class LogbookView extends React.PureComponent<LogbookViewProps, State> {
-
-    // TODO AUDTIOR: The user should input this
-
+export default class SingleLogbookView extends React.PureComponent<LogbookViewProps, State> {
 
     static LogsPerPage = 20;
     static ShouldUpdateLogbookView = false;
@@ -55,9 +52,9 @@ export default class LogbookView extends React.PureComponent<LogbookViewProps, S
             console.log("refreshing!");
             this.getLogs();
         }
-        else if(LogbookView.ShouldUpdateLogbookView){
+        else if(SingleLogbookView.ShouldUpdateLogbookView){
             this.getLogs();
-            LogbookView.ShouldUpdateLogbookView = false;
+            SingleLogbookView.ShouldUpdateLogbookView = false;
         }
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
     };
@@ -70,7 +67,7 @@ export default class LogbookView extends React.PureComponent<LogbookViewProps, S
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let newMap = new Map<string, string>();
         let logs = await this.props.logSource.getRecordsFor(currentLogbook);
-        const photos = await this.props.imageSource.getImages(logs.slice(0,LogbookView.LogsPerPage));
+        const photos = await this.props.imageSource.getImages(logs.slice(0,SingleLogbookView.LogsPerPage));
         photos.map((photo:string,i:number) => {
             newMap.set(logs[i].dataMultiHash, photo);
         });
@@ -94,7 +91,7 @@ export default class LogbookView extends React.PureComponent<LogbookViewProps, S
                         data={this.state.logs}
                         contentContainerStyle={styles.list}
                         renderItem={({item}) =>
-                            <LogRowCell
+                            <LogCell
                                 src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
                                 // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
                                 // don't pass an image

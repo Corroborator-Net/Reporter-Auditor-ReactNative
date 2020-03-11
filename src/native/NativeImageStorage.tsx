@@ -1,9 +1,8 @@
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord, Log, RealmSchemas} from "../interfaces/Data";
+import {ImageRecord, ImageRecordSchema, Log, RealmSchemas} from "../interfaces/Data";
 import Realm from "realm";
 import {StorageSchemaVersion} from "../utils/Constants"
-const schemaName = 'ImageHash';
 
 // NATIVE IMPLEMENTATION
 export default class NativeImageStorage implements ImageDatabase{
@@ -13,7 +12,7 @@ export default class NativeImageStorage implements ImageDatabase{
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    const newHash = realm.create(schemaName,
+                    const newHash = realm.create(ImageRecordSchema.name,
                         picture
                     );
                     // console.log(newHash.multiHash);
@@ -32,7 +31,7 @@ export default class NativeImageStorage implements ImageDatabase{
             .then(realm => {
                 let imageRecords = new Array<string>();
                 for (const log of logs){
-                    const imageRecord= realm.objects(schemaName).filtered("storageLocation = '" + log.storageLocation +"'")[0];
+                    const imageRecord= realm.objects(ImageRecordSchema.name).filtered("storageLocation = '" + log.storageLocation +"'")[0];
                     // const imageRecord= realm.objects(schemaName).filtered("multiHash = '" + log.dataMultiHash +"'")[0];
                     //@ts-ignore
                     imageRecords.push(imageRecord.thumbnail);

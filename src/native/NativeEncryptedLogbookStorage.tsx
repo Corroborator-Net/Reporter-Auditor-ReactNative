@@ -1,11 +1,10 @@
 import Realm from 'realm';
 import {LocalLogbookDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log, RealmSchemas} from "../interfaces/Data";
+import {Log, LogSchema, RealmSchemas} from "../interfaces/Data";
 import { StorageSchemaVersion} from "../utils/Constants"
 
 // TODO: encrypt each record
 export default class NativeEncryptedLogbookStorage implements LogbookDatabase, LocalLogbookDatabase{
-    static schemaName = 'LogSchema';
     public type = "local";
 
 
@@ -15,7 +14,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
                 // Create Realm objects and write to local storage
                 realm.write(() => {
                     const newLog = realm.create(
-                        NativeEncryptedLogbookStorage.schemaName,
+                        LogSchema.name,
                         log,
                         Realm.UpdateMode.Modified
                     );
@@ -30,7 +29,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Query Realm for all unsynced image hashes
-                return realm.objects(NativeEncryptedLogbookStorage.schemaName).
+                return realm.objects(LogSchema.name).
                 filtered('transactionHash = ""');
             })
             .catch((error) => {
@@ -46,7 +45,8 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
 
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    const newLog = realm.create(NativeEncryptedLogbookStorage.schemaName,
+                    const newLog = realm.create(
+                        LogSchema.name,
                         newRecord
                     );
 
@@ -65,7 +65,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Query Realm for all unsynced image hashes
-                const logs = realm.objects(NativeEncryptedLogbookStorage.schemaName).
+                const logs = realm.objects(LogSchema.name).
                 filtered("logBookAddress = '"+ logBookAddress +"'");
                           //+ " SORT(name DESC)");
 

@@ -1,27 +1,19 @@
 import {Log, LogMetadata} from "../interfaces/Data";
 import React from "react";
-import {ListItem, Text} from "react-native-elements";
+import {ListItem} from "react-native-elements";
 import {Image, StyleSheet} from "react-native";
 import {CorroboratedUnsynced, DetailsScreenName, LocalOnly, Synced} from "../utils/Constants";
 
 type CellProps = {
     src: string;
     item:Log;
-    // callback:CallableFunction
     navigation:any;
 }
 
 type CellState = {
-    expanded:boolean
 }
 
-export default class LogRowCell extends React.Component<CellProps,CellState> {
-
-    state = {
-        expanded:false,
-    };
-
-
+export default class LogCell extends React.Component<CellProps,CellState> {
 
 
     render(){
@@ -35,9 +27,9 @@ export default class LogRowCell extends React.Component<CellProps,CellState> {
                     width:150,
                 }}
                 onPress={(event => {this.props.navigation.navigate
-                (DetailsScreenName, {log:JSON.stringify(this.props.item)})})
+                (DetailsScreenName, {log:JSON.stringify(this.props.item), src:this.props.src})})
                 }
-                // TODO: must decrypt here
+                // TODO: must decrypt these
                 title={ this.props.src.length < 50 ?
                     JSON.parse(this.props.item.signedMetadataJson)["0"][LogMetadata.DateTag]
                     :
@@ -54,21 +46,21 @@ export default class LogRowCell extends React.Component<CellProps,CellState> {
                             style={styles.image}
                         />
                 }
-
             />
         );
     }
 
-    // Hash status:
-    // green: the log has a transaction hash, its data is on chain
-    // yellow: the metadata has multiple signatures
-    // orange: the log exists, has been saved
 
-    // Data status:
-    // solo icon: the data is local only
-    // network icon: the data is backed up
 
     getColorForLog(log:Log):string{
+        // Hash status:
+        // green: the log has a transaction hash, its data is on chain
+        // yellow: the metadata has multiple signatures
+        // orange: the log exists, has been saved
+
+        // Data status:
+        // solo icon: the data is local only
+        // network icon: the data is backed up
         if (log.transactionHash.length<=1){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
             const trueLog = Object.setPrototypeOf(log, Log.prototype);
@@ -96,8 +88,6 @@ const styles = StyleSheet.create({
     },
 
     image:{
-        // justifyContent: 'center',
-        // alignSelf:"center",
         width: 105,
         height: 100,
     },

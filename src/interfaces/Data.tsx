@@ -2,12 +2,9 @@ import {FirstReporterPublicKey} from "../utils/Constants";
 
 export interface LogbookStateKeeper {
     CurrentLogbook:string
-    // LogbookChanged:Callback
+    AvailableLogbooks:string[]
 }
-// TODO:
-// export interface Callback {
-//     callbackExecuted(): void;
-// }
+
 
 export class LogMetadata {
     // custom metadata tags:
@@ -58,6 +55,8 @@ export class LogMetadata {
 
 
 }
+
+
 export class Log {
 
     // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
@@ -111,9 +110,11 @@ export class Log {
     }
 }
 
+
 export interface HashReceiver{
     OnHashProduced(hashData:HashData):void;
 }
+
 
 export const LogSchema = {
     name:"LogSchema",
@@ -127,11 +128,13 @@ export const LogSchema = {
     }
 };
 
+
 export interface HashData{
     multiHash:string;
     storageLocation:string;
     metadata:string;
 }
+
 
 export class ImageRecord implements HashData {
     public metadata:string;
@@ -147,6 +150,7 @@ export class ImageRecord implements HashData {
     }
 }
 
+
 export const ImageRecordSchema = {
     name: 'ImageHash',
     primaryKey: 'storageLocation',
@@ -160,6 +164,21 @@ export const ImageRecordSchema = {
         metadata:'string',
     }
 };
+export class UserPreference{
+    constructor(public UserPublicKey:string,
+                public Key:string,
+                public Preference:string[] ) {
+    }
+}
 
+export const UserPreferenceSchema ={
+    name:"UserPreference",
+    primaryKey:"Key",
+    properties:{
+        UserPublicKey:"string",
+        Key:"string",
+        Preference:"string[]",
+    }
+}
 
-export const RealmSchemas = [LogSchema, ImageRecordSchema];
+export const RealmSchemas = [LogSchema, ImageRecordSchema, UserPreferenceSchema];
