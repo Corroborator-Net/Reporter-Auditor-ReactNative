@@ -1,6 +1,5 @@
 import React from "react";
 import { Input, Text, CheckBox } from 'react-native-elements';
-// @ts-ignore
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScrollView, StyleSheet, View} from "react-native";
 import NativeUserPreferences from "../native/NativeUserPreferences";
@@ -30,7 +29,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <Text h4 style={styles.title}> Settings </Text>
                 {this.InputCell("Name","account")}
                 {this.InputCell("Department","account-group")}
-                {this.InputCell(UserPreferenceKeys.ImageDescription,"folder-multiple-image")}
+                {this.InputCell(UserPreferenceKeys.ImageDescription,"pencil")}
                 {this.InputToggle("Sync Data with Department","sync", "sync-off")}
             </ScrollView>
         )
@@ -41,7 +40,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <View style={styles.input}>
             <CheckBox
                 center
-                title={label + " - " + this.state.syncChecked}
+                title={label + " : " + (this.state.syncChecked? "On":"Off ")}
                 checkedIcon={<Icon name={iconOn} size={15} color={"black"} />}
                 uncheckedIcon={<Icon name={iconOff} size={15} color={"red"} />}
                 checked={this.state.syncChecked}
