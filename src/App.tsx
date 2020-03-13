@@ -49,6 +49,7 @@ class App extends PureComponent{
         this.peerCorroborators,
         this.hashManager,
         this.blockchainManager,
+        this.userPreferences,
     );
 
   render() {

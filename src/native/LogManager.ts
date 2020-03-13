@@ -2,14 +2,13 @@ import {LocalLogbookDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log, LogMetadata} from "../interfaces/Data";
+import {HashData, HashReceiver, Log, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
-import {AndroidFileStorageLocation, UserPreferenceKeys, waitMS} from "../utils/Constants";
-import NativeUserPreferences from "./NativeUserPreferences";
+import {AndroidFileStorageLocation, waitMS} from "../utils/Constants";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -22,6 +21,7 @@ export class LogManager implements HashReceiver{
                 public peers:PeerCorroborators,
                 public hashManager:HashManager,
                 public blockchainManager:BlockchainInterface,
+                public logbookStateKeeper:LogbookStateKeeper,
                 ) {
         hashManager.hashReceivers.push(this);
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
@@ -65,7 +65,7 @@ export class LogManager implements HashReceiver{
 
         // TODO: show user alert if no logbook selected!!
         const newLog = new Log(
-            NativeUserPreferences.Instance.CurrentLogbook,
+            this.logbookStateKeeper.CurrentLogbook,
             hashData.storageLocation,
             "",
             hashData.multiHash,

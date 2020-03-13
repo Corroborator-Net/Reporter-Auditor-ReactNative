@@ -1,13 +1,14 @@
 import {Log, LogMetadata} from "../interfaces/Data";
 import React from "react";
 import {ListItem} from "react-native-elements";
-import {Image, StyleSheet} from "react-native";
+import {Image, ImageBackground, StyleSheet} from "react-native";
 import {CorroboratedUnsynced, DetailsScreenName, LocalOnly, Synced} from "../utils/Constants";
 
 type CellProps = {
     src: string;
     item:Log;
     navigation:any;
+    onSelectedOverlay:HTMLElement
 }
 
 type CellState = {
@@ -26,9 +27,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
                     maxHeight:150,
                     width:150,
                 }}
-                onPress={(event => {this.props.navigation.navigate
-                (DetailsScreenName, {log:JSON.stringify(this.props.item), src:this.props.src})})
-                }
+                // onPress={this.props.onPress}
                 // TODO: must decrypt these
                 title={ this.props.src.length < 50 ?
                     JSON.parse(this.props.item.signedMetadataJson)["0"][LogMetadata.DateTag]
@@ -40,11 +39,13 @@ export default class LogCell extends React.Component<CellProps,CellState> {
                     this.props.src.length < 50 ?
                         <></>
                         :
-                        <Image
+                        <ImageBackground
                             source={{uri: this.props.src}}
                             resizeMethod={"resize"}
                             style={styles.image}
-                        />
+                        >
+                            {this.props.onSelectedOverlay}
+                        </ImageBackground>
                 }
             />
         );
