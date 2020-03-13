@@ -6,7 +6,7 @@ import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
 import {ImageRecord,  LogMetadata} from "../interfaces/Data";
-import {LogManager} from "../native/LogManager";
+import {LogManager} from "../shared/LogManager";
 import {
     requestCameraPermission,
     requestLocationPermission,
