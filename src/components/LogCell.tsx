@@ -62,7 +62,8 @@ export default class LogCell extends React.Component<CellProps,CellState> {
         // Data status:
         // solo icon: the data is local only
         // network icon: the data is backed up
-        if (log.transactionHash.length<=1){
+        // still unpublished? check for corroborations
+        if (log.originalTransactionHash.length<=1){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
             const trueLog = Object.setPrototypeOf(log, Log.prototype);
             const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();

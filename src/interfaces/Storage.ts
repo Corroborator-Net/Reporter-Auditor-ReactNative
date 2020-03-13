@@ -6,14 +6,11 @@ export interface UserPreferenceStorage {
 }
 
 export interface LogbookDatabase {
-    // BOTH
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
-
-    // Reporter only
     addNewRecord(newRecord:Log) : Promise<string>;
 }
 
-// REPORTER ONLY, essentially an extension of the above
+// REPORTER ONLY for now.... but it seems like anyone should be able to update records as long as they have keys
 export interface LocalLogbookDatabase extends LogbookDatabase{
     type:string;
     getUnsyncedRecords():Promise<Log[]>;

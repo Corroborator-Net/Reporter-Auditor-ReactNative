@@ -12,9 +12,9 @@ export default class DetailsScreen extends React.Component<Props> {
     parseAndDisplayMetadata(log:Log):Array<Element>{
         let details = new Array<Element>();
         const obj = JSON.parse(log.signedMetadataJson)["0"];
-        // add extra bits from the log
-        obj["Hash"]=log.dataMultiHash;
-        obj["Transaction Hash"]=log.transactionHash;
+        // TODO: just add all log data except the signedMetadataJson
+        // obj["Hash"]=log.dataMultiHash;
+        // obj["Transaction Hash"]=log.transactionHash;
 
         Object.keys(obj).
         forEach(function eachKey(key)

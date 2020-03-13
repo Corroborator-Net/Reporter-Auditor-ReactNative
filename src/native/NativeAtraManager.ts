@@ -19,6 +19,10 @@ export class NativeAtraManager implements BlockchainInterface {
                     "type":"text",
                 },
                 {
+                    "name":"OriginalTransactionHash",
+                    "type":"text",
+                },
+                {
                     "name":"SignedMetadata",
                     "type":"text",
                 }
@@ -43,6 +47,7 @@ export class NativeAtraManager implements BlockchainInterface {
             "record":[
                 log.dataMultiHash,
                 log.storageLocation.slice(0,6),
+                log.originalTransactionHash==""?"null":log.originalTransactionHash,
                 log.signedMetadataJson,
             ]
         };

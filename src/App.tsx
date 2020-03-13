@@ -74,7 +74,6 @@ class App extends PureComponent{
                   )}}>
                   {props => <NativeCameraView {...props}
                                               imageDatabase={this.imageManager}
-                                              logManager={this.logManager}
                   /> }
                 </Tab.Screen>
 

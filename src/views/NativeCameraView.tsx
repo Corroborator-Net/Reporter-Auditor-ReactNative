@@ -22,7 +22,6 @@ type State={
 }
 type Props={
     imageDatabase:ImageDatabase
-    logManager:LogManager
 }
 
 export default class NativeCameraView extends React.PureComponent<Props, State> {
@@ -167,7 +166,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         // add image to image database
         this.props.imageDatabase.add(imageData);
         // tell log manager we produced data to hash
-        this.props.logManager.OnDataProduced(imageData)
+        LogManager.Instance.OnDataProduced(imageData)
 
     }
 }

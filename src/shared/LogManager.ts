@@ -15,7 +15,7 @@ export class LogManager implements HashReceiver{
 
     syncingLogs = false;
     currentlyConnectedToNetwork = false;
-
+    public static Instance:LogManager;
     constructor(public logStorage:LogbookDatabase,
                 public didModule:Identity,
                 public peers:PeerCorroborators,
@@ -23,9 +23,22 @@ export class LogManager implements HashReceiver{
                 public blockchainManager:BlockchainInterface,
                 public logbookStateKeeper:LogbookStateKeeper,
                 ) {
+        if (LogManager.Instance){
+            console.log("ERROR: multiple instances of log manager created")
+        }
+        LogManager.Instance= this;
         hashManager.hashReceivers.push(this);
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
         this.checkForUnsyncedLogs();
+    }
+
+
+    public async UploadEditedLogs(logHashes:string[]): Promise<string>{
+
+        //TODO: when the user edits a log's metadata, the logcells creates a new log referencing the originalTransactionHash
+        // now here we'll go and set the database (general user preferences?) to include all of those logs in an update queue
+        // then we'll check for unsynced logs
+
     }
 
 
@@ -68,6 +81,7 @@ export class LogManager implements HashReceiver{
             this.logbookStateKeeper.CurrentLogbook,
             hashData.storageLocation,
             "",
+            "",
             hashData.multiHash,
             logMetadata.JsonData()
         );
@@ -76,7 +90,6 @@ export class LogManager implements HashReceiver{
         this.logStorage.addNewRecord(newLog);
 
         if (this.currentlyConnectedToNetwork ){
-            //&& NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.AutoSyncLogs)[0] == "true" ) {
             this.uploadToBlockchain(newLog);
         }
     }
@@ -94,7 +107,7 @@ export class LogManager implements HashReceiver{
             return;
         }
         this.syncingLogs = true;
-        if (isLocal(this.logStorage)) {
+        if (hasLocalStorage(this.logStorage)) {
             // TODO: the returned logs have their string arrays set to indexed objects. Weird!
             const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
             console.log("unsynced logs is of length: " + unsyncedLogs.length);
@@ -131,8 +144,11 @@ export class LogManager implements HashReceiver{
         this.blockchainManager.publishTransaction(txn).then(
             (recordID)=>{
                 console.log("TODO: use record id to get transaction hash? keeping as record id for now: ", recordID);
-                if (isLocal(this.logStorage)){
-                    log.transactionHash = recordID;
+                if (hasLocalStorage(this.logStorage)){
+                    if (log.originalTransactionHash==""){
+                        log.originalTransactionHash = recordID;
+                    }
+                    log.currentTransactionHash = recordID;
                     this.logStorage.updateRecord(log);
                 }
             }).catch((err)=>{
@@ -142,6 +158,6 @@ export class LogManager implements HashReceiver{
     }
 }
 
-function isLocal(arg: any): arg is LocalLogbookDatabase {
+export function hasLocalStorage(arg: any): arg is LocalLogbookDatabase {
     return arg && arg.type && typeof(arg.type) == 'string';
 }

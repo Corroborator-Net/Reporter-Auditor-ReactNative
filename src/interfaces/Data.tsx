@@ -62,11 +62,11 @@ export class Log {
     // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
     constructor(public logBookAddress:string,
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
-                public transactionHash:string,
+                public originalTransactionHash:string,
+                public currentTransactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
                 public signedMetadataJson:string, // this will include signed Hashes
     ) {
-       // console.log("signed metadata: ", this.signedMetadataJson);
     }
 
 
@@ -122,7 +122,8 @@ export const LogSchema = {
     properties:{
         logBookAddress:'string',
         storageLocation:'string',
-        transactionHash:'string',
+        originalTransactionHash:'string',
+        currentTransactionHash:'string',
         dataMultiHash:'string',
         signedMetadataJson:'string',
     }

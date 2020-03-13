@@ -14,6 +14,7 @@ import {Button} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
 import {DetailsScreenName} from "../utils/Constants";
+import {hasLocalStorage, LogManager} from "../shared/LogManager";
 
 type State={
     logs:Log[]
@@ -71,6 +72,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.setState({
             selectingMultiple:false
         })
+
+        // TODO: show user we're uploading the logs!
+        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogHashes)
     }
 
 
