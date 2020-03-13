@@ -19,7 +19,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
             [UserPreferenceKeys.Logbooks]:[],
             [UserPreferenceKeys.CurrentLogbook]:[],
             [UserPreferenceKeys.ImageDescription]:["none"],
-            [UserPreferenceKeys.AutoSyncLogs]:["false"]
+            // [UserPreferenceKeys.AutoSyncLogs]:["false"]
 
         };
 

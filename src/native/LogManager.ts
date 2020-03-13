@@ -75,9 +75,8 @@ export class LogManager implements HashReceiver{
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog);
 
-
-        if (this.currentlyConnectedToNetwork &&
-            NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.AutoSyncLogs)[0] == "true" ) {
+        if (this.currentlyConnectedToNetwork ){
+            //&& NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.AutoSyncLogs)[0] == "true" ) {
             this.uploadToBlockchain(newLog);
         }
     }

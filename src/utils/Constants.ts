@@ -20,5 +20,5 @@ export const UserPreferenceKeys={
     ImageDescription:"Image Description",
     CurrentLogbook:"Current Logbook",
     Logbooks:"Logbooks",
-    AutoSyncLogs:"Auto Sync Logs"
+    // AutoSyncLogs:"Auto Sync Logs"
 };

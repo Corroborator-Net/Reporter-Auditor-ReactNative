@@ -18,13 +18,13 @@ export default class SettingsView extends React.PureComponent<Props, State> {
         syncChecked:false
     };
 
-    componentDidMount = async ()  => {
-        let shouldSync =
-            (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.AutoSyncLogs))[0];
-        this.setState({
-            syncChecked:(shouldSync == "true")
-        })
-    };
+    // componentDidMount = async ()  => {
+    //     let shouldSync =
+    //         (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.AutoSyncLogs))[0];
+    //     this.setState({
+    //         syncChecked:(shouldSync == "true")
+    //     })
+    // };
 
     onChangeUserSettings(key:string, value:string){
         console.log(key,value);
@@ -38,7 +38,7 @@ export default class SettingsView extends React.PureComponent<Props, State> {
                 {this.InputCell("Name","account")}
                 {this.InputCell("Department","account-group")}
                 {this.InputCell(UserPreferenceKeys.ImageDescription,"pencil")}
-                {this.InputToggle(UserPreferenceKeys.AutoSyncLogs,"sync", "sync-off")}
+                {/*{this.InputToggle(UserPreferenceKeys.AutoSyncLogs,"sync", "sync-off")}*/}
             </ScrollView>
         )
     }
