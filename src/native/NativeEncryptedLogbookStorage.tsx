@@ -1,14 +1,14 @@
 import Realm from 'realm';
-import {LocalLogbookDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogSchema, RealmSchemas} from "../interfaces/Data";
 import { StorageSchemaVersion} from "../utils/Constants"
 
 // TODO: encrypt each record
-export default class NativeEncryptedLogbookStorage implements LogbookDatabase, LocalLogbookDatabase{
+export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
     public type = "local";
 
-
-    updateRecord(log: Log): void {
+    // TODO: limit the arguments to the transaction hash and the multihash
+    updateLogWithTransactionHash(log: Log): void {
         Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Create Realm objects and write to local storage
@@ -24,6 +24,21 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase, L
                 console.log(error);
             });
     }
+
+
+    getUnsyncedEditedRecords(): Promise<Log[]> {
+        return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
+            .then(realm => {
+                // Query Realm for all unsynced image hashes
+                return realm.objects(LogSchema.name).
+                filtered('currentTransactionHash = ""');
+            })
+            .catch((error) => {
+                console.log(error);
+                return error // read error
+            });
+    }
+
 
     getUnsyncedRecords(): Promise<Log[]> {
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})

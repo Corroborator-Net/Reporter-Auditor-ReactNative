@@ -1,4 +1,4 @@
-import {LocalLogbookDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
@@ -8,7 +8,7 @@ import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
-import {AndroidFileStorageLocation, waitMS} from "../utils/Constants";
+import { waitMS} from "../utils/Constants";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -38,6 +38,7 @@ export class LogManager implements HashReceiver{
         //TODO: when the user edits a log's metadata, the logcells creates a new log referencing the originalTransactionHash
         // now here we'll go and set the database (general user preferences?) to include all of those logs in an update queue
         // then we'll check for unsynced logs
+        const editedLogsToUpload = await this.logStorage.getUnsyncedEditedRecords();
 
     }
 
@@ -46,11 +47,8 @@ export class LogManager implements HashReceiver{
     public async OnDataProduced(hashData:HashData) : Promise<void> {
         await waitMS(100);
         // console.log("Waited before reading to produce hash");
-        // TODO: assumption: assumes all metadata includes a LogMetadata.FileName key
-        const fileName =  JSON.parse(hashData.metadata)[LogMetadata.FileName];
-        const fullPath = AndroidFileStorageLocation +fileName;
 
-        RNFetchBlob.fs.readFile(fullPath, 'base64')
+        RNFetchBlob.fs.readFile(hashData.storageLocation, 'base64')
             .then((data) => {
                 // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
                 // console.log("log manager reading file at: " + fullPath);
@@ -107,19 +105,19 @@ export class LogManager implements HashReceiver{
             return;
         }
         this.syncingLogs = true;
-        if (hasLocalStorage(this.logStorage)) {
-            // TODO: the returned logs have their string arrays set to indexed objects. Weird!
-            const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
-            console.log("unsynced logs is of length: " + unsyncedLogs.length);
-            for (const log of unsyncedLogs){
-                const trueLog = Object.setPrototypeOf(log, Log.prototype);
-                const logToUpdate = {...trueLog};
-                console.log("previously unsynced log to update: ", logToUpdate);
-                await this.uploadToBlockchain(logToUpdate);
-            }
-            console.log("finished syncing");
-            SingleLogbookView.ShouldUpdateLogbookView = true;
+
+        // TODO: the returned logs have their string arrays set to indexed objects. Weird!
+        const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
+        console.log("unsynced logs is of length: " + unsyncedLogs.length);
+        for (const log of unsyncedLogs){
+            const trueLog = Object.setPrototypeOf(log, Log.prototype);
+            const logToUpdate = {...trueLog};
+            console.log("previously unsynced log to update: ", logToUpdate);
+            await this.uploadToBlockchain(logToUpdate);
         }
+        console.log("finished syncing");
+        SingleLogbookView.ShouldUpdateLogbookView = true;
+
         this.syncingLogs = false;
     }
 
@@ -144,13 +142,12 @@ export class LogManager implements HashReceiver{
         this.blockchainManager.publishTransaction(txn).then(
             (recordID)=>{
                 console.log("TODO: use record id to get transaction hash? keeping as record id for now: ", recordID);
-                if (hasLocalStorage(this.logStorage)){
-                    if (log.originalTransactionHash==""){
-                        log.originalTransactionHash = recordID;
-                    }
-                    log.currentTransactionHash = recordID;
-                    this.logStorage.updateRecord(log);
+                if (log.originalTransactionHash==""){
+                    log.originalTransactionHash = recordID;
                 }
+                log.currentTransactionHash = recordID;
+                this.logStorage.updateLogWithTransactionHash(log);
+
             }).catch((err)=>{
             console.log("error on submit to blockchain:", err);
             return null;
@@ -158,6 +155,7 @@ export class LogManager implements HashReceiver{
     }
 }
 
-export function hasLocalStorage(arg: any): arg is LocalLogbookDatabase {
-    return arg && arg.type && typeof(arg.type) == 'string';
-}
+//
+// export function hasLocalStorage(arg: any): arg is LocalLogbookDatabase {
+//     return arg && arg.type && typeof(arg.type) == 'string';
+// }

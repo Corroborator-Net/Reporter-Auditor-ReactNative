@@ -1,5 +1,5 @@
 import React from "react";
-import {View, Text, StyleSheet, Image, ScrollView} from "react-native";
+import {Text, StyleSheet, Image, ScrollView} from "react-native";
 import {Log} from "../interfaces/Data";
 
 
@@ -7,11 +7,17 @@ type Props={
     route:any
 }
 
-export default class DetailsScreen extends React.Component<Props> {
+export default class LogDetailsView extends React.Component<Props> {
 
     parseAndDisplayMetadata(log:Log):Array<Element>{
         let details = new Array<Element>();
         const obj = JSON.parse(log.signedMetadataJson)["0"];
+        for (const key of Object.keys(log)){
+            if (key != "signedMetadataJson"){
+                //@ts-ignore
+                obj[key] = log[key];
+            }
+        }
         // TODO: just add all log data except the signedMetadataJson
         // obj["Hash"]=log.dataMultiHash;
         // obj["Transaction Hash"]=log.transactionHash;

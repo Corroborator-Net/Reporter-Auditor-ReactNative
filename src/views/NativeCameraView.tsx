@@ -13,7 +13,7 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
-import {UserPreferenceKeys, waitMS} from "../utils/Constants";
+import {GetFullPath, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import NativeUserPreferences from "../native/NativeUserPreferences";
 
 type State={
@@ -149,13 +149,15 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         const data = await this.state.camera.takePictureAsync(options);
 
         // Add filename to metadata
-        data.exif[LogMetadata.FileName] = data.uri.slice(data.uri.lastIndexOf("/") + 1,data.uri.length);
+        const fileName = data.uri.slice(data.uri.lastIndexOf("/") + 1,data.uri.length);
+        data.exif[LogMetadata.FileName] = fileName;
+        const fullPath = GetFullPath(fileName);
 
         await CameraRoll.saveToCameraRoll(data.uri, "photo");
         // construct image record here
         const imageData = new ImageRecord(
             new Date(),
-            data.uri,
+            fullPath,
             "",
             data.pictureOrientation,
             data.deviceOrientation,

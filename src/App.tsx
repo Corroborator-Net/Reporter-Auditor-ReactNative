@@ -24,7 +24,7 @@ import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import NativeDID from "./native/NativeDID";
 import NativeUserPreferences from "./native/NativeUserPreferences";
-import DetailsScreen from "./components/LogDetailScreen";
+import LogDetailsView from "./views/LogDetailScreen";
 import {createStackNavigator } from '@react-navigation/stack';
 import {DetailsScreenName} from "./utils/Constants";
 import MultiLogbookView from "./views/MultiLogbookView";
@@ -104,7 +104,7 @@ class App extends PureComponent{
                               />
                           }
                       </Stack.Screen>
-                      <Stack.Screen name={DetailsScreenName} component={DetailsScreen} />
+                      <Stack.Screen name={DetailsScreenName} component={LogDetailsView} />
                   </Stack.Navigator>
               }
               </Tab.Screen>

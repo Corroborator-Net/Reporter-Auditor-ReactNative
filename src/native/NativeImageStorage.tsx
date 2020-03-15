@@ -27,6 +27,7 @@ export default class NativeImageStorage implements ImageDatabase{
 
 
     public async getImages(logs:Log[]):Promise<string[]> {
+
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 let imageRecords = new Array<string>();
