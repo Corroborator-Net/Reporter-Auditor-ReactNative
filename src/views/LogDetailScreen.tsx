@@ -11,16 +11,15 @@ export default class LogDetailsView extends React.Component<Props> {
 
     parseAndDisplayMetadata(log:Log):Array<Element>{
         let details = new Array<Element>();
+        // TODO: decrypt the signed metadata
         const obj = JSON.parse(log.signedMetadataJson)["0"];
+        // we add all metadata except the above parsed stuff which we'll have to decrypt!
         for (const key of Object.keys(log)){
             if (key != "signedMetadataJson"){
                 //@ts-ignore
                 obj[key] = log[key];
             }
         }
-        // TODO: just add all log data except the signedMetadataJson
-        // obj["Hash"]=log.dataMultiHash;
-        // obj["Transaction Hash"]=log.transactionHash;
 
         Object.keys(obj).
         forEach(function eachKey(key)

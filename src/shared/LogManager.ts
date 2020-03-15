@@ -9,11 +9,13 @@ import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
 import { waitMS} from "../utils/Constants";
+import _ from "lodash";
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
 
-    syncingLogs = false;
+    logsToSync:Log[] = [];
+    syncingLogs=false;
     currentlyConnectedToNetwork = false;
     public static Instance:LogManager;
     constructor(public logStorage:LogbookDatabase,
@@ -33,12 +35,13 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async UploadEditedLogs(logHashes:string[]): Promise<string>{
+    public async UploadEditedLogs(logHashes:string[]){
 
         //TODO: when the user edits a log's metadata, the logcells creates a new log referencing the originalTransactionHash
         // now here we'll go and set the database (general user preferences?) to include all of those logs in an update queue
         // then we'll check for unsynced logs
         const editedLogsToUpload = await this.logStorage.getUnsyncedEditedRecords();
+        this.syncLogs(editedLogsToUpload);
 
     }
 
@@ -100,25 +103,36 @@ export class LogManager implements HashReceiver{
     }
 
 
-    async checkForUnsyncedLogs(){
+    async syncLogs(logs:Log[]){
+        for (const log of logs){
+            if (!_.includes(this.logsToSync, log)){
+                this.logsToSync.push(log);
+            }
+        }
         if (this.syncingLogs){
             return;
         }
         this.syncingLogs = true;
 
-        // TODO: the returned logs have their string arrays set to indexed objects. Weird!
-        const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
-        console.log("unsynced logs is of length: " + unsyncedLogs.length);
-        for (const log of unsyncedLogs){
+        while(this.logsToSync.length>0){
+            const log  = this.logsToSync.pop();
             const trueLog = Object.setPrototypeOf(log, Log.prototype);
             const logToUpdate = {...trueLog};
-            console.log("previously unsynced log to update: ", logToUpdate);
+            console.log("syncing log: ", logToUpdate);
             await this.uploadToBlockchain(logToUpdate);
         }
-        console.log("finished syncing");
+
         SingleLogbookView.ShouldUpdateLogbookView = true;
 
         this.syncingLogs = false;
+
+    }
+
+    async checkForUnsyncedLogs(){
+        // TODO: the returned logs have their string arrays set to indexed objects. Weird!
+        const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
+        this.syncLogs(unsyncedLogs);
+
     }
 
 
