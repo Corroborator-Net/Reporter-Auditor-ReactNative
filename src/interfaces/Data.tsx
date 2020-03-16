@@ -154,7 +154,7 @@ export class ImageRecord implements HashData {
 
 export const ImageRecordSchema = {
     name: 'ImageHash',
-    primaryKey: 'multiHash',
+    primaryKey: 'storageLocation',
     properties: {
         timestamp:  'date',
         multiHash: 'string',
