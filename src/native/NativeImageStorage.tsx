@@ -37,6 +37,7 @@ export default class NativeImageStorage implements ImageDatabase{
 
                     // const imageRecord= realm.objects(schemaName).filtered("multiHash = '" + log.dataMultiHash +"'")[0];
                     if (imageRecord){
+                        //@ts-ignore
                         imageRecords.push(imageRecord.base64Data);
                     }
 
@@ -51,13 +52,13 @@ export default class NativeImageStorage implements ImageDatabase{
     }
 
 
-    public async getImageRecordsViaRootHash(log:Log):Promise<ImageRecord[]> {
+    public async getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]> {
 
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // TODO: order by their time stamp
                 const imageRecords = realm.objects(ImageRecordSchema.name).
-                filtered("rootMultiHash = '" + log.dataMultiHash +"' SORT(timestamp ASC)");
+                filtered("rootMultiHash = '" + hash +"' SORT(timestamp ASC)");
 
                 return imageRecords;
 

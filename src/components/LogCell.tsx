@@ -1,12 +1,12 @@
-import {Log, LogMetadata} from "../interfaces/Data";
+import {LogbookEntry, LogMetadata} from "../interfaces/Data";
 import React from "react";
 import {ListItem} from "react-native-elements";
-import {Image, ImageBackground, StyleSheet} from "react-native";
-import {CorroboratedUnsynced, DetailLogViewName, LocalOnly, Synced} from "../utils/Constants";
+import {ImageBackground, StyleSheet} from "react-native";
+import {CorroboratedUnsynced, LocalOnly, Synced} from "../utils/Constants";
 
 type CellProps = {
     src: string;
-    item:Log;
+    item:LogbookEntry;
     navigation:any;
     onSelectedOverlay:HTMLElement
 }
@@ -30,7 +30,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
                 // onPress={this.props.onPress}
                 // TODO: must decrypt these
                 title={ this.props.src.length < 50 ?
-                    JSON.parse(this.props.item.signedMetadataJson)["0"][LogMetadata.DateTag]
+                    JSON.parse(this.props.item.Log.signedMetadataJson)["0"][LogMetadata.DateTag]
                     :
                     ""
                 }
@@ -53,7 +53,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
 
 
 
-    getColorForLog(log:Log):string{
+    getColorForLog(log:LogbookEntry):string{
         // Hash status:
         // green: the log has a transaction hash, its data is on chain
         // yellow: the metadata has multiple signatures
@@ -63,10 +63,10 @@ export default class LogCell extends React.Component<CellProps,CellState> {
         // solo icon: the data is local only
         // network icon: the data is backed up
         // still unpublished? check for corroborations
-        if (log.rootTransactionHash.length<=1){
+        if (!log.IsImageRecordSynced()){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
-            const trueLog = Object.setPrototypeOf(log, Log.prototype);
-            const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();
+            // const trueLog = Object.setPrototypeOf(log.Log, Log.prototype);
+            const reporterToMetadataMap = log.Log.getTimestampsMappedToReporterKeys();
             if (reporterToMetadataMap.size<=1){
                 return LocalOnly;
             }

@@ -26,6 +26,10 @@ export const UserPreferenceKeys={
     // AutoSyncLogs:"Auto Sync Logs"
 };
 
+export function PrependJpegString(imageData:string):string{
+return `data:image/jpeg;base64,${imageData}`;
+}
+
 
 // TODO extend to ios
 export function GetPathToCameraRoll(fileName:string){

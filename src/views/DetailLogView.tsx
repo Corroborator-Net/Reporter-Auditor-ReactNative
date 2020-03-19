@@ -1,23 +1,26 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView} from "react-native";
-import {Log} from "../interfaces/Data";
+import {Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {PrependJpegString} from "../utils/Constants";
 
 
 type Props={
     route:any
+    logbookStateKeeper:LogbookStateKeeper
 }
 
 export default class DetailLogView extends React.Component<Props> {
 
-    parseAndDisplayMetadata(log:Log):Array<Element>{
+    parseAndDisplayMetadata(logbookEntry:LogbookEntry):Array<Element>{
         let details = new Array<Element>();
         // TODO: decrypt the signed metadata
-        const obj = JSON.parse(log.signedMetadataJson)["0"];
+        const obj = JSON.parse(logbookEntry.ImageRecord.metadata);
+
         // we add all metadata except the above parsed stuff which we'll have to decrypt!
-        for (const key of Object.keys(log)){
+        for (const key of Object.keys(logbookEntry.Log)){
             if (key != "signedMetadataJson"){
                 //@ts-ignore
-                obj[key] = log[key];
+                obj[key] = logbookEntry.Log[key];
             }
         }
 
@@ -30,12 +33,12 @@ export default class DetailLogView extends React.Component<Props> {
     }
 
     render() {
-        const logString = this.props.route.params.log;
-        const log:Log = JSON.parse(logString);
+
+        const log:LogbookEntry = this.props.logbookStateKeeper.CurrentSelectedLogs[0];
         return (
             <ScrollView>
                 <Image
-                    source={{uri: this.props.route.params.src}}
+                    source={{uri: PrependJpegString(log.ImageRecord.base64Data)}}
                     resizeMethod={"resize"}
                     style={styles.image}
                 />

@@ -7,20 +7,19 @@ import {
     TouchableOpacity, View
 } from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log, LogbookStateKeeper} from "../interfaces/Data";
+import {Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
 import {Button} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
-import {DetailLogViewName, EditLogsViewName} from "../utils/Constants";
+import {DetailLogViewName, EditLogsViewName, PrependJpegString} from "../utils/Constants";
 import { LogManager} from "../shared/LogManager";
 
 type State={
-    logs:Log[]
-    photos:Map<string, string>
+    logbookEntries:LogbookEntry[]
     refreshing:boolean
     selectingMultiple:boolean
-    currentlySelectedLogs:Log[]
+    currentlySelectedLogs:LogbookEntry[]
     rerenderSelectedCells:boolean
 }
 
@@ -40,11 +39,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
     FlatList:any=null;
     state={
-        logs:new Array<Log>(),
-        photos:new Map<string, string>(),
+        logbookEntries:new Array<LogbookEntry>(),
         refreshing:false,
         selectingMultiple:false,
-        currentlySelectedLogs:new Array<Log>(),
+        currentlySelectedLogs:new Array<LogbookEntry>(),
         rerenderSelectedCells:false
     };
 
@@ -78,7 +76,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         // clear the selection or not? Thinking not in case of user error/fat fingers
         if (this.state.currentlySelectedLogs.length==1){
             this.props.navigation.navigate(EditLogsViewName, {
-                src: this.state.photos.get(this.state.currentlySelectedLogs[0].dataMultiHash)
+                src: this.state.currentlySelectedLogs[0].ImageRecord.base64Data
             });
         }
         else{
@@ -96,7 +94,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogs);
         this.setState({
             selectingMultiple:false,
-            currentlySelectedLogs:new Array<Log>(),
+            currentlySelectedLogs:new Array<LogbookEntry>(),
             rerenderSelectedCells:!this.state.rerenderSelectedCells
         });
     }
@@ -110,7 +108,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 
     onScreenFocus = () => {
-        if (this.previousLogLength < this.state.logs.length ||
+        if (this.previousLogLength < this.state.logbookEntries.length ||
             (this.logbookChanged())
         ){
             console.log("refreshing!");
@@ -130,19 +128,26 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
         console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
-        let newMap = new Map<string, string>();
-        //TODO: organize logs into groups by their root transaction hash or create data structure to organize
-        // the logs and image records
-        let logs = await this.props.logSource.getRecordsFor(currentLogbook);
-        const photos = await this.props.imageSource.getImages(logs.slice(0,SingleLogbookView.LogsPerPage));
-        photos.map((photo:string,i:number) => {
-            newMap.set(logs[i].dataMultiHash, photo);
-        });
+        let allLogs = await this.props.logSource.getRecordsFor(currentLogbook);
+        console.log("total logs:",allLogs.length);
+
+        // we only want the ROOT logs
+        const rootLogs = allLogs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
+
+        let logbookEntries = new Array<LogbookEntry>();
+        for (const log of rootLogs){
+            // console.log("root txn hash:", log.rootTransactionHash);
+            // we'll have logs that are not root, therefore we won't get their records via hash
+            const records = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.dataMultiHash);
+            // console.log("records:",records.length);
+            const logbookEntry = new LogbookEntry(allLogs, records);
+            logbookEntries.push(logbookEntry);
+        }
+        // console.log("entries:",logbookEntries.length);
         this.setState({
-            logs:logs,
-            photos:newMap,
+            logbookEntries:logbookEntries,
         });
-        this.previousLogLength = logs.length;
+        this.previousLogLength = allLogs.length;
     }
 
 
@@ -155,7 +160,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                         initialNumToRender={8}
                         numColumns={2}
                         maxToRenderPerBatch={2}
-                        data={this.state.logs}
+                        data={this.state.logbookEntries}
                         contentContainerStyle={styles.list}
                         renderItem={({item}) =>
                             <TouchableOpacity
@@ -163,7 +168,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                 onLongPress={()=>{this.beginSelectingMultiple(item)}}
                             >
                             <LogCell
-                                src= {`data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
+                                src= {PrependJpegString(item.ImageRecord.base64Data)}
                                 // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
                                 // don't pass an image
                                 item={item}
@@ -189,7 +194,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                             />
                             </TouchableOpacity>
                         }
-                        keyExtractor={item => item.dataMultiHash}
+                        keyExtractor={item => item.Log.dataMultiHash}
                         refreshControl={
                             <RefreshControl
                                 refreshing={this.state.refreshing}
@@ -201,12 +206,12 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         );
     }
 
-    beginSelectingMultiple(log:Log){
+    beginSelectingMultiple(log:LogbookEntry){
         // const shouldSelectMultiple = ;
         this.setState({
             selectingMultiple:!this.state.selectingMultiple,
             rerenderSelectedCells:!this.state.rerenderSelectedCells,
-            currentlySelectedLogs:new Array<Log>(),
+            currentlySelectedLogs:new Array<LogbookEntry>(),
         },
             ()=>{
                 // if we're now selecting multiple logs, highlight the one we just pressed
@@ -215,14 +220,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             }})
     }
 
-    onSelectLog(log:Log){
+    onSelectLog(log:LogbookEntry){
         if (!this.state.selectingMultiple) {
-            this.props.navigation.navigate(
-                DetailLogViewName,
-                {
-                    log: JSON.stringify(log),
-                    src: this.state.photos.get(log.dataMultiHash),
-                });
+            this.props.logbookStateKeeper.CurrentSelectedLogs = [log]
+            this.props.navigation.navigate(DetailLogViewName);
             return
         }
 

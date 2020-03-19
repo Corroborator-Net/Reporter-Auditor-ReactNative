@@ -1,5 +1,5 @@
 import {
-    Log,
+    Log, LogbookEntry,
     LogbookStateKeeper,
     RealmSchemas,
     UserPreference,
@@ -101,7 +101,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
     // Logbook State Keeper methods:
     // ****************************
 
-    public CurrentSelectedLogs:Log[]=[];
+    public CurrentSelectedLogs:LogbookEntry[]=[];
 
     set CurrentLogbook(logbook){
         this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook] = [logbook];

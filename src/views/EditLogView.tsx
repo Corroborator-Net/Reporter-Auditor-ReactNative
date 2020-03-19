@@ -1,6 +1,6 @@
 import React from "react";
-import {StyleSheet, Image, ScrollView, View} from "react-native";
-import {ImageRecord, Log, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {StyleSheet, Image, ScrollView} from "react-native";
+import {ImageRecord, Log, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
 //@ts-ignore
@@ -50,7 +50,7 @@ export default class EditLogView extends React.Component<Props, State> {
         for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
 
             // I want image records with matching root hashes
-            const imageRecordsWithMatchingRootHashes = await this.props.imageDatabase.getImageRecordsViaRootHash(log);
+            const imageRecordsWithMatchingRootHashes = log.imageRecords;
             console.log("length:",imageRecordsWithMatchingRootHashes.length);
             console.log("first:", imageRecordsWithMatchingRootHashes[0].metadata);
             const mostRecentImageRecord = imageRecordsWithMatchingRootHashes[imageRecordsWithMatchingRootHashes.length - 1];
@@ -102,14 +102,14 @@ export default class EditLogView extends React.Component<Props, State> {
 
             const dirs = RNFetchBlob.fs.dirs;
             const temp = dirs.CacheDir;
-            const fileName = log.storageLocation.slice(log.storageLocation.lastIndexOf("/") + 1);
+            const fileName = log.RootLog.storageLocation.slice(log.Log.storageLocation.lastIndexOf("/") + 1);
             const newPath = temp + "/" + fileName.slice(0,fileName.length-4) + timestamp + ".jpg";
             console.log("new storage location:",newPath);
 
             const newImageRecord = new ImageRecord(
                 time,
                 newPath,
-                log.dataMultiHash,
+                log.RootLog.dataMultiHash,
                 newHash,
                 newBase64Data,
                 exif);
@@ -134,7 +134,7 @@ export default class EditLogView extends React.Component<Props, State> {
     }
 
 
-    parseAndDisplayMetadata(logs:Log[]):Array<Element>{
+    parseAndDisplayMetadata(logs:LogbookEntry[]):Array<Element>{
         let details = new Array<Element>();
 
         if (this.props.logbookStateKeeper.CurrentSelectedLogs.length<2){

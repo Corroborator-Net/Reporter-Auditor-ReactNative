@@ -17,7 +17,7 @@ export interface LogbookDatabase {
 export interface ImageDatabase {
     add(data:HashData): Promise<string>;
     getImages(logs:Log[]):Promise<string[]>;
-    getImageRecordsViaRootHash(log:Log):Promise<ImageRecord[]>;
+    getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]>;
     removeImageRecord(imageRecord:ImageRecord):Promise<string>;
     getUnLoggedEditedImages():Promise<ImageRecord[]>;
 

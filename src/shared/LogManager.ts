@@ -26,7 +26,6 @@ export class LogManager implements HashReceiver{
                 public hashManager:HashManager,
                 public blockchainManager:BlockchainInterface,
                 public logbookStateKeeper:LogbookStateKeeper,
-                public imageDatabase:ImageDatabase,
                 ) {
         if (LogManager.Instance){
             console.log("ERROR: multiple instances of log manager created")
@@ -39,11 +38,7 @@ export class LogManager implements HashReceiver{
 
 
     public async UploadEditedLogs(logbookEntries:LogbookEntry[]){
-        console.log("uploading edited logs:", logbookEntries);
-        // const allEditedRecords = await this.imageDatabase.getUnLoggedEditedImages();
-        // // pick out the ones the user has selected
-        // const editedRecordsToLog = _.filter(allEditedRecords,(editedRecord) =>
-        //     _.some(logs, (log)=> log.dataMultiHash == editedRecord.rootMultiHash));
+        console.log("uploading edited logs:", logbookEntries.length);
 
         let editedLogsToUpload = new Array<Log>();
         for (const entry of logbookEntries){
@@ -52,7 +47,7 @@ export class LogManager implements HashReceiver{
             const oldLog = entry.Log;
             console.log("edited record current hash:", record.currentMultiHash);
             console.log("edited record root hash:", record.rootMultiHash);
-            this.SaveToCameraRoll(record);
+            await this.SaveToCameraRoll(record);
             // const oldLog = logs.filter(matchingLog=>{return matchingLog.dataMultiHash === record.rootMultiHash;})[0];
             const newLog = new Log(
                 oldLog.logBookAddress,
@@ -66,20 +61,22 @@ export class LogManager implements HashReceiver{
         }
 
         this.syncLogs(editedLogsToUpload);
-
-
     }
 
 
     // TODO: how to implement?
     public async SaveToCameraRoll(hashableData:HashData) {
 
+        console.log(hashableData.storageLocation);
         // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
         // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
-        await RNFetchBlob.fs.createFile(hashableData.storageLocation,hashableData.base64Data,"base64");
-        await CameraRoll.saveToCameraRoll(hashableData.storageLocation, "photo");
-
-
+        RNFetchBlob.fs.createFile(
+            hashableData.storageLocation.slice("file://".length),
+            hashableData.base64Data,
+            "base64").then(async ()=>{
+            // await waitMS(10);
+            await CameraRoll.saveToCameraRoll(hashableData.storageLocation, "photo");
+        })
 
     }
 

@@ -1,20 +1,40 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
+import _ from "lodash";
 
 export interface LogbookStateKeeper {
     CurrentLogbook:string
     AvailableLogbooks:string[]
-    CurrentSelectedLogs:Log[]
+    CurrentSelectedLogs:LogbookEntry[]
 }
 
 export class LogbookEntry{
     constructor(public logs:Log[], public imageRecords:ImageRecord[]) {
-        // TODO: sort the logs and image records
+        // get all logs that have a hash that matches our image records' hashes
+        this.logs = _.filter(logs,(log) =>
+            _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
+        // TODO: sort logs
+        console.log("my logs:", this.logs.length);
+        console.log("my records:", this.imageRecords.length);
+
+        this.imageRecords = imageRecords;
+    }
+    // TODO test the order of this
+    get RootLog():Log{
+        return this.logs[this.logs.length-1]
     }
     get Log():Log{
         return this.logs[0]
     }
     get ImageRecord():ImageRecord{
-        return this.imageRecords[0];
+        return this.imageRecords[this.imageRecords.length-1];
+    }
+
+    public IsImageRecordSynced():boolean{
+        // console.log("is synced?", this.Log, "record:", this.ImageRecord.currentMultiHash);
+        // if they match then the image record has been logged
+        return true;
+        // return this.Log.dataMultiHash == this.ImageRecord.currentMultiHash &&
+        //     this.Log.currentTransactionHash!= "";
     }
 }
 
@@ -160,6 +180,9 @@ export class ImageRecord implements HashData {
                  exif:any,
     ) {
         this.metadata = JSON.stringify(exif);
+        if (!storageLocation.startsWith("file://")){
+            this.storageLocation = "file://" + storageLocation;
+        }
     }
 }
 

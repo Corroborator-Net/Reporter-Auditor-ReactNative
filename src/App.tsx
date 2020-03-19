@@ -51,7 +51,6 @@ class App extends PureComponent{
         this.hashManager,
         this.blockchainManager,
         this.userPreferences,
-        this.imageStorage,
     );
 
   render() {
@@ -106,7 +105,13 @@ class App extends PureComponent{
                               />
                           }
                       </Stack.Screen>
-                      <Stack.Screen name={DetailLogViewName} component={DetailLogView} />
+                      <Stack.Screen name={DetailLogViewName} >
+                          {(props:any) =>
+                              <DetailLogView {...props}
+                                           logbookStateKeeper={this.userPreferences}
+                              />
+                          }
+                      </Stack.Screen>
                       <Stack.Screen name={EditLogsViewName} >
                           {(props:any) =>
                               <EditLogView {...props}
