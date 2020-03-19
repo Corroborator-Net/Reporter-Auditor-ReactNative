@@ -1,4 +1,4 @@
-import {LogbookEntry, LogMetadata} from "../interfaces/Data";
+import {Log, LogbookEntry, LogMetadata} from "../interfaces/Data";
 import React from "react";
 import {ListItem} from "react-native-elements";
 import {ImageBackground, StyleSheet} from "react-native";
@@ -63,10 +63,11 @@ export default class LogCell extends React.Component<CellProps,CellState> {
         // solo icon: the data is local only
         // network icon: the data is backed up
         // still unpublished? check for corroborations
+
         if (!log.IsImageRecordSynced()){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
-            // const trueLog = Object.setPrototypeOf(log.Log, Log.prototype);
-            const reporterToMetadataMap = log.Log.getTimestampsMappedToReporterKeys();
+            const trueLog = Object.setPrototypeOf(log.Log, Log.prototype);
+            const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();
             if (reporterToMetadataMap.size<=1){
                 return LocalOnly;
             }

@@ -12,7 +12,7 @@ import LogCell from "../components/LogCell";
 import {Button} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
-import {DetailLogViewName, EditLogsViewName, PrependJpegString} from "../utils/Constants";
+import {DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
 import { LogManager} from "../shared/LogManager";
 
 type State={
@@ -21,6 +21,7 @@ type State={
     selectingMultiple:boolean
     currentlySelectedLogs:LogbookEntry[]
     rerenderSelectedCells:boolean
+    currentPage:number
 }
 
 type LogbookViewProps={
@@ -43,7 +44,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         refreshing:false,
         selectingMultiple:false,
         currentlySelectedLogs:new Array<LogbookEntry>(),
-        rerenderSelectedCells:false
+        rerenderSelectedCells:false,
+        currentPage:0
     };
 
 
@@ -87,16 +89,25 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     }
 
 
-    resyncSelectedLogs(){
+    async resyncSelectedLogs(){
         console.log("resync!");
 
-        // TODO: show user we're uploading the logs!
-        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogs);
         this.setState({
             selectingMultiple:false,
             currentlySelectedLogs:new Array<LogbookEntry>(),
-            rerenderSelectedCells:!this.state.rerenderSelectedCells
+            refreshing:true,
         });
+        // TODO: show user we're uploading the logs!
+        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogs).then(async ()=>{
+           while (LogManager.Instance.syncingLogs){
+               await waitMS(50);
+           }
+            this.setState({
+                rerenderSelectedCells:!this.state.rerenderSelectedCells,
+                refreshing:false,
+            });
+        });
+
     }
 
 
@@ -109,8 +120,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
     onScreenFocus = () => {
         if (this.previousLogLength < this.state.logbookEntries.length ||
-            (this.logbookChanged())
+            (this.logbookChanged() && !this.state.refreshing)
         ){
+            console.log(this.previousLogLength < this.state.logbookEntries.length);
+            console.log((this.logbookChanged() && !this.state.refreshing));
             console.log("refreshing!");
             this.getLogs();
         }
@@ -118,36 +131,40 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             this.getLogs();
             SingleLogbookView.ShouldUpdateLogbookView = false;
         }
-        this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
     };
 
     //TODO: Shouldn't we be showing the image record's meta data anyways?
     // So they can see the extra goodies in the JPEG. So let's load the image metadata!
     // TODO: implement pages or infinite scroll
     async getLogs(){
+        this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
+        this.setState({
+            refreshing:true
+        });
+
         const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
         console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let allLogs = await this.props.logSource.getRecordsFor(currentLogbook);
-        console.log("total logs:",allLogs.length);
+
 
         // we only want the ROOT logs
-        const rootLogs = allLogs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
-
+        const rootLogs = (allLogs.filter(log=>log.rootTransactionHash == log.currentTransactionHash)).
+        slice(this.state.currentPage, SingleLogbookView.LogsPerPage);
         let logbookEntries = new Array<LogbookEntry>();
+
         for (const log of rootLogs){
-            // console.log("root txn hash:", log.rootTransactionHash);
-            // we'll have logs that are not root, therefore we won't get their records via hash
+            // Get all records with the same root hash
             const records = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.dataMultiHash);
-            // console.log("records:",records.length);
-            const logbookEntry = new LogbookEntry(allLogs, records);
+            const logbookEntry = new LogbookEntry(log, allLogs, records);
             logbookEntries.push(logbookEntry);
         }
         // console.log("entries:",logbookEntries.length);
         this.setState({
             logbookEntries:logbookEntries,
+            refreshing:false
         });
-        this.previousLogLength = allLogs.length;
+        this.previousLogLength = logbookEntries.length;
     }
 
 

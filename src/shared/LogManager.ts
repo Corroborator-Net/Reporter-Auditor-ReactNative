@@ -28,7 +28,7 @@ export class LogManager implements HashReceiver{
                 public logbookStateKeeper:LogbookStateKeeper,
                 ) {
         if (LogManager.Instance){
-            console.log("ERROR: multiple instances of log manager created")
+            console.log("ERROR: multiple instances of log manager created");
         }
         LogManager.Instance= this;
         hashManager.hashReceivers.push(this);
@@ -37,7 +37,7 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async UploadEditedLogs(logbookEntries:LogbookEntry[]){
+    public async UploadEditedLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
         console.log("uploading edited logs:", logbookEntries.length);
 
         let editedLogsToUpload = new Array<Log>();
@@ -48,7 +48,6 @@ export class LogManager implements HashReceiver{
             console.log("edited record current hash:", record.currentMultiHash);
             console.log("edited record root hash:", record.rootMultiHash);
             await this.SaveToCameraRoll(record);
-            // const oldLog = logs.filter(matchingLog=>{return matchingLog.dataMultiHash === record.rootMultiHash;})[0];
             const newLog = new Log(
                 oldLog.logBookAddress,
                 record.storageLocation,
@@ -61,6 +60,7 @@ export class LogManager implements HashReceiver{
         }
 
         this.syncLogs(editedLogsToUpload);
+        return this.syncingLogs;
     }
 
 
@@ -165,7 +165,6 @@ export class LogManager implements HashReceiver{
         SingleLogbookView.ShouldUpdateLogbookView = true;
 
         this.syncingLogs = false;
-
     }
 
     async checkForUnsyncedLogs(){
