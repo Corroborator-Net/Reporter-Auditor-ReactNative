@@ -2,7 +2,7 @@ import {Log, LogMetadata} from "../interfaces/Data";
 import React from "react";
 import {ListItem} from "react-native-elements";
 import {Image, ImageBackground, StyleSheet} from "react-native";
-import {CorroboratedUnsynced, DetailsScreenName, LocalOnly, Synced} from "../utils/Constants";
+import {CorroboratedUnsynced, DetailLogViewName, LocalOnly, Synced} from "../utils/Constants";
 
 type CellProps = {
     src: string;
@@ -63,7 +63,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
         // solo icon: the data is local only
         // network icon: the data is backed up
         // still unpublished? check for corroborations
-        if (log.originalTransactionHash.length<=1){
+        if (log.rootTransactionHash.length<=1){
             console.log("log has no transaction hash, checking for other signatures from corroborators");
             const trueLog = Object.setPrototypeOf(log, Log.prototype);
             const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();

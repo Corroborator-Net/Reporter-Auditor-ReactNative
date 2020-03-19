@@ -13,7 +13,7 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
-import {GetFullPath, UserPreferenceKeys, waitMS} from "../utils/Constants";
+import {GetPathToCameraRoll, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import NativeUserPreferences from "../native/NativeUserPreferences";
 
 type State={
@@ -135,23 +135,25 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             return;
         }
 
-        const exifAppend: { [name: string]: any } = {};
-        exifAppend[LogMetadata.GPSLat] = this.state.position.coords.latitude;
-        exifAppend[LogMetadata.GPSLong] = this.state.position.coords.longitude;
-        exifAppend[LogMetadata.GPSAlt] = this.state.position.coords.altitude;
-        exifAppend[LogMetadata.GPSSpeed] = this.state.position.coords.speed;
-        exifAppend[LogMetadata.GPSAcc] = this.state.position.coords.accuracy;
-        exifAppend[LogMetadata.ImageDescription] =
-            NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0];
+        const exifAppend: { [name: string]: any } = {
+            [LogMetadata.GPSLat]:this.state.position.coords.latitude,
+            [LogMetadata.GPSLong]: this.state.position.coords.longitude,
+            [LogMetadata.GPSAlt] : this.state.position.coords.altitude,
+            [LogMetadata.GPSSpeed] : this.state.position.coords.speed,
+            [LogMetadata.GPSAcc] :this.state.position.coords.accuracy,
+            [LogMetadata.ImageDescription] :
+                NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0],
+        };
+
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
         const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
         const data = await this.state.camera.takePictureAsync(options);
 
         // Add filename to metadata
-        const fileName = data.uri.slice(data.uri.lastIndexOf("/") + 1,data.uri.length);
+        const fileName = data.uri.slice(data.uri.lastIndexOf("/") + 1);
         data.exif[LogMetadata.FileName] = fileName;
-        const fullPath = GetFullPath(fileName);
+        const fullPath = GetPathToCameraRoll(fileName);
 
         await CameraRoll.saveToCameraRoll(data.uri, "photo");
         // construct image record here
@@ -159,16 +161,20 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             new Date(),
             fullPath,
             "",
-            data.pictureOrientation,
-            data.deviceOrientation,
-            data.base64,
+            "",
+            "",
             data.exif);
-        // console.log(data.exif);
-        // console.log("length of base64 img: " + data.base64.length);
-        // add image to image database
-        this.props.imageDatabase.add(imageData);
-        // tell log manager we produced data to hash
-        LogManager.Instance.OnDataProduced(imageData)
+
+
+        // Log manager fills the base64 data for us TODO: let's store a thumbnail, not the entire image
+        LogManager.Instance.LoadFileToGetBase64AndHash(imageData).then(data=>{
+            imageData.base64Data = data[0];
+            imageData.currentMultiHash = data[1];
+            imageData.rootMultiHash = data[1];
+            // console.log("imagedata's hash:", imageData.currentMultiHash);
+            this.props.imageDatabase.add(imageData);
+            LogManager.Instance.OnHashProduced(imageData);
+        });
 
     }
 }

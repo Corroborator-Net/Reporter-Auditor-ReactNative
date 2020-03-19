@@ -1,4 +1,4 @@
-import {HashData, Log} from "./Data";
+import {HashData, ImageRecord, Log} from "./Data";
 
 export interface UserPreferenceStorage {
     SetNewPersistentUserPreference(key:string, value:string[]):void;
@@ -9,7 +9,7 @@ export interface LogbookDatabase {
     getRecordsFor(logBookAddress:string) : Promise<Log[]>;
     addNewRecord(newRecord:Log) : Promise<string>;
     getUnsyncedRecords():Promise<Log[]>;
-    getUnsyncedEditedRecords():Promise<Log[]>;
+
     updateLogWithTransactionHash(log:Log):void;
 }
 
@@ -17,6 +17,10 @@ export interface LogbookDatabase {
 export interface ImageDatabase {
     add(data:HashData): Promise<string>;
     getImages(logs:Log[]):Promise<string[]>;
+    getImageRecordsViaRootHash(log:Log):Promise<ImageRecord[]>;
+    removeImageRecord(imageRecord:ImageRecord):Promise<string>;
+    getUnLoggedEditedImages():Promise<ImageRecord[]>;
+
 }
 
 

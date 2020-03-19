@@ -14,8 +14,10 @@ export const LocalOnly = "orange";
 export const CorroboratedUnsynced = 'yellow';
 export const Synced = 'lightgreen';
 
-export const DetailsScreenName = "Details";
-export const LogsScreenName = "Logs";
+export const DetailLogViewName = "Details";
+export const LogsViewName = "Logs";
+export const EditLogsViewName = "EditLogs";
+
 
 export const UserPreferenceKeys={
     ImageDescription:"Image Description",
@@ -26,7 +28,7 @@ export const UserPreferenceKeys={
 
 
 // TODO extend to ios
-export function GetFullPath(fileName:string){
+export function GetPathToCameraRoll(fileName:string){
     const AndroidFileStorageLocation="file:///storage/emulated/0/Pictures/";
     if (Platform.OS == 'ios'){
         console.log("ERROR, IOS FULL PATH NOT YET TESTED")

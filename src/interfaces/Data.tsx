@@ -3,6 +3,19 @@ import {FirstReporterPublicKey} from "../utils/Constants";
 export interface LogbookStateKeeper {
     CurrentLogbook:string
     AvailableLogbooks:string[]
+    CurrentSelectedLogs:Log[]
+}
+
+export class LogbookEntry{
+    constructor(public logs:Log[], public imageRecords:ImageRecord[]) {
+        // TODO: sort the logs and image records
+    }
+    get Log():Log{
+        return this.logs[0]
+    }
+    get ImageRecord():ImageRecord{
+        return this.imageRecords[0];
+    }
 }
 
 
@@ -56,13 +69,12 @@ export class LogMetadata {
 
 }
 
-
 export class Log {
 
     // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
     constructor(public logBookAddress:string,
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
-                public originalTransactionHash:string,
+                public rootTransactionHash:string,
                 public currentTransactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
                 public signedMetadataJson:string, // this will include signed Hashes
@@ -120,9 +132,9 @@ export const LogSchema = {
     name:"LogSchema",
     primaryKey: 'dataMultiHash',
     properties:{
-        logBookAddress:'string',
+        logBookAddress: {type:'string', indexed:true},
         storageLocation:'string',
-        originalTransactionHash:'string',
+        rootTransactionHash:'string',
         currentTransactionHash:'string',
         dataMultiHash:'string',
         signedMetadataJson:'string',
@@ -131,20 +143,20 @@ export const LogSchema = {
 
 
 export interface HashData{
-    multiHash:string;
+    currentMultiHash:string;
     storageLocation:string;
     metadata:string;
+    base64Data:string;
 }
 
-
+// TODO: storing the entire image in the base64 property is too inefficient
 export class ImageRecord implements HashData {
     public metadata:string;
     constructor( public timestamp:Date,
                  public storageLocation:string,
-                 public multiHash:string,
-                 public pictureOrientation: number,
-                 public deviceOrientation: number,
-                 public thumbnail:string,
+                 public rootMultiHash:string,
+                 public currentMultiHash:string,
+                 public base64Data:string,
                  exif:any,
     ) {
         this.metadata = JSON.stringify(exif);
@@ -154,14 +166,13 @@ export class ImageRecord implements HashData {
 
 export const ImageRecordSchema = {
     name: 'ImageHash',
-    primaryKey: 'storageLocation',
+    primaryKey: 'currentMultiHash',
     properties: {
         timestamp:  'date',
-        multiHash: 'string',
+        currentMultiHash: 'string',
+        rootMultiHash: {type:'string', indexed:true},
         storageLocation:'string',
-        pictureOrientation:'int',
-        deviceOrientation:'int',
-        thumbnail:'string',
+        base64Data:'string',
         metadata:'string',
     }
 };

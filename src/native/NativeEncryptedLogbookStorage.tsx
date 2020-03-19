@@ -26,18 +26,18 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
     }
 
 
-    getUnsyncedEditedRecords(): Promise<Log[]> {
-        return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
-            .then(realm => {
-                // Query Realm for all unsynced image hashes
-                return realm.objects(LogSchema.name).
-                filtered('currentTransactionHash = ""');
-            })
-            .catch((error) => {
-                console.log(error);
-                return error // read error
-            });
-    }
+    // getUnsyncedEditedRecords(): Promise<Log[]> {
+    //     return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
+    //         .then(realm => {
+    //             // Query Realm for all unsynced image hashes
+    //             return realm.objects(LogSchema.name).
+    //             filtered('currentTransactionHash = ""');
+    //         })
+    //         .catch((error) => {
+    //             console.log(error);
+    //             return error // read error
+    //         });
+    // }
 
 
     getUnsyncedRecords(): Promise<Log[]> {
@@ -45,7 +45,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
             .then(realm => {
                 // Query Realm for all unsynced image hashes
                 return realm.objects(LogSchema.name).
-                filtered('originalTransactionHash = ""');
+                filtered('currentTransactionHash = ""');
             })
             .catch((error) => {
                 console.log(error);

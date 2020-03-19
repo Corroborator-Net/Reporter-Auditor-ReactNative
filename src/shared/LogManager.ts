@@ -1,8 +1,8 @@
-import {LogbookDatabase} from "../interfaces/Storage";
+import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {HashData, HashReceiver, Log, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
@@ -10,6 +10,8 @@ import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/typ
 import SingleLogbookView from "../views/SingleLogbookView";
 import { waitMS} from "../utils/Constants";
 import _ from "lodash";
+import CameraRoll from "@react-native-community/cameraroll";
+
 
 // TODO: make singleton
 export class LogManager implements HashReceiver{
@@ -24,6 +26,7 @@ export class LogManager implements HashReceiver{
                 public hashManager:HashManager,
                 public blockchainManager:BlockchainInterface,
                 public logbookStateKeeper:LogbookStateKeeper,
+                public imageDatabase:ImageDatabase,
                 ) {
         if (LogManager.Instance){
             console.log("ERROR: multiple instances of log manager created")
@@ -35,33 +38,73 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async UploadEditedLogs(logHashes:string[]){
+    public async UploadEditedLogs(logbookEntries:LogbookEntry[]){
+        console.log("uploading edited logs:", logbookEntries);
+        // const allEditedRecords = await this.imageDatabase.getUnLoggedEditedImages();
+        // // pick out the ones the user has selected
+        // const editedRecordsToLog = _.filter(allEditedRecords,(editedRecord) =>
+        //     _.some(logs, (log)=> log.dataMultiHash == editedRecord.rootMultiHash));
 
-        //TODO: when the user edits a log's metadata, the logcells creates a new log referencing the originalTransactionHash
-        // now here we'll go and set the database (general user preferences?) to include all of those logs in an update queue
-        // then we'll check for unsynced logs
-        const editedLogsToUpload = await this.logStorage.getUnsyncedEditedRecords();
+        let editedLogsToUpload = new Array<Log>();
+        for (const entry of logbookEntries){
+            // add logs here to record
+            const record = entry.ImageRecord;
+            const oldLog = entry.Log;
+            console.log("edited record current hash:", record.currentMultiHash);
+            console.log("edited record root hash:", record.rootMultiHash);
+            this.SaveToCameraRoll(record);
+            // const oldLog = logs.filter(matchingLog=>{return matchingLog.dataMultiHash === record.rootMultiHash;})[0];
+            const newLog = new Log(
+                oldLog.logBookAddress,
+                record.storageLocation,
+                oldLog.rootTransactionHash,
+                "",
+                record.currentMultiHash,
+                record.metadata
+                );
+            editedLogsToUpload.push(newLog);
+        }
+
         this.syncLogs(editedLogsToUpload);
+
 
     }
 
 
-    // TODO how can we make this deterministic?
-    public async OnDataProduced(hashData:HashData) : Promise<void> {
-        await waitMS(100);
-        // console.log("Waited before reading to produce hash");
+    // TODO: how to implement?
+    public async SaveToCameraRoll(hashableData:HashData) {
 
-        RNFetchBlob.fs.readFile(hashData.storageLocation, 'base64')
+        // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
+        // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
+        await RNFetchBlob.fs.createFile(hashableData.storageLocation,hashableData.base64Data,"base64");
+        await CameraRoll.saveToCameraRoll(hashableData.storageLocation, "photo");
+
+
+
+    }
+
+    // TODO how can we make this deterministic?
+    public async LoadFileToGetBase64AndHash(hashData:HashData):Promise<string[]> {
+
+        await waitMS(20);
+        // console.log("Waited before reading to produce hash");
+        // this.hashManager.GetHash(hashData,hashData.base64Data);
+
+       return RNFetchBlob.fs.readFile(hashData.storageLocation, 'base64')
             .then((data) => {
                 // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
-                // console.log("log manager reading file at: " + fullPath);
-                this.hashManager.GetHash(hashData,data);
+                // console.log("log manager reading file: ", data.slice(0,50));
+
+                // TODO: check if the data starts with `data:image/jpeg;base64,${base64Data}` and remove it if so?
+                return [data, HashManager.GetHashSync(data)];
             })
     }
 
 
     OnHashProduced(hashData: HashData): void {
 
+        // console.log("hash: ", hashData.currentMultiHash);
+        // return;
         // TODO get signature from our did module
         // const signedHash = this.didModule.sign(hashData.multiHash);
         // const signedMetaData = this.didModule.sign(hashData.timeStamp);
@@ -83,14 +126,14 @@ export class LogManager implements HashReceiver{
             hashData.storageLocation,
             "",
             "",
-            hashData.multiHash,
+            hashData.currentMultiHash,
             logMetadata.JsonData()
         );
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog);
 
-        if (this.currentlyConnectedToNetwork ){
+        if (this.currentlyConnectedToNetwork){
             this.uploadToBlockchain(newLog);
         }
     }
@@ -131,7 +174,9 @@ export class LogManager implements HashReceiver{
     async checkForUnsyncedLogs(){
         // TODO: the returned logs have their string arrays set to indexed objects. Weird!
         const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
-        this.syncLogs(unsyncedLogs);
+        if (unsyncedLogs.length>0) {
+            this.syncLogs(unsyncedLogs);
+        }
 
     }
 
@@ -156,8 +201,8 @@ export class LogManager implements HashReceiver{
         this.blockchainManager.publishTransaction(txn).then(
             (recordID)=>{
                 console.log("TODO: use record id to get transaction hash? keeping as record id for now: ", recordID);
-                if (log.originalTransactionHash==""){
-                    log.originalTransactionHash = recordID;
+                if (log.rootTransactionHash==""){
+                    log.rootTransactionHash = recordID;
                 }
                 log.currentTransactionHash = recordID;
                 this.logStorage.updateLogWithTransactionHash(log);

@@ -24,10 +24,11 @@ import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import NativeDID from "./native/NativeDID";
 import NativeUserPreferences from "./native/NativeUserPreferences";
-import LogDetailsView from "./views/LogDetailScreen";
+import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';
-import {DetailsScreenName} from "./utils/Constants";
+import {DetailLogViewName, EditLogsViewName} from "./utils/Constants";
 import MultiLogbookView from "./views/MultiLogbookView";
+import EditLogView from "./views/EditLogView";
 
 declare var global: {HermesInternal: null | {}};
 
@@ -40,7 +41,7 @@ class App extends PureComponent{
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
     peerCorroborators = new Mesh();
-    imageManager = new NativeImageStorage();
+    imageStorage = new NativeImageStorage();
     blockchainManager = new NativeAtraManager();
 
     logManager = new LogManager(
@@ -50,6 +51,7 @@ class App extends PureComponent{
         this.hashManager,
         this.blockchainManager,
         this.userPreferences,
+        this.imageStorage,
     );
 
   render() {
@@ -73,7 +75,7 @@ class App extends PureComponent{
                       <Icon name={"camera"} color={color} size={size} />
                   )}}>
                   {props => <NativeCameraView {...props}
-                                              imageDatabase={this.imageManager}
+                                              imageDatabase={this.imageStorage}
                   /> }
                 </Tab.Screen>
 
@@ -88,7 +90,7 @@ class App extends PureComponent{
                       <Stack.Screen name={"Logbooks"}>
                           {(props:any) =>
                               <MultiLogbookView {...props}
-                                                 imageSource={this.imageManager}
+                                                 imageSource={this.imageStorage}
                                                  logbookStateKeeper={this.userPreferences}
                                                  blockchainInterface={this.blockchainManager}
                                                  userPreferences={this.userPreferences}
@@ -99,12 +101,22 @@ class App extends PureComponent{
                           {(props:any) =>
                               <SingleLogbookView {...props}
                                                  logSource={this.storage}
-                                                 imageSource={this.imageManager}
+                                                 imageSource={this.imageStorage}
                                                  logbookStateKeeper={this.userPreferences}
                               />
                           }
                       </Stack.Screen>
-                      <Stack.Screen name={DetailsScreenName} component={LogDetailsView} />
+                      <Stack.Screen name={DetailLogViewName} component={DetailLogView} />
+                      <Stack.Screen name={EditLogsViewName} >
+                          {(props:any) =>
+                              <EditLogView {...props}
+                                            logbookStateKeeper={this.userPreferences}
+                                            logManager={this.logManager}
+                                            imageDatabase={this.imageStorage}
+                              />
+                          }
+                      </Stack.Screen>
+
                   </Stack.Navigator>
               }
               </Tab.Screen>

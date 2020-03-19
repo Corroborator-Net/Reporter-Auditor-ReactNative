@@ -7,7 +7,7 @@ type Props={
     route:any
 }
 
-export default class LogDetailsView extends React.Component<Props> {
+export default class DetailLogView extends React.Component<Props> {
 
     parseAndDisplayMetadata(log:Log):Array<Element>{
         let details = new Array<Element>();

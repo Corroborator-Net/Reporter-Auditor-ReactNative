@@ -4,8 +4,7 @@ import {
     RefreshControl,
     SafeAreaView,
     StyleSheet,
-
-    TouchableOpacity
+    TouchableOpacity, View
 } from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogbookStateKeeper} from "../interfaces/Data";
@@ -13,7 +12,7 @@ import LogCell from "../components/LogCell";
 import {Button} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
-import {DetailsScreenName} from "../utils/Constants";
+import {DetailLogViewName, EditLogsViewName} from "../utils/Constants";
 import { LogManager} from "../shared/LogManager";
 
 type State={
@@ -21,7 +20,7 @@ type State={
     photos:Map<string, string>
     refreshing:boolean
     selectingMultiple:boolean
-    currentlySelectedLogHashes:string[]
+    currentlySelectedLogs:Log[]
     rerenderSelectedCells:boolean
 }
 
@@ -45,7 +44,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         photos:new Map<string, string>(),
         refreshing:false,
         selectingMultiple:false,
-        currentlySelectedLogHashes:new Array<string>(),
+        currentlySelectedLogs:new Array<Log>(),
         rerenderSelectedCells:false
     };
 
@@ -58,23 +57,48 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
         this.props.navigation.setOptions({
             headerRight: () => (
+                <View style={styles.buttonView}>
                 <Button onPress={() => this.resyncSelectedLogs()}
                         title="Sync"
                         buttonStyle={{marginRight:10}}
                         icon={<Icon name={"sync"} size={25} color={"white"} style={{marginRight:7}} />}
                 />
+                    <Button onPress={() => this.onEditButtonPressed()}
+                            title="Edit"
+                            buttonStyle={{marginRight:10}}
+                            icon={<Icon name={"pencil"} size={25} color={"white"} style={{marginRight:7}} />}
+                    />
+                </View>
             ),
         });
     }
 
+    onEditButtonPressed(){
+        this.props.logbookStateKeeper.CurrentSelectedLogs = this.state.currentlySelectedLogs;
+        // clear the selection or not? Thinking not in case of user error/fat fingers
+        if (this.state.currentlySelectedLogs.length==1){
+            this.props.navigation.navigate(EditLogsViewName, {
+                src: this.state.photos.get(this.state.currentlySelectedLogs[0].dataMultiHash)
+            });
+        }
+        else{
+            this.props.navigation.navigate(EditLogsViewName)
+        }
+
+
+    }
+
+
     resyncSelectedLogs(){
         console.log("resync!");
-        this.setState({
-            selectingMultiple:false
-        })
 
         // TODO: show user we're uploading the logs!
-        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogHashes)
+        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogs);
+        this.setState({
+            selectingMultiple:false,
+            currentlySelectedLogs:new Array<Log>(),
+            rerenderSelectedCells:!this.state.rerenderSelectedCells
+        });
     }
 
 
@@ -99,13 +123,16 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
     };
 
-
+    //TODO: Shouldn't we be showing the image record's meta data anyways?
+    // So they can see the extra goodies in the JPEG. So let's load the image metadata!
     // TODO: implement pages or infinite scroll
     async getLogs(){
         const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
         console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let newMap = new Map<string, string>();
+        //TODO: organize logs into groups by their root transaction hash or create data structure to organize
+        // the logs and image records
         let logs = await this.props.logSource.getRecordsFor(currentLogbook);
         const photos = await this.props.imageSource.getImages(logs.slice(0,SingleLogbookView.LogsPerPage));
         photos.map((photo:string,i:number) => {
@@ -136,7 +163,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                 onLongPress={()=>{this.beginSelectingMultiple(item)}}
                             >
                             <LogCell
-                                src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
+                                src= {`data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
                                 // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
                                 // don't pass an image
                                 item={item}
@@ -144,7 +171,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                 onSelectedOverlay={
                                     this.state.selectingMultiple?
                                         // we're in select multiple mode, show blank or checked circles
-                                        _.includes(this.state.currentlySelectedLogHashes,item.dataMultiHash)?
+                                        _.includes(this.state.currentlySelectedLogs,item)?
                                             <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
                                                 marginLeft:75,
                                                 backgroundColor:"white",
@@ -179,10 +206,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.setState({
             selectingMultiple:!this.state.selectingMultiple,
             rerenderSelectedCells:!this.state.rerenderSelectedCells,
-            currentlySelectedLogHashes:new Array<string>(),
+            currentlySelectedLogs:new Array<Log>(),
         },
             ()=>{
-                console.log("selecting multiple:", this.state.selectingMultiple);
                 // if we're now selecting multiple logs, highlight the one we just pressed
             if (this.state.selectingMultiple){
                 this.onSelectLog(log)
@@ -192,27 +218,27 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     onSelectLog(log:Log){
         if (!this.state.selectingMultiple) {
             this.props.navigation.navigate(
-                DetailsScreenName,
+                DetailLogViewName,
                 {
                     log: JSON.stringify(log),
-                    src: `data:image/jpeg;base64,${this.state.photos.get(log.dataMultiHash)}`
+                    src: this.state.photos.get(log.dataMultiHash),
                 });
             return
         }
 
 
-        let currentlySelected = this.state.currentlySelectedLogHashes;
-        if (_.includes(currentlySelected,log.dataMultiHash)){
-            _.pull(currentlySelected,log.dataMultiHash);
+        let currentlySelected = this.state.currentlySelectedLogs;
+
+        if (_.includes(currentlySelected,log)){
+            _.pull(currentlySelected,log);
         }
         else{
-            currentlySelected.push(log.dataMultiHash);
+            currentlySelected.push(log);
         }
         this.setState({
-            currentlySelectedLogHashes:currentlySelected,
+            currentlySelectedLogs:currentlySelected,
             rerenderSelectedCells:!this.state.rerenderSelectedCells
         });
-        console.log("currentlyselected:", currentlySelected);
     }
 }
 
@@ -227,5 +253,10 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems:"center",
     },
+    buttonView:{
+        flex: 1,
+        flexDirection: 'row',
+        alignItems:"center",
+    }
 
 });

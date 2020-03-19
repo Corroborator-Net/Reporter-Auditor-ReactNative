@@ -4,7 +4,7 @@ import LogbookCell from "../components/LogbookCell";
 import {LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
-import {LogsScreenName, UserPreferenceKeys} from "../utils/Constants";
+import {LogsViewName, UserPreferenceKeys} from "../utils/Constants";
 
 
 type State={
@@ -95,7 +95,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 title={this.state.logbookNames.get(item) || ""}
                                 onPress={() => {
                                     this.props.logbookStateKeeper.CurrentLogbook = item;
-                                    this.props.navigation.navigate(LogsScreenName);
+                                    this.props.navigation.navigate(LogsViewName);
                                 }}
                             />
 
