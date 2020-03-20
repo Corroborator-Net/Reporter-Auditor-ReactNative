@@ -63,14 +63,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     onEditButtonPressed(){
         this.props.logbookStateKeeper.CurrentSelectedLogs = this.state.currentlySelectedLogs;
         // clear the selection or not? Thinking not in case of user error/fat fingers
-        if (this.state.currentlySelectedLogs.length==1){
-            this.props.navigation.navigate(EditLogsViewName, {
-                src: this.state.currentlySelectedLogs[0].ImageRecord.base64Data
-            });
-        }
-        else{
-            this.props.navigation.navigate(EditLogsViewName)
-        }
+        this.props.navigation.navigate(EditLogsViewName);
 
 
     }
@@ -310,10 +303,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                             showingOptionsButton:!this.state.showingOptionsButton
                         })}}
                     icon={<Icon name={"dots-horizontal"} size={30} color={"white"}/>}
-                >
+                />
 
-
-                </Button>
 
             </View>
         )

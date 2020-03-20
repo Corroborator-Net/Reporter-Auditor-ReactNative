@@ -74,7 +74,7 @@ export default class NativeImageStorage implements ImageDatabase{
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    console.log("deleting record with key:", imageRecord.currentMultiHash);
+                    // console.log("deleting record with key:", imageRecord.currentMultiHash);
                     // const record = realm.create(ImageRecordSchema.name, imageRecord);
                     realm.delete(imageRecord);
                     return "deleted"; // no error

@@ -1,5 +1,5 @@
 import React from "react";
-import {StyleSheet, Image, ScrollView} from "react-native";
+import {StyleSheet, Image, ScrollView, View, Keyboard} from "react-native";
 import {ImageRecord, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
@@ -9,6 +9,7 @@ import {ImageDatabase} from "../interfaces/Storage";
 import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
+import {AppButtonTint} from "../utils/Constants";
 
 
 type Props={
@@ -21,34 +22,28 @@ type Props={
 
 type State ={
     newImageDescription:string
+    saving:boolean
 }
 export default class EditLogView extends React.Component<Props, State> {
 
     state = {
-        newImageDescription:""
+        newImageDescription:"",
+        saving:false,
     };
 
-    componentDidMount(): void {
-
-        this.props.navigation.setOptions({
-            headerRight: () => (
-                    <Button onPress={() => this.saveEditedImageData()}
-                            title="Save Changes"
-                            buttonStyle={{marginRight:10}}
-                            icon={<Icon name={"content-save-outline"} size={25} color={"white"} style={{marginRight:7}} />}
-                    />
-            ),
-        });
-    }
-
     async saveEditedImageData(){
-
+        if (this.state.newImageDescription == ""){
+            this.setState({
+                saving:false
+            });
+            return
+        }
         for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
 
             // I want image records with matching root hashes
             const imageRecordsWithMatchingRootHashes = log.imageRecords;
-            console.log("length:",imageRecordsWithMatchingRootHashes.length);
-            console.log("first:", imageRecordsWithMatchingRootHashes[0].metadata);
+            // console.log("length:",imageRecordsWithMatchingRootHashes.length);
+            // console.log("first:", imageRecordsWithMatchingRootHashes[0].metadata);
             const mostRecentImageRecord = imageRecordsWithMatchingRootHashes[imageRecordsWithMatchingRootHashes.length - 1];
             console.log("most recent", mostRecentImageRecord.metadata);
             const jpeg = `data:image/jpeg;base64,${mostRecentImageRecord.base64Data}`;
@@ -68,7 +63,7 @@ export default class EditLogView extends React.Component<Props, State> {
             //     }
             // }
 
-            console.log("EDITING TAG");
+            // console.log("EDITING TAG");
             exifObj["0th"][270] = this.state.newImageDescription;
 
             // after editing the exif, dump it into a string
@@ -90,7 +85,11 @@ export default class EditLogView extends React.Component<Props, State> {
             };
 
             const newHash = HashManager.GetHashSync(newBase64Data);
-            console.log("we have the same data: ", newHash == mostRecentImageRecord.currentMultiHash);
+            if ( newHash == mostRecentImageRecord.currentMultiHash){
+                console.log("data is unchanged");
+                continue;
+            }
+
 
             const time = new Date();
             const timestamp = "_EditedOn_D:" + time.toLocaleDateString().replace("/","_").replace("/","_")
@@ -100,7 +99,7 @@ export default class EditLogView extends React.Component<Props, State> {
             const temp = dirs.CacheDir;
             const fileName = log.RootLog.storageLocation.slice(log.Log.storageLocation.lastIndexOf("/") + 1);
             const newPath = temp + "/" + fileName.slice(0,fileName.length-4) + timestamp + ".jpg";
-            console.log("new storage location:",newPath);
+            // console.log("new storage location:",newPath);
 
             const newImageRecord = new ImageRecord(
                 time,
@@ -112,70 +111,145 @@ export default class EditLogView extends React.Component<Props, State> {
 
 
             if (imageRecordsWithMatchingRootHashes.length > 1) {
-                console.log("replacing previous head image record");
+                // console.log("replacing previous head image record");
                 // we have multiple image records. let's remove the current head then
-                this.props.imageDatabase.removeImageRecord(mostRecentImageRecord).then(
-                    (response) => {
-                        console.log("deleted record, now adding the edited one");
-                        this.props.imageDatabase.add(newImageRecord);
-                    }
-                )
+                await this.props.imageDatabase.removeImageRecord(mostRecentImageRecord);
+                console.log("deleted record, now adding the edited one");
+                await this.props.imageDatabase.add(newImageRecord);
+
             } else {
-                this.props.imageDatabase.add(newImageRecord);
+                await this.props.imageDatabase.add(newImageRecord);
             }
 
         }
-
+        this.setState({
+            saving:false
+        });
 
     }
 
-
-    // TODO: allow editing multiple logs' metadata at once
-    parseAndDisplayMetadata(logs:LogbookEntry[]):Array<Element>{
+    DisplayEditableMetadata(logs:LogbookEntry[]):Array<Element>{
         let details = new Array<Element>();
 
-        if (this.props.logbookStateKeeper.CurrentSelectedLogs.length<2){
+        let currentDescription = `Enter new description for the ${logs.length} images`;
+        if (logs.length==1){
             // add one log specific UI here
-            details.push(<Input
-                key={"Enter a new image description"}
-            placeholder={"Enter a new image description"}
-                onChangeText={(text => {
+            currentDescription = JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription];
+            console.log("only one image's description: ", currentDescription);
+        }
+
+
+        details.push(<Input
+            key={currentDescription}
+            placeholder={currentDescription}
+            label={"Image Description"}
+            onChangeText={(text => {
                 this.setState({
                     newImageDescription:text
                 });
             })}/>);
-            return details;
-        }
-
-
-        details.push(<Input></Input>);
 
         return details;
     }
 
-    render() {
 
+    render() {
+            const logs = this.props.logbookStateKeeper.CurrentSelectedLogs;
         return (
+            <>
             <ScrollView>
-                {this.props.route.params ?
+                {logs.length==1 ?
                     <Image
-                        source={{uri: `data:image/jpeg;base64,${this.props.route.params.src}`}}
+                        source={{uri: `data:image/jpeg;base64,${logs[0].ImageRecord.base64Data}`}}
                         resizeMethod={"resize"}
                         style={styles.image}
                     />
                 :
-                    <></>
+                    <View style={{flex:1,flexDirection:"row", height:300,  justifyContent:"flex-start"}}>
+                        {logs.map((log)=>{
+                            return (<Image
+                                source={{uri: `data:image/jpeg;base64,${log.ImageRecord.base64Data}`}}
+                                resizeMethod={"resize"}
+                                key={log.Log.dataMultiHash}
+                                style={{width:this.getWidth(logs.length),
+                                    marginHorizontal:this.getMargin(logs.length),
+                                    resizeMode:"contain",
+                                }}
+                            />)
+                        })}
+                    </View>
                 }
-        {this.parseAndDisplayMetadata(this.props.logbookStateKeeper.CurrentSelectedLogs)}
+        {this.DisplayEditableMetadata(logs)}
+
         </ScrollView>
+                <View style={{
+                    position:"absolute",
+                    bottom:10,
+                    right:10,
+                }}>
+                    <Button
+                        containerStyle={{
+                            alignSelf:"flex-end",
+                            justifyContent: 'center',
+                            width: 85,
+                            bottom: 0,
+                            right: 10,
+                            height: 85,
+                            backgroundColor: AppButtonTint,
+                            borderRadius: 100,
+                        }}
+                        style={{
+                            height: 100,
+                            width: 100,
+                            borderRadius: 100,
+
+                        }}
+                        type={"clear"}
+                        title={"save"}
+                        titleStyle={{color:"white"}}
+                        onPress={() =>{
+                            Keyboard.dismiss();
+                            this.setState({
+                                saving:true
+                            },
+                            this.saveEditedImageData)
+                        }}
+                        loading={this.state.saving}
+                        icon={<Icon name={"content-save-outline"} size={30} color={"white"} style={{}}/>
+                        }
+                    />
+                </View>
+                </>
+
     );
+
+
+    }
+
+    getMargin(length:number):number{
+        if (length<breakPoint){
+            return 0;
+        }
+        const margin = -((360/breakPoint)*(length-breakPoint))/(length);
+        return margin/2;
+    }
+
+    getWidth(length:number):number{
+        if (length>breakPoint){
+            return 360/breakPoint;
+        }
+        return 360/length;
     }
 }
 
+const breakPoint=3;
 const styles = StyleSheet.create({
     image:{
         resizeMode:"contain",
         height: 300,
         margin:10
+    },
+    images:{
+        resizeMode:"contain",
     },
 });
