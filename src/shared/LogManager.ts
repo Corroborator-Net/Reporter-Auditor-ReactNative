@@ -1,4 +1,4 @@
-import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
@@ -29,6 +29,7 @@ export class LogManager implements HashReceiver{
                 ) {
         if (LogManager.Instance){
             console.log("ERROR: multiple instances of log manager created");
+            return;
         }
         LogManager.Instance= this;
         hashManager.hashReceivers.push(this);
@@ -42,9 +43,12 @@ export class LogManager implements HashReceiver{
 
         let editedLogsToUpload = new Array<Log>();
         for (const entry of logbookEntries){
-            // add logs here to record
             const record = entry.ImageRecord;
             const oldLog = entry.Log;
+            if (record.currentMultiHash == oldLog.dataMultiHash && oldLog.currentTransactionHash!= ""){
+                console.log("skipping log upload as hash hasn't changed and the log has a transaction hash");
+                continue;
+            }
             console.log("edited record current hash:", record.currentMultiHash);
             console.log("edited record root hash:", record.rootMultiHash);
             await this.SaveToCameraRoll(record);
@@ -128,7 +132,11 @@ export class LogManager implements HashReceiver{
         );
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
-        this.logStorage.addNewRecord(newLog);
+        this.logStorage.addNewRecord(newLog).then(()=> {
+                console.log("should update!");
+                SingleLogbookView.ShouldUpdateLogbookView = true
+            }
+        );
 
         if (this.currentlyConnectedToNetwork){
             this.uploadToBlockchain(newLog);
@@ -162,6 +170,7 @@ export class LogManager implements HashReceiver{
             await this.uploadToBlockchain(logToUpdate);
         }
 
+        console.log("should update!");
         SingleLogbookView.ShouldUpdateLogbookView = true;
 
         this.syncingLogs = false;

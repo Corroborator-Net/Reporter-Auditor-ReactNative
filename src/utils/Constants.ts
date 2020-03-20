@@ -18,6 +18,7 @@ export const DetailLogViewName = "Details";
 export const LogsViewName = "Logs";
 export const EditLogsViewName = "EditLogs";
 
+export const AppButtonTint='#0077FF';
 
 export const UserPreferenceKeys={
     ImageDescription:"Image Description",

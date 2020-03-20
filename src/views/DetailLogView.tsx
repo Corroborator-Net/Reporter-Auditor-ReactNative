@@ -31,12 +31,17 @@ export default class DetailLogView extends React.Component<Props, State> {
         // TODO: decrypt the signed metadata
         const obj = JSON.parse(imageRecord.metadata);
 
-        // we add all metadata except the above parsed stuff which we'll have to decrypt!
-        for (const key of Object.keys(log)){
-            if (key != "signedMetadataJson"){
-                // @ts-ignore
-                obj[key] = log[key];
+        if (log.dataMultiHash== imageRecord.currentMultiHash) {
+            // we add all metadata except the above parsed stuff which we'll have to decrypt!
+            for (const key of Object.keys(log)) {
+                if (key != "signedMetadataJson") {
+                    // @ts-ignore
+                    obj[key] = log[key];
+                }
             }
+        }
+        else {
+            obj["Log Status:"] = "Not Yet Logged"
         }
 
         Object.keys(obj).
@@ -61,7 +66,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                 />
                 <ListItem
                     onPress={()=>this.setState({shotCurrentInfo:!this.state.shotCurrentInfo})}
-                    title={"Show Current Log Metadata"}
+                    title={"Show Most Recent Log Metadata"}
                     containerStyle={styles.title}
                     chevron={this.state.shotCurrentInfo ?
                         <Icon name={"chevron-down"} size={20} color={"black"}/>

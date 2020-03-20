@@ -26,7 +26,7 @@ import NativeDID from "./native/NativeDID";
 import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';
-import {DetailLogViewName, EditLogsViewName} from "./utils/Constants";
+import {AppButtonTint, DetailLogViewName, EditLogsViewName} from "./utils/Constants";
 import MultiLogbookView from "./views/MultiLogbookView";
 import EditLogView from "./views/EditLogView";
 
@@ -57,7 +57,7 @@ class App extends PureComponent{
 
     return (
         <NavigationContainer>
-          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: '#0077FF', }}>
+          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: AppButtonTint, }}>
 
                 <Tab.Screen name="Settings" options={{
                 tabBarLabel: 'Settings',

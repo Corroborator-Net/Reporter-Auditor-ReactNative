@@ -14,11 +14,11 @@ export class LogbookEntry{
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
         // get all logs that have the same root hash
         this.logs = logs.filter((log)=>log.rootTransactionHash == rootLog.rootTransactionHash);
-        if (this.logs.length>2){console.log(`I have been logged ${this.logs.length} times`)};
+        // if (this.logs.length>2){console.log(`I have been logged ${this.logs.length} times`)};
     }
     // TODO test the order of this
     get RootLog():Log{
-        console.log("root log hash: ", this.rootLog.dataMultiHash);
+        // console.log("root log hash: ", this.rootLog.dataMultiHash);
         return this.rootLog;
     }
 

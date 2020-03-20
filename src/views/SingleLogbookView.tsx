@@ -2,17 +2,17 @@ import React from "react";
 import {
     FlatList,
     RefreshControl,
-    SafeAreaView,
+    SafeAreaView, ScrollView,
     StyleSheet,
     TouchableOpacity, View
 } from "react-native";
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
 import {Button} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
-import {DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
+import {AppButtonTint, DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
 import { LogManager} from "../shared/LogManager";
 
 type State={
@@ -22,6 +22,8 @@ type State={
     currentlySelectedLogs:LogbookEntry[]
     rerenderSelectedCells:boolean
     currentPage:number
+    showingOptionsButton:boolean
+
 }
 
 type LogbookViewProps={
@@ -35,7 +37,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
     static LogsPerPage = 20;
     static ShouldUpdateLogbookView = false;
-    previousLogLength = 0;
     previousLogbook = "";
 
     FlatList:any=null;
@@ -45,7 +46,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         selectingMultiple:false,
         currentlySelectedLogs:new Array<LogbookEntry>(),
         rerenderSelectedCells:false,
-        currentPage:0
+        currentPage:0,
+        showingOptionsButton:false,
     };
 
 
@@ -53,25 +55,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     componentDidMount(): void {
         this.FlatList = React.createRef();
         this.getLogs();
-        this.props.navigation.addListener('focus', this.onScreenFocus)
-
-        this.props.navigation.setOptions({
-            headerRight: () => (
-                <View style={styles.buttonView}>
-                <Button onPress={() => this.resyncSelectedLogs()}
-                        title="Sync"
-                        buttonStyle={{marginRight:10}}
-                        icon={<Icon name={"sync"} size={25} color={"white"} style={{marginRight:7}} />}
-                />
-                    <Button onPress={() => this.onEditButtonPressed()}
-                            title="Edit"
-                            buttonStyle={{marginRight:10}}
-                            icon={<Icon name={"pencil"} size={25} color={"white"} style={{marginRight:7}} />}
-                    />
-                </View>
-            ),
-        });
+        this.props.navigation.addListener('focus', this.onScreenFocus);
     }
+
+
 
     onEditButtonPressed(){
         this.props.logbookStateKeeper.CurrentSelectedLogs = this.state.currentlySelectedLogs;
@@ -119,10 +106,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 
     onScreenFocus = () => {
-        if (this.previousLogLength < this.state.logbookEntries.length ||
-            (this.logbookChanged() && !this.state.refreshing)
-        ){
-            console.log(this.previousLogLength < this.state.logbookEntries.length);
+        console.log("should update:",SingleLogbookView.ShouldUpdateLogbookView);
+
+        if (this.logbookChanged() && !this.state.refreshing) {
             console.log((this.logbookChanged() && !this.state.refreshing));
             console.log("refreshing!");
             this.getLogs();
@@ -133,10 +119,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         }
     };
 
-    //TODO: Shouldn't we be showing the image record's meta data anyways?
-    // So they can see the extra goodies in the JPEG. So let's load the image metadata!
+
     // TODO: implement pages or infinite scroll
     async getLogs(){
+
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
         this.setState({
             refreshing:true
@@ -159,12 +145,11 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             const logbookEntry = new LogbookEntry(log, allLogs, records);
             logbookEntries.push(logbookEntry);
         }
-        // console.log("entries:",logbookEntries.length);
+
         this.setState({
             logbookEntries:logbookEntries,
-            refreshing:false
+            refreshing:false,
         });
-        this.previousLogLength = logbookEntries.length;
     }
 
 
@@ -215,10 +200,17 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                         refreshControl={
                             <RefreshControl
                                 refreshing={this.state.refreshing}
-                                onRefresh={() => this.getLogs()}/>
+                                onRefresh={()=>this.getLogs()}/>
                         }
                         extraData={this.state}
                 />
+
+                {
+                    this.state.selectingMultiple ?
+                        this.OptionsButton()
+                    :
+                        <></>
+                }
             </SafeAreaView>
         );
     }
@@ -226,6 +218,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     beginSelectingMultiple(log:LogbookEntry){
         // const shouldSelectMultiple = ;
         this.setState({
+            showingOptionsButton:false,
             selectingMultiple:!this.state.selectingMultiple,
             rerenderSelectedCells:!this.state.rerenderSelectedCells,
             currentlySelectedLogs:new Array<LogbookEntry>(),
@@ -234,7 +227,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                 // if we're now selecting multiple logs, highlight the one we just pressed
             if (this.state.selectingMultiple){
                 this.onSelectLog(log)
-            }})
+            }
+            });
+
     }
 
     onSelectLog(log:LogbookEntry){
@@ -258,7 +253,74 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             rerenderSelectedCells:!this.state.rerenderSelectedCells
         });
     }
+
+    OptionsButton() {
+        return (
+            <View >
+                {this.state.showingOptionsButton ?
+
+                <ScrollView style={styles.buttonList}>
+                        <>
+                            <Button onPress={() => this.resyncSelectedLogs()}
+                                    containerStyle={styles.buttonContainer}
+                                    style={styles.button}
+                                    type={"outline"}
+                                    title="Sync"
+                                    titleStyle={{color:AppButtonTint}}
+                                    buttonStyle={{marginRight: 10}}
+                                    icon={<Icon name={"sync"} size={25} color={AppButtonTint} style={{marginRight: 7}}/>}
+                            />
+                            < Button onPress={() => this.onEditButtonPressed()}
+                                     containerStyle={styles.buttonContainer}
+                                     style={styles.button}
+                                     type={"outline"}
+                                    titleStyle={{color:AppButtonTint}}
+                                     title="Edit"
+                                     buttonStyle={{marginRight: 10}}
+                                     icon={<Icon name={"pencil"} size={25} color={AppButtonTint} style={{marginRight: 7}}/>}
+                            />
+                        </>
+
+                </ScrollView>
+                    : <></>
+                }
+
+                <Button
+                    containerStyle={{
+                        alignSelf:"flex-end",
+                        justifyContent: 'center',
+                        width: 85,
+                        bottom: 10,
+                        right: 10,
+                        height: 85,
+                        backgroundColor: 'white',
+                        borderRadius: 100,
+                    }}
+                    style={{
+                        height: 100,
+                        width: 100,
+                        borderRadius: 100,
+
+                    }}
+                    type={"clear"}
+                    onPress={() => {
+                        this.setState({
+                            showingOptionsButton:!this.state.showingOptionsButton
+                        })}}
+                    icon={<Icon name={"dots-horizontal"} size={20} color={AppButtonTint}/>}
+                >
+
+
+                </Button>
+
+            </View>
+        )
+    }
+
 }
+
+
+
 
 
 
@@ -271,10 +333,22 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems:"center",
     },
-    buttonView:{
-        flex: 1,
-        flexDirection: 'row',
-        alignItems:"center",
+    buttonList:{
+        padding:10,
+        marginLeft:20,
+        width:150,
+        zIndex:100,
+        backgroundColor:"white",
+        borderColor:"grey",
+        borderRadius:10,
+        alignSelf:"flex-end",
+    },
+    buttonContainer:{
+        margin:6,
+    },
+    button:{
+        width:100,
+        height:100,
     }
 
 });

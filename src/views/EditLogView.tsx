@@ -1,6 +1,6 @@
 import React from "react";
 import {StyleSheet, Image, ScrollView} from "react-native";
-import {ImageRecord, Log, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {ImageRecord, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
 //@ts-ignore
@@ -24,10 +24,6 @@ type State ={
 }
 export default class EditLogView extends React.Component<Props, State> {
 
-    //TODO pass a logbook database to save these new logs
-    // and add a save button
-    // and add ui info for the data we're editing
-    // and add the piexifjs library to test editing the metadata
     state = {
         newImageDescription:""
     };
@@ -134,12 +130,14 @@ export default class EditLogView extends React.Component<Props, State> {
     }
 
 
+    // TODO: allow editing multiple logs' metadata at once
     parseAndDisplayMetadata(logs:LogbookEntry[]):Array<Element>{
         let details = new Array<Element>();
 
         if (this.props.logbookStateKeeper.CurrentSelectedLogs.length<2){
             // add one log specific UI here
             details.push(<Input
+                key={"Enter a new image description"}
             placeholder={"Enter a new image description"}
                 onChangeText={(text => {
                 this.setState({
@@ -148,29 +146,10 @@ export default class EditLogView extends React.Component<Props, State> {
             })}/>);
             return details;
         }
-        //TODO: we don't need to produce logs here.
-        // we need to produce new image records if the "HEAD" image record is the same as the "ROOT"
-        // or we need to edit the "HEAD" image record if it is different
-        //TODO: how do we match multiple versions of a log (i.e. root and head will share original transaction hash)
-        // to the root and head versions of the image record? hashes will differ so perhaps we need to reference
-        // all the logs+records by the "HEAD" transaction hash.
-
-
-
-        // how do we associate a log with an edited image record that hasn't been re-logged yet?
-        // they'll have matching storageLocations until we re-log the image record
-
-        // this.props.logManager.OnBase64DataProduced([hashData]);
-
 
 
         details.push(<Input></Input>);
 
-        // Object.keys(obj).
-        // forEach(function eachKey(key)
-        // {
-        //     details.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {obj[key]}</Text>);
-        // });
         return details;
     }
 
