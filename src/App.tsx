@@ -36,6 +36,9 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 class App extends PureComponent{
+    state={
+        loading:true
+    };
     userPreferences = NativeUserPreferences.Instance;
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
@@ -52,82 +55,94 @@ class App extends PureComponent{
         this.blockchainManager,
         this.userPreferences,
     );
+    componentDidMount(): void {
+        NativeUserPreferences.Initialize().then(()=>{
+            this.setState({
+            loading:false
+            })
+        });
+    }
 
-  render() {
+    render() {
+        return (
+            this.state.loading ? <></> :
 
-    return (
-        <NavigationContainer>
-          <Tab.Navigator initialRouteName="Logs" tabBarOptions={{ activeTintColor: AppButtonTint, }}>
+                <NavigationContainer>
+                    <Tab.Navigator initialRouteName="Logs" tabBarOptions={{activeTintColor: AppButtonTint,}}>
 
-                <Tab.Screen name="Settings" options={{
-                tabBarLabel: 'Settings',
-                tabBarIcon:(({focused,color,size})=>
-                  <Icon name={"settings"} color={color} size={size} />
-                )}}>
-                {props => <SettingsView {...props}
-                /> }
-                </Tab.Screen>
+                        <Tab.Screen name="Settings" options={{
+                            tabBarLabel: 'Settings',
+                            tabBarIcon: (({focused, color, size}) =>
+                                    <Icon name={"settings"} color={color} size={size}/>
+                            )
+                        }}>
+                            {props => <SettingsView {...props}
+                            />}
+                        </Tab.Screen>
 
-                <Tab.Screen name="Camera" options={{
-                  tabBarLabel: 'Camera',
-                  tabBarIcon:(({focused,color,size})=>
-                      <Icon name={"camera"} color={color} size={size} />
-                  )}}>
-                  {props => <NativeCameraView {...props}
-                                              imageDatabase={this.imageStorage}
-                  /> }
-                </Tab.Screen>
+                        <Tab.Screen name="Camera" options={{
+                            tabBarLabel: 'Camera',
+                            tabBarIcon: (({focused, color, size}) =>
+                                    <Icon name={"camera"} color={color} size={size}/>
+                            )
+                        }}>
+                            {props => <NativeCameraView {...props}
+                                                        logbookStateKeeper={this.userPreferences}
+                                                        imageDatabase={this.imageStorage}
+                            />}
+                        </Tab.Screen>
 
-              <Tab.Screen name="Logs" options={{
-                tabBarLabel: 'Logs',
-                  tabBarIcon:(({focused,color,size})=>
-                          <Icon name={"file-cabinet"} color={color} size={size} />
-                  )
-              }}>
-              {props =>
-                  <Stack.Navigator>
-                      <Stack.Screen name={"Logbooks"}>
-                          {(props:any) =>
-                              <MultiLogbookView {...props}
-                                                 imageSource={this.imageStorage}
-                                                 logbookStateKeeper={this.userPreferences}
-                                                 blockchainInterface={this.blockchainManager}
-                                                 userPreferences={this.userPreferences}
-                              />
-                          }
-                      </Stack.Screen>
-                      <Stack.Screen name={"Logs"}>
-                          {(props:any) =>
-                              <SingleLogbookView {...props}
-                                                 logSource={this.storage}
-                                                 imageSource={this.imageStorage}
-                                                 logbookStateKeeper={this.userPreferences}
-                              />
-                          }
-                      </Stack.Screen>
-                      <Stack.Screen name={DetailLogViewName} >
-                          {(props:any) =>
-                              <DetailLogView {...props}
-                                           logbookStateKeeper={this.userPreferences}
-                              />
-                          }
-                      </Stack.Screen>
-                      <Stack.Screen name={EditLogsViewName} >
-                          {(props:any) =>
-                              <EditLogView {...props}
-                                            logbookStateKeeper={this.userPreferences}
-                                            logManager={this.logManager}
-                                            imageDatabase={this.imageStorage}
-                              />
-                          }
-                      </Stack.Screen>
+                        <Tab.Screen name="Logs" options={{
+                            tabBarLabel: 'Logs',
+                            tabBarIcon: (({focused, color, size}) =>
+                                    <Icon name={"file-cabinet"} color={color} size={size}/>
+                            )
+                        }}>
+                            {props =>
+                                <Stack.Navigator>
+                                    <Stack.Screen name={"Logbooks"}>
+                                        {(props: any) =>
+                                            <MultiLogbookView {...props}
+                                                              imageSource={this.imageStorage}
+                                                              logbookStateKeeper={this.userPreferences}
+                                                              blockchainInterface={this.blockchainManager}
+                                                              userPreferences={this.userPreferences}
+                                            />
+                                        }
+                                    </Stack.Screen>
+                                    <Stack.Screen name={"Logs"}>
+                                        {(props: any) =>
+                                            <SingleLogbookView {...props}
+                                                               logSource={this.storage}
+                                                               imageSource={this.imageStorage}
+                                                               logbookStateKeeper={this.userPreferences}
+                                            />
+                                        }
+                                    </Stack.Screen>
+                                    <Stack.Screen name={DetailLogViewName}>
+                                        {(props: any) =>
+                                            <DetailLogView {...props}
+                                                           logbookStateKeeper={this.userPreferences}
+                                            />
+                                        }
+                                    </Stack.Screen>
+                                    <Stack.Screen name={EditLogsViewName}>
+                                        {(props: any) =>
+                                            <EditLogView {...props}
+                                                         logbookStateKeeper={this.userPreferences}
+                                                         logManager={this.logManager}
+                                                         imageDatabase={this.imageStorage}
+                                            />
+                                        }
+                                    </Stack.Screen>
 
-                  </Stack.Navigator>
-              }
-              </Tab.Screen>
+                                </Stack.Navigator>
+                            }
+                        </Tab.Screen>
 
-          </Tab.Navigator>
-        </NavigationContainer>
+                    </Tab.Navigator>
+                </NavigationContainer>
+
     );
   }
 

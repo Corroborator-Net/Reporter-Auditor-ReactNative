@@ -117,7 +117,7 @@ export class LogManager implements HashReceiver{
 
         // TODO: show user alert if no logbook selected!!
         const newLog = new Log(
-            this.logbookStateKeeper.CurrentLogbook,
+            this.logbookStateKeeper.CurrentLogbookID,
             hashData.storageLocation,
             "",
             "",

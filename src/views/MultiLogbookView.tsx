@@ -39,8 +39,8 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         let logbookNames = this.state.logbookNames;
         for (const logbookID of logbooks ){
             const logbookName =
-                await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(logbookID);
-            logbookNames.set(logbookID, logbookName[0]);
+                await this.props.logbookStateKeeper.LogbookName(logbookID);
+            logbookNames.set(logbookID, logbookName);
         }
 
         const newLogbookButtonPlaceholder = "newLogbook";
@@ -94,8 +94,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 }
                                 title={this.state.logbookNames.get(item) || ""}
                                 onPress={() => {
-                                    this.props.logbookStateKeeper.CurrentLogbook = item;
-                                    this.props.navigation.navigate(LogsViewName);
+                                    this.props.logbookStateKeeper.CurrentLogbookID = item;
+                                    this.props.navigation.navigate(LogsViewName, {
+                                        title:this.state.logbookNames.get(item)});
                                 }}
                             />
 

@@ -12,6 +12,7 @@ import Realm from "realm";
 
 // TODO: turn into singleton
 export default class NativeUserPreferences implements LogbookStateKeeper, UserPreferenceStorage{
+
     static get Instance(): NativeUserPreferences {
         if (NativeUserPreferences._Instance){
             return NativeUserPreferences._Instance;
@@ -26,8 +27,10 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
 
         this._Instance = new NativeUserPreferences();
         this._Instance.CurrentUserSettings = DefaultsDict;
-        this._Instance.LoadAllSavedPreferences();
         return this._Instance;
+    }
+    static async Initialize(){
+        return this._Instance.LoadAllSavedPreferences();
     }
 
     private static _Instance:NativeUserPreferences;
@@ -38,6 +41,14 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
     private async LoadAllSavedPreferences(){
         for(const key of Object.keys(this.CurrentUserSettings)){
             this.CurrentUserSettings[key] = await this.GetPersistentUserPreferenceOrDefault(key);
+        }
+        const allLogbooks = this.CurrentUserSettings[UserPreferenceKeys.Logbooks];
+
+        for (const logbookID of allLogbooks){
+            console.log("loading name for id:", logbookID);
+            const logbookName =
+                await this.GetPersistentUserPreferenceOrDefault(logbookID);
+            this.CurrentUserSettings[logbookID]= logbookName;
         }
     }
 
@@ -103,13 +114,21 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
 
     public CurrentSelectedLogs:LogbookEntry[]=[];
 
-    set CurrentLogbook(logbook){
+    LogbookName(logbookID:string):string {
+        if (logbookID ) {
+            return this.CurrentUserSettings[logbookID][0];
+        }
+        return "Not Set"
+    }
+
+    set CurrentLogbookID(logbook){
         this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook] = [logbook];
     }
 
 
     // to satisfy the interface - can't have static methods
-    get CurrentLogbook(): string {
+    get CurrentLogbookID(): string {
+        console.log("current logbook: ", this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0])
         return this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0];
     }
 

@@ -9,7 +9,7 @@ import {
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
-import {Button, SearchBar} from "react-native-elements";
+import {Button, SearchBar, Text} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
 import {AppButtonTint, DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
@@ -32,6 +32,7 @@ type LogbookViewProps={
     logbookStateKeeper:LogbookStateKeeper;
     imageSource:ImageDatabase;
     navigation: any;
+    route:any;
 }
 
 export default class SingleLogbookView extends React.PureComponent<LogbookViewProps, State> {
@@ -59,6 +60,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.FlatList = React.createRef();
         this.getLogs();
         this.props.navigation.addListener('focus', this.onScreenFocus);
+        this.props.navigation.setOptions({
+            title: this.props.route.params.title
+        });
     }
 
 
@@ -97,7 +101,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
     // TODO: maybe add a callback to the logbook state keeper interface?
     logbookChanged() : boolean{
-        return this.previousLogbook != this.props.logbookStateKeeper.CurrentLogbook
+        return this.previousLogbook != this.props.logbookStateKeeper.CurrentLogbookID
     }
 
 
@@ -119,12 +123,12 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     // TODO: implement pages or infinite scroll
     async getLogs(){
 
-        this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbook;
+        this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbookID;
         this.setState({
             refreshing:true
         });
 
-        const currentLogbook=this.props.logbookStateKeeper.CurrentLogbook;
+        const currentLogbook=this.props.logbookStateKeeper.CurrentLogbookID;
         console.log("loading logs for logbook: ", currentLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let allLogs = await this.props.logSource.getRecordsFor(currentLogbook);

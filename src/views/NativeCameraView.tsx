@@ -5,7 +5,7 @@ import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord,  LogMetadata} from "../interfaces/Data";
+import {ImageRecord, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
 import {LogManager} from "../shared/LogManager";
 import {
     requestCameraPermission,
@@ -15,19 +15,30 @@ import {
 } from "../utils/RequestPermissions";
 import {GetPathToCameraRoll, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import NativeUserPreferences from "../native/NativeUserPreferences";
+import {Text} from "react-native-elements";
 
 type State={
     camera:any
     position:GeoPosition
+    logName:string
 }
 type Props={
     imageDatabase:ImageDatabase
+    logbookStateKeeper:LogbookStateKeeper
+    navigation:any
 }
 
 export default class NativeCameraView extends React.PureComponent<Props, State> {
 
+    // state={
+    //   camera:null,
+    //   position:new GeoPosition(),
+    //   logName:this.props.logbookStateKeeper.LogbookName(this.props.logbookStateKeeper.CurrentLogbookID)
+    // };
+
     constructor(props:Props) {
         super(props);
+
     }
     async getPermission(){
         await waitMS(1000);
@@ -77,14 +88,18 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
     }
 
 
-
-
     componentDidMount(): void {
         this.getPermission();
         this.startWatchingGPS();
         this.getStartingGPSCoords();
-    }
+        this.props.navigation.addListener('focus', this.onScreenFocus);
 
+    }
+    onScreenFocus = () => {
+      this.setState({
+          logName:this.props.logbookStateKeeper.LogbookName(this.props.logbookStateKeeper.CurrentLogbookID)
+      })
+    };
 
     render(){
         return(
@@ -120,6 +135,11 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                     <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture} >
                         <Icon name={"checkbox-blank-circle"} color={"white"} size={60} />
                     </TouchableOpacity>
+                </View>
+                <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center', marginBottom:10, marginTop:-10 }}>
+                    <Text style={{color:"white"}}> Logging to Logbook: {" "}
+                        {this.state ? this.state.logName : this.props.logbookStateKeeper.LogbookName(this.props.logbookStateKeeper.CurrentLogbookID)}
+                    </Text>
                 </View>
             </View>
             </>

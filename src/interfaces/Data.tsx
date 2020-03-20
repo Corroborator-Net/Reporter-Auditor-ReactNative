@@ -2,7 +2,8 @@ import {FirstReporterPublicKey} from "../utils/Constants";
 import _ from "lodash";
 
 export interface LogbookStateKeeper {
-    CurrentLogbook:string
+    CurrentLogbookID:string
+    LogbookName(logbookID:string):string
     AvailableLogbooks:string[]
     CurrentSelectedLogs:LogbookEntry[]
 }
