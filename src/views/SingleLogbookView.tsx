@@ -1,5 +1,6 @@
 import React from "react";
 import {
+    Dimensions,
     FlatList,
     RefreshControl,
     SafeAreaView, ScrollView,
@@ -125,7 +126,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbookID;
         this.setState({
-            refreshing:true
+            refreshing:true,
+            currentlySelectedLogs:[]
         });
 
         const currentLogbook=this.props.logbookStateKeeper.CurrentLogbookID;
@@ -190,7 +192,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                         removeClippedSubviews={true}
                         ref={ (ref) => this.FlatList = ref }
                         initialNumToRender={8}
-                        numColumns={2}
+                        numColumns={Dimensions.get("window").width/120}
                         maxToRenderPerBatch={2}
                         data={this.state.filteredLogbookEntries && this.state.searchText != ""
                             ? this.state.filteredLogbookEntries
@@ -213,13 +215,15 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                         // we're in select multiple mode, show blank or checked circles
                                         _.includes(this.state.currentlySelectedLogs,item)?
                                             <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
-                                                marginLeft:75,
+                                                margin:5,
+                                                width:30,
                                                 backgroundColor:"white",
                                                 borderRadius: 50,
                                             }}/>
                                         :
                                             <Icon name={"checkbox-blank-circle-outline"} size={30} color={"black"} style={{
-                                                marginLeft:75,
+                                                margin:5,
+                                                width:30,
                                                 backgroundColor:"white",
                                                 borderRadius: 50,
                                             }}/>
@@ -365,7 +369,7 @@ const styles = StyleSheet.create({
     },
     list: {
         flexDirection: 'column',
-        alignItems:"center",
+        alignItems:"flex-start",
     },
     buttonList:{
         padding:10,

@@ -77,6 +77,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                 </ListItem>
                 {this.state.shotCurrentInfo ? this.parseAndDisplayMetadata(log.Log, log.ImageRecord) : <></>}
 
+                {log.ImageRecord.currentMultiHash != log.RootImageRecord.currentMultiHash ?
                 <ListItem
                     onPress={()=>this.setState({showRootInfo:!this.state.showRootInfo})}
                     title={"Original Log Metadata"}
@@ -88,6 +89,9 @@ export default class DetailLogView extends React.Component<Props, State> {
                     }
                 >
                 </ListItem>
+                    :
+                    <></>
+                }
 
                 {this.state.showRootInfo ? this.parseAndDisplayMetadata(log.RootLog, log.RootImageRecord) : <></>}
             </ScrollView>

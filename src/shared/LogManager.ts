@@ -51,13 +51,17 @@ export class LogManager implements HashReceiver{
             console.log("edited record current hash:", record.currentMultiHash);
             console.log("edited record root hash:", record.rootMultiHash);
             await this.SaveToCameraRoll(record);
+            const logMetadata = new LogMetadata(
+                record.metadata,
+                "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
+            );
             const newLog = new Log(
                 oldLog.logBookAddress,
                 record.storageLocation,
                 oldLog.rootTransactionHash,
                 "",
                 record.currentMultiHash,
-                record.metadata
+                logMetadata.JsonData()
                 );
             editedLogsToUpload.push(newLog);
         }

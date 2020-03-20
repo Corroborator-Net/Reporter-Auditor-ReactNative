@@ -1,7 +1,7 @@
 import {Log, LogbookEntry, LogMetadata} from "../interfaces/Data";
 import React from "react";
-import {ListItem} from "react-native-elements";
-import {ImageBackground, StyleSheet} from "react-native";
+import {Text} from "react-native-elements";
+import {ImageBackground, StyleSheet, View} from "react-native";
 import {CorroboratedUnsynced, LocalOnly, Synced} from "../utils/Constants";
 
 type CellProps = {
@@ -19,35 +19,37 @@ export default class LogCell extends React.Component<CellProps,CellState> {
 
     render(){
         return (
-            <ListItem
+            <View
                 style={{
                     backgroundColor: this.getColorForLog(this.props.item),
                     padding: 5,
                     margin: 2,
-                    maxHeight:150,
-                    width:150,
-                }}
-                // onPress={this.props.onPress}
-                // TODO: must decrypt these
-                title={ this.props.src.length < 50 ?
-                    JSON.parse(this.props.item.Log.signedMetadataJson)["0"][LogMetadata.DateTag]
+                    height:110,
+                    width:110,
+                    justifyContent:"center",
+                    alignContent:"center",
+
+                    }}
+            >
+                {this.props.src.length < 50 ?
+                    <></>
                     :
-                    ""
+                    <ImageBackground
+                        source={{uri: this.props.src}}
+                        resizeMethod={"resize"}
+                        style={styles.image}
+                    >
+                        {this.props.onSelectedOverlay}
+                    </ImageBackground>
                 }
-                titleStyle={styles.title}
-                leftIcon={
+                {
                     this.props.src.length < 50 ?
-                        <></>
+
+                        <Text>{JSON.parse(this.props.item.Log.signedMetadataJson)["0"][LogMetadata.DateTag]}</Text>
                         :
-                        <ImageBackground
-                            source={{uri: this.props.src}}
-                            resizeMethod={"resize"}
-                            style={styles.image}
-                        >
-                            {this.props.onSelectedOverlay}
-                        </ImageBackground>
-                }
-            />
+                        <></>
+                    }
+            </View>
         );
     }
 
@@ -85,14 +87,13 @@ export default class LogCell extends React.Component<CellProps,CellState> {
 const styles = StyleSheet.create({
     title: {
         fontSize: 15,
-        // flex:1,
-        // flexWrap: 'wrap',
         alignSelf:"center",
     },
 
     image:{
-        width: 105,
+        width: 100,
         height: 100,
+        alignSelf:"center",
     },
 
 });

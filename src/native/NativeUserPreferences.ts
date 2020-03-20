@@ -128,7 +128,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
 
     // to satisfy the interface - can't have static methods
     get CurrentLogbookID(): string {
-        console.log("current logbook: ", this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0])
+        // console.log("current logbook: ", this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0])
         return this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0];
     }
 
