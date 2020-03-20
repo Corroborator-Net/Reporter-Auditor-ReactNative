@@ -1,6 +1,6 @@
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {HashData, ImageRecord, ImageRecordSchema, Log, LogSchema, RealmSchemas} from "../interfaces/Data";
+import { ImageRecord, ImageRecordSchema, Log, RealmSchemas} from "../interfaces/Data";
 import Realm from "realm";
 import {GetPathToCameraRoll, ModifiedAlbum, StorageSchemaVersion} from "../utils/Constants"
 import RNFetchBlob from "rn-fetch-blob";
@@ -11,8 +11,6 @@ export default class NativeImageStorage implements ImageDatabase{
 
 
     public async updateImageRecordToHead(imageRecord:ImageRecord): Promise<string> {
-        // TODO: update image record with new storage location in the modified album
-        // console.log("starting location:",imageRecord.storageLocation);
         // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
         // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
         await RNFetchBlob.fs.createFile(
@@ -26,8 +24,6 @@ export default class NativeImageStorage implements ImageDatabase{
             console.log(`already a file at ${imageRecord.storageLocation} in camera roll , carrying on`)
         });
 
-
-        // console.log("modified record storage location:", imageRecord.storageLocation);
 
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
