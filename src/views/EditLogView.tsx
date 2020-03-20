@@ -10,6 +10,7 @@ import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
 import {AppButtonTint, waitMS} from "../utils/Constants";
+import SingleLogbookView from "./SingleLogbookView";
 
 
 type Props={
@@ -114,6 +115,7 @@ export default class EditLogView extends React.Component<Props, State> {
 
             }
         }
+        SingleLogbookView.ShouldUpdateLogbookView=true;
         this.setState({
             saving:false
         });

@@ -91,6 +91,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                syncing = false;
            }
             console.log("done syncing!");
+            // give the db a second to update so we can update colors appropriately
+            await waitMS(100);
             this.setState({
                 refreshing:false,
             },
