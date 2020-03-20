@@ -23,7 +23,6 @@ type  Props={
 }
 
 export default class MultiLogbookView extends React.PureComponent<Props, State> {
-    FlatList:any=null;
 
     state={
         logbooks:new Array<string>(),
@@ -53,7 +52,6 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     }
 
     componentDidMount = async () => {
-        this.FlatList = React.createRef();
         // get the current saved logbooks in user storage
         await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Logbooks);
         this.props.userPreferences.SetNewPersistentUserPreference("RequireReadWrite", ["GiveMePermission"]);
@@ -67,7 +65,6 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
                 <FlatList
                     removeClippedSubviews={true}
-                    ref={ (ref) => this.FlatList = ref }
                     initialNumToRender={1}
                     numColumns={2}
                     maxToRenderPerBatch={2}
