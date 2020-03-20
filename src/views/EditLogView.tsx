@@ -9,7 +9,7 @@ import {ImageDatabase} from "../interfaces/Storage";
 import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
-import {AppButtonTint} from "../utils/Constants";
+import {AppButtonTint, waitMS} from "../utils/Constants";
 
 
 type Props={
@@ -31,25 +31,34 @@ export default class EditLogView extends React.Component<Props, State> {
         saving:false,
     };
 
+    listExifKeysValues(exifObj:any){
+        // for (const ifd in exifObj) {
+        //     if (ifd == "thumbnail") {
+        //         continue;
+        //     }
+        //     console.log("-" + ifd);
+        //     for (var tag in exifObj[ifd]) {
+        //
+        //         console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
+        //         console.log("ifd:", ifd, "tag:", tag)
+        //
+        //
+        //     }
+        // }
+    }
+
     async saveEditedImageData(){
+        // let the loading spinner start spinning
+        await waitMS(500);
         if (this.state.newImageDescription != "") {
+            const dirs = RNFetchBlob.fs.dirs;
+            const temp = dirs.CacheDir;
+
             for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
                 const jpeg = `data:image/jpeg;base64,${log.ImageRecord.base64Data}`;
                 // load the exif data for viewing
                 const exifObj = piexif.load(jpeg);
-                // for (const ifd in exifObj) {
-                //     if (ifd == "thumbnail") {
-                //         continue;
-                //     }
-                //     console.log("-" + ifd);
-                //     for (var tag in exifObj[ifd]) {
-                //
-                //         console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
-                //         console.log("ifd:", ifd, "tag:", tag)
-                //
-                //
-                //     }
-                // }
+                // this.listExifKeysValues(exifObj);
 
                 // console.log("EDITING TAG");
                 exifObj["0th"][270] = this.state.newImageDescription;
@@ -83,8 +92,7 @@ export default class EditLogView extends React.Component<Props, State> {
                 const timestamp = "_EditedOn_D:" + time.toLocaleDateString().replace("/", "_").replace("/", "_")
                     + "_T:" + time.toLocaleTimeString();
 
-                const dirs = RNFetchBlob.fs.dirs;
-                const temp = dirs.CacheDir;
+
                 const fileName = log.RootLog.storageLocation.slice(log.RootLog.storageLocation.lastIndexOf("/") + 1);
                 const newPath = temp + "/" + fileName.slice(0, fileName.length - 4) + timestamp + ".jpg";
 
@@ -98,8 +106,6 @@ export default class EditLogView extends React.Component<Props, State> {
 
 
                 if (log.imageRecords.length > 1) {
-                    // console.log("replacing previous head image record");
-
                     await this.props.imageDatabase.add(newImageRecord);
 
                 } else {
@@ -201,6 +207,7 @@ export default class EditLogView extends React.Component<Props, State> {
                             this.saveEditedImageData)
                         }}
                         loading={this.state.saving}
+                        loadingProps={{color:"white", size:"large"}}
                         icon={<Icon name={"content-save-outline"} size={30} color={"white"} style={{}}/>
                         }
                     />
