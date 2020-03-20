@@ -256,7 +256,11 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
     OptionsButton() {
         return (
-            <View >
+            <View style={{
+                position:"absolute",
+                bottom:10,
+                right:10,
+            }}>
                 {this.state.showingOptionsButton ?
 
                 <ScrollView style={styles.buttonList}>
@@ -267,7 +271,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                     type={"outline"}
                                     title="Sync"
                                     titleStyle={{color:AppButtonTint}}
-                                    buttonStyle={{marginRight: 10}}
                                     icon={<Icon name={"sync"} size={25} color={AppButtonTint} style={{marginRight: 7}}/>}
                             />
                             < Button onPress={() => this.onEditButtonPressed()}
@@ -276,7 +279,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                                      type={"outline"}
                                     titleStyle={{color:AppButtonTint}}
                                      title="Edit"
-                                     buttonStyle={{marginRight: 10}}
                                      icon={<Icon name={"pencil"} size={25} color={AppButtonTint} style={{marginRight: 7}}/>}
                             />
                         </>
@@ -293,7 +295,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                         bottom: 10,
                         right: 10,
                         height: 85,
-                        backgroundColor: 'white',
+                        backgroundColor: AppButtonTint,
                         borderRadius: 100,
                     }}
                     style={{
@@ -307,7 +309,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                         this.setState({
                             showingOptionsButton:!this.state.showingOptionsButton
                         })}}
-                    icon={<Icon name={"dots-horizontal"} size={20} color={AppButtonTint}/>}
+                    icon={<Icon name={"dots-horizontal"} size={30} color={"white"}/>}
                 >
 
 
@@ -338,13 +340,15 @@ const styles = StyleSheet.create({
         marginLeft:20,
         width:150,
         zIndex:100,
-        backgroundColor:"white",
+        backgroundColor:AppButtonTint,
         borderColor:"grey",
         borderRadius:10,
         alignSelf:"flex-end",
+        marginBottom:10,
     },
     buttonContainer:{
-        margin:6,
+        backgroundColor: "white",
+        margin:5,
     },
     button:{
         width:100,

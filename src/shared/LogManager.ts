@@ -13,7 +13,6 @@ import _ from "lodash";
 import CameraRoll from "@react-native-community/cameraroll";
 
 
-// TODO: make singleton
 export class LogManager implements HashReceiver{
 
     logsToSync:Log[] = [];
@@ -68,7 +67,6 @@ export class LogManager implements HashReceiver{
     }
 
 
-    // TODO: how to implement?
     public async SaveToCameraRoll(hashableData:HashData) {
 
         console.log(hashableData.storageLocation);
@@ -78,18 +76,14 @@ export class LogManager implements HashReceiver{
             hashableData.storageLocation.slice("file://".length),
             hashableData.base64Data,
             "base64").then(async ()=>{
-            // await waitMS(10);
             await CameraRoll.saveToCameraRoll(hashableData.storageLocation, "photo");
         })
-
     }
 
-    // TODO how can we make this deterministic?
     public async LoadFileToGetBase64AndHash(hashData:HashData):Promise<string[]> {
 
-        await waitMS(20);
-        // console.log("Waited before reading to produce hash");
-        // this.hashManager.GetHash(hashData,hashData.base64Data);
+        // await waitMS(20);
+        console.log("No longer waiting to produce hash, double check the hashes match!");
 
        return RNFetchBlob.fs.readFile(hashData.storageLocation, 'base64')
             .then((data) => {
@@ -177,7 +171,6 @@ export class LogManager implements HashReceiver{
     }
 
     async checkForUnsyncedLogs(){
-        // TODO: the returned logs have their string arrays set to indexed objects. Weird!
         const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
         if (unsyncedLogs.length>0) {
             this.syncLogs(unsyncedLogs);
