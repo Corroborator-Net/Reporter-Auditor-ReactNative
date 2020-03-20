@@ -9,7 +9,7 @@ import {
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
-import {Button} from "react-native-elements";
+import {Button, SearchBar} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
 import {AppButtonTint, DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
@@ -17,13 +17,14 @@ import { LogManager} from "../shared/LogManager";
 
 type State={
     logbookEntries:LogbookEntry[]
+    filteredLogbookEntries:LogbookEntry[]
     refreshing:boolean
     selectingMultiple:boolean
     currentlySelectedLogs:LogbookEntry[]
     rerenderSelectedCells:boolean
     currentPage:number
     showingOptionsButton:boolean
-
+    searchText:string
 }
 
 type LogbookViewProps={
@@ -42,12 +43,14 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     FlatList:any=null;
     state={
         logbookEntries:new Array<LogbookEntry>(),
+        filteredLogbookEntries:new Array<LogbookEntry>(),
         refreshing:false,
         selectingMultiple:false,
         currentlySelectedLogs:new Array<LogbookEntry>(),
         rerenderSelectedCells:false,
         currentPage:0,
         showingOptionsButton:false,
+        searchText:"",
     };
 
 
@@ -145,17 +148,50 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         });
     }
 
+    search(searchText:string){
+        this.setState({
+            searchText:searchText
+        });
+        searchText = searchText.toLowerCase();
+
+        // TODO: search by date, log status, what else?
+        let filteredLogbookEntries = this.state.logbookEntries.filter(function (log) {
+            return(
+                // log.RootLog.signedMetadataJson.includes(searchText) ||
+                // log.Log.signedMetadataJson.includes(searchText) ||
+                    log.ImageRecord.metadata.toLowerCase().includes(searchText) ||
+                    log.ImageRecord.storageLocation.toLowerCase().includes(searchText) ||
+                    log.RootImageRecord.metadata.toLowerCase().includes(searchText)
+            );
+        });
+
+        this.setState({filteredLogbookEntries: filteredLogbookEntries});
+    }
+
 
     render() {
         return (
             <SafeAreaView style={styles.container}>
+                <SearchBar
+                    containerStyle={{backgroundColor:"transparent"}}
+                    round={true}
+                    lightTheme={true}
+                    placeholder="Search Logs..."
+                    autoCapitalize='none'
+                    autoCorrect={false}
+                    onChangeText={ (text => {this.search(text)})}
+                    value={this.state.searchText}
+                />
                 <FlatList
                         removeClippedSubviews={true}
                         ref={ (ref) => this.FlatList = ref }
                         initialNumToRender={8}
                         numColumns={2}
                         maxToRenderPerBatch={2}
-                        data={this.state.logbookEntries}
+                        data={this.state.filteredLogbookEntries && this.state.searchText != ""
+                            ? this.state.filteredLogbookEntries
+                            : this.state.logbookEntries
+                        }
                         contentContainerStyle={styles.list}
                         renderItem={({item}) =>
                             <TouchableOpacity
@@ -320,7 +356,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 25,
+        marginTop: 0,
+
     },
     list: {
         flexDirection: 'column',

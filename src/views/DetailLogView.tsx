@@ -66,7 +66,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                 />
                 <ListItem
                     onPress={()=>this.setState({shotCurrentInfo:!this.state.shotCurrentInfo})}
-                    title={"Show Most Recent Log Metadata"}
+                    title={"Most Recent Log Metadata"}
                     containerStyle={styles.title}
                     chevron={this.state.shotCurrentInfo ?
                         <Icon name={"chevron-down"} size={20} color={"black"}/>
@@ -79,7 +79,7 @@ export default class DetailLogView extends React.Component<Props, State> {
 
                 <ListItem
                     onPress={()=>this.setState({showRootInfo:!this.state.showRootInfo})}
-                    title={"Show Original Log Metadata"}
+                    title={"Original Log Metadata"}
                     containerStyle={styles.title}
                     chevron={this.state.showRootInfo ?
                       <Icon name={"chevron-down"} size={20} color={"black"}/>
