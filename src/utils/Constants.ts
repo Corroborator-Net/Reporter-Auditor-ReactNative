@@ -20,6 +20,9 @@ export const EditLogsViewName = "EditLogs";
 
 export const AppButtonTint='#459cff';
 
+export const OriginalAlbum = "Original Corroborator Pictures";
+export const ModifiedAlbum = "Modified Corroborator Pictures";
+
 export const UserPreferenceKeys={
     ImageDescription:"Image Description",
     CurrentLogbook:"Current Logbook",
@@ -33,10 +36,16 @@ return `data:image/jpeg;base64,${imageData}`;
 
 
 // TODO extend to ios
-export function GetPathToCameraRoll(fileName:string){
-    const AndroidFileStorageLocation="file:///storage/emulated/0/Pictures/";
+export function GetPathToCameraRoll(fileName:string, original:boolean){
+    let StorageLocation="file:///storage/emulated/0/Pictures/";
     if (Platform.OS == 'ios'){
         console.log("ERROR, IOS FULL PATH NOT YET TESTED")
     }
-    return AndroidFileStorageLocation +fileName;
+    if (original){
+        StorageLocation += OriginalAlbum + "/"
+    }
+    else{
+        StorageLocation += ModifiedAlbum + "/"
+    }
+    return StorageLocation +fileName;
 }

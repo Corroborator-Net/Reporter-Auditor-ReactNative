@@ -1,4 +1,4 @@
-import {LogbookDatabase} from "../interfaces/Storage";
+import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
@@ -25,10 +25,11 @@ export class LogManager implements HashReceiver{
                 public hashManager:HashManager,
                 public blockchainManager:BlockchainInterface,
                 public logbookStateKeeper:LogbookStateKeeper,
+                public imageDatabase:ImageDatabase,
                 ) {
         if (LogManager.Instance){
             console.log("ERROR: multiple instances of log manager created");
-            return;
+            return LogManager.Instance;
         }
         LogManager.Instance= this;
         hashManager.hashReceivers.push(this);
@@ -37,7 +38,7 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async UploadEditedLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
+    public async SyncEditedOrNewLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
         console.log("uploading edited logs:", logbookEntries.length);
 
         let editedLogsToUpload = new Array<Log>();
@@ -48,9 +49,17 @@ export class LogManager implements HashReceiver{
                 console.log("skipping log upload as hash hasn't changed and the log has a transaction hash");
                 continue;
             }
-            console.log("edited record current hash:", record.currentMultiHash);
-            console.log("edited record root hash:", record.rootMultiHash);
-            await this.SaveToCameraRoll(record);
+
+            // delete old image records and images in the camera roll if they exist
+            for (const oldRecord of entry.imageRecords){
+                // we have multiple image records. let's remove the current head then
+                if (oldRecord.currentMultiHash != entry.RootImageRecord.currentMultiHash &&
+                    oldRecord.currentMultiHash != record.currentMultiHash){
+                    await this.imageDatabase.removeImageRecord(oldRecord);
+                }
+            }
+            await this.imageDatabase.updateImageRecordToHead(record);
+
             const logMetadata = new LogMetadata(
                 record.metadata,
                 "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
@@ -71,33 +80,6 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async SaveToCameraRoll(hashableData:HashData) {
-
-        console.log(hashableData.storageLocation);
-        // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
-        // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
-        RNFetchBlob.fs.createFile(
-            hashableData.storageLocation.slice("file://".length),
-            hashableData.base64Data,
-            "base64").then(async ()=>{
-            await CameraRoll.saveToCameraRoll(hashableData.storageLocation, "photo");
-        })
-    }
-
-    public async LoadFileToGetBase64AndHash(hashData:HashData):Promise<string[]> {
-
-        // await waitMS(20);
-        console.log("No longer waiting to produce hash, double check the hashes match!");
-
-       return RNFetchBlob.fs.readFile(hashData.storageLocation, 'base64')
-            .then((data) => {
-                // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
-                // console.log("log manager reading file: ", data.slice(0,50));
-
-                // TODO: check if the data starts with `data:image/jpeg;base64,${base64Data}` and remove it if so?
-                return [data, HashManager.GetHashSync(data)];
-            })
-    }
 
 
     OnHashProduced(hashData: HashData): void {
@@ -131,7 +113,6 @@ export class LogManager implements HashReceiver{
         // console.log("new log to log: ", newLog);
         // log the data after if/we get signatures
         this.logStorage.addNewRecord(newLog).then(()=> {
-                console.log("should update!");
                 SingleLogbookView.ShouldUpdateLogbookView = true
             }
         );

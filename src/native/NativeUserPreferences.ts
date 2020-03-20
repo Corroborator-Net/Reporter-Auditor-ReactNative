@@ -45,7 +45,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
         const allLogbooks = this.CurrentUserSettings[UserPreferenceKeys.Logbooks];
 
         for (const logbookID of allLogbooks){
-            console.log("loading name for id:", logbookID);
+            // console.log("loading name for id:", logbookID);
             const logbookName =
                 await this.GetPersistentUserPreferenceOrDefault(logbookID);
             this.CurrentUserSettings[logbookID]= logbookName;
@@ -98,7 +98,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
                 const currentUserPreferenceList:string[] =
                     Object.setPrototypeOf(Array.from(currentUserPreference)[0],UserPreference).Preference;
                 this.CurrentUserSettings[key] = currentUserPreferenceList;
-                console.log("got current user setting: ", currentUserPreferenceList);
+                // console.log("got current user setting: ", currentUserPreferenceList);
                 return currentUserPreferenceList;
 
             })

@@ -5,6 +5,7 @@ import {LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {LogsViewName, UserPreferenceKeys} from "../utils/Constants";
+import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 
 
 type State={
@@ -52,6 +53,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     }
 
     componentDidMount = async () => {
+        await requestStoragePermission();
+        await requestWritePermission();
+
         // get the current saved logbooks in user storage
         await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Logbooks);
         this.props.userPreferences.SetNewPersistentUserPreference("RequireReadWrite", ["GiveMePermission"]);

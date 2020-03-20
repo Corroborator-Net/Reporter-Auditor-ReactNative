@@ -13,9 +13,11 @@ import {
     requestStoragePermission,
     requestWritePermission
 } from "../utils/RequestPermissions";
-import {GetPathToCameraRoll, UserPreferenceKeys, waitMS} from "../utils/Constants";
+import {GetPathToCameraRoll, OriginalAlbum, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import NativeUserPreferences from "../native/NativeUserPreferences";
 import {Text} from "react-native-elements";
+import RNFetchBlob from "rn-fetch-blob";
+import HashManager from "../shared/HashManager";
 
 type State={
     camera:any
@@ -42,7 +44,6 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
     }
     async getPermission(){
         await waitMS(1000);
-
         await requestStoragePermission();
         await requestWritePermission();
         await requestCameraPermission();
@@ -173,9 +174,9 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         // Add filename to metadata
         const fileName = data.uri.slice(data.uri.lastIndexOf("/") + 1);
         data.exif[LogMetadata.FileName] = fileName;
-        const fullPath = GetPathToCameraRoll(fileName);
+        const fullPath = GetPathToCameraRoll(fileName, true);
 
-        await CameraRoll.saveToCameraRoll(data.uri, "photo");
+        await CameraRoll.save(data.uri, {type:'photo',album:OriginalAlbum});
         // construct image record here
         const imageData = new ImageRecord(
             new Date(),
@@ -185,18 +186,21 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             "",
             data.exif);
 
-
-        // Log manager fills the base64 data for us TODO: let's store a thumbnail, not the entire image
-        LogManager.Instance.LoadFileToGetBase64AndHash(imageData).then(data=>{
-            imageData.base64Data = data[0];
-            imageData.currentMultiHash = data[1];
-            imageData.rootMultiHash = data[1];
-            // console.log("imagedata's hash:", imageData.currentMultiHash);
-            this.props.imageDatabase.add(imageData);
-            LogManager.Instance.OnHashProduced(imageData);
-        });
-
+        RNFetchBlob.fs.readFile(imageData.storageLocation, 'base64')
+            .then((data) => {
+                // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
+                console.log("image saved at:", imageData.storageLocation);
+                const hash = HashManager.GetHashSync(data);
+                imageData.base64Data = data;
+                imageData.currentMultiHash = hash;
+                imageData.rootMultiHash = hash;
+                // console.log("imagedata's hash:", imageData.currentMultiHash);
+                this.props.imageDatabase.add(imageData);
+                LogManager.Instance.OnHashProduced(imageData);
+            })
     }
+
+
 }
 
 

@@ -10,7 +10,7 @@ import {
 import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
-import {Button, SearchBar, Text} from "react-native-elements";
+import {Button, SearchBar} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
 import {AppButtonTint, DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
@@ -78,22 +78,24 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 
     async resyncSelectedLogs(){
-        console.log("resync!");
-
         this.setState({
             selectingMultiple:false,
             currentlySelectedLogs:new Array<LogbookEntry>(),
             refreshing:true,
         });
-        // TODO: show user we're uploading the logs!
-        LogManager.Instance.UploadEditedLogs(this.state.currentlySelectedLogs).then(async ()=>{
-           while (LogManager.Instance.syncingLogs){
-               await waitMS(50);
+
+        LogManager.Instance.SyncEditedOrNewLogs(this.state.currentlySelectedLogs).then(async (syncing)=>{
+            while (LogManager.Instance.syncingLogs || syncing){
+               console.log("syncing!");
+               await waitMS(1000);
+               syncing = false;
            }
+            console.log("done syncing!");
             this.setState({
-                rerenderSelectedCells:!this.state.rerenderSelectedCells,
                 refreshing:false,
-            });
+            },
+                this.getLogs
+            );
         });
 
     }

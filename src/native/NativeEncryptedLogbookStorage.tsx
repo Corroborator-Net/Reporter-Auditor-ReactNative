@@ -13,7 +13,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    const newLog = realm.create(
+                    realm.create(
                         LogSchema.name,
                         log,
                         Realm.UpdateMode.Modified

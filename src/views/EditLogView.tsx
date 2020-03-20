@@ -32,95 +32,81 @@ export default class EditLogView extends React.Component<Props, State> {
     };
 
     async saveEditedImageData(){
-        if (this.state.newImageDescription == ""){
-            this.setState({
-                saving:false
-            });
-            return
-        }
-        for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
+        if (this.state.newImageDescription != "") {
+            for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
+                const jpeg = `data:image/jpeg;base64,${log.ImageRecord.base64Data}`;
+                // load the exif data for viewing
+                const exifObj = piexif.load(jpeg);
+                // for (const ifd in exifObj) {
+                //     if (ifd == "thumbnail") {
+                //         continue;
+                //     }
+                //     console.log("-" + ifd);
+                //     for (var tag in exifObj[ifd]) {
+                //
+                //         console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
+                //         console.log("ifd:", ifd, "tag:", tag)
+                //
+                //
+                //     }
+                // }
 
-            // I want image records with matching root hashes
-            const imageRecordsWithMatchingRootHashes = log.imageRecords;
-            // console.log("length:",imageRecordsWithMatchingRootHashes.length);
-            // console.log("first:", imageRecordsWithMatchingRootHashes[0].metadata);
-            const mostRecentImageRecord = imageRecordsWithMatchingRootHashes[imageRecordsWithMatchingRootHashes.length - 1];
-            console.log("most recent", mostRecentImageRecord.metadata);
-            const jpeg = `data:image/jpeg;base64,${mostRecentImageRecord.base64Data}`;
-            // load the exif data for viewing
-            const exifObj = piexif.load(jpeg);
-            // for (const ifd in exifObj) {
-            //     if (ifd == "thumbnail") {
-            //         continue;
-            //     }
-            //     console.log("-" + ifd);
-            //     for (var tag in exifObj[ifd]) {
-            //
-            //         console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
-            //         console.log("ifd:", ifd, "tag:", tag)
-            //
-            //
-            //     }
-            // }
+                // console.log("EDITING TAG");
+                exifObj["0th"][270] = this.state.newImageDescription;
 
-            // console.log("EDITING TAG");
-            exifObj["0th"][270] = this.state.newImageDescription;
+                // after editing the exif, dump it into a string
+                const exifString = piexif.dump(exifObj);
 
-            // after editing the exif, dump it into a string
-            const exifString = piexif.dump(exifObj);
+                // OVERWRITE the string into the jpeg - insert is not properly named!
+                const newJpeg = piexif.insert(exifString, jpeg);
+                const newBase64Data = newJpeg.slice("data:image/jpeg;base64,".length);
 
-            // OVERWRITE the string into the jpeg - insert is not properly named!
-            const newJpeg = piexif.insert(exifString, jpeg);
-            const newBase64Data = newJpeg.slice("data:image/jpeg;base64,".length);
+                // TODO: let's get new gps coords so we know were the user edited the data
+                const oldExif = JSON.parse(log.ImageRecord.metadata);
+                const exif: { [name: string]: any } = {
+                    [LogMetadata.GPSLat]: oldExif[LogMetadata.GPSLat],
+                    [LogMetadata.GPSLong]: oldExif[LogMetadata.GPSLong],
+                    [LogMetadata.GPSAlt]: oldExif[LogMetadata.GPSAlt],
+                    [LogMetadata.GPSSpeed]: oldExif[LogMetadata.GPSSpeed],
+                    [LogMetadata.GPSAcc]: oldExif[LogMetadata.GPSAcc],
+                    [LogMetadata.ImageDescription]: exifObj["0th"][270],
+                };
 
-            // TODO: let's get new gps coords so we know were the user edited the data
-            const oldExif = JSON.parse(mostRecentImageRecord.metadata);
-            const exif: { [name: string]: any } = {
-                [LogMetadata.GPSLat]: oldExif[LogMetadata.GPSLat],
-                [LogMetadata.GPSLong]: oldExif[LogMetadata.GPSLong],
-                [LogMetadata.GPSAlt]: oldExif[LogMetadata.GPSAlt],
-                [LogMetadata.GPSSpeed] : oldExif[LogMetadata.GPSSpeed],
-                [LogMetadata.GPSAcc] :oldExif[LogMetadata.GPSAcc],
-                [LogMetadata.ImageDescription]: exifObj["0th"][270],
-            };
+                const newHash = HashManager.GetHashSync(newBase64Data);
+                if (newHash == log.ImageRecord.currentMultiHash) {
+                    console.log("data is unchanged");
+                    continue;
+                }
 
-            const newHash = HashManager.GetHashSync(newBase64Data);
-            if ( newHash == mostRecentImageRecord.currentMultiHash){
-                console.log("data is unchanged");
-                continue;
+
+                const time = new Date();
+                const timestamp = "_EditedOn_D:" + time.toLocaleDateString().replace("/", "_").replace("/", "_")
+                    + "_T:" + time.toLocaleTimeString();
+
+                const dirs = RNFetchBlob.fs.dirs;
+                const temp = dirs.CacheDir;
+                const fileName = log.RootLog.storageLocation.slice(log.RootLog.storageLocation.lastIndexOf("/") + 1);
+                const newPath = temp + "/" + fileName.slice(0, fileName.length - 4) + timestamp + ".jpg";
+
+                const newImageRecord = new ImageRecord(
+                    time,
+                    newPath,
+                    log.RootLog.dataMultiHash,
+                    newHash,
+                    newBase64Data,
+                    exif);
+
+
+                if (log.imageRecords.length > 1) {
+                    // console.log("replacing previous head image record");
+
+                    await this.props.imageDatabase.add(newImageRecord);
+
+                } else {
+                    await this.props.imageDatabase.add(newImageRecord);
+                }
+
             }
-
-
-            const time = new Date();
-            const timestamp = "_EditedOn_D:" + time.toLocaleDateString().replace("/","_").replace("/","_")
-                +"_T:" + time.toLocaleTimeString();
-
-            const dirs = RNFetchBlob.fs.dirs;
-            const temp = dirs.CacheDir;
-            const fileName = log.RootLog.storageLocation.slice(log.Log.storageLocation.lastIndexOf("/") + 1);
-            const newPath = temp + "/" + fileName.slice(0,fileName.length-4) + timestamp + ".jpg";
-            // console.log("new storage location:",newPath);
-
-            const newImageRecord = new ImageRecord(
-                time,
-                newPath,
-                log.RootLog.dataMultiHash,
-                newHash,
-                newBase64Data,
-                exif);
-
-
-            if (imageRecordsWithMatchingRootHashes.length > 1) {
-                // console.log("replacing previous head image record");
-                // we have multiple image records. let's remove the current head then
-                await this.props.imageDatabase.removeImageRecord(mostRecentImageRecord);
-                console.log("deleted record, now adding the edited one");
-                await this.props.imageDatabase.add(newImageRecord);
-
-            } else {
-                await this.props.imageDatabase.add(newImageRecord);
-            }
-
         }
         this.setState({
             saving:false

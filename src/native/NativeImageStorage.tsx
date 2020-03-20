@@ -1,23 +1,68 @@
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord, ImageRecordSchema, Log, RealmSchemas} from "../interfaces/Data";
+import {HashData, ImageRecord, ImageRecordSchema, Log, LogSchema, RealmSchemas} from "../interfaces/Data";
 import Realm from "realm";
-import {StorageSchemaVersion} from "../utils/Constants"
+import {GetPathToCameraRoll, ModifiedAlbum, StorageSchemaVersion} from "../utils/Constants"
+import RNFetchBlob from "rn-fetch-blob";
+import CameraRoll from "@react-native-community/cameraroll";
 
 // NATIVE IMPLEMENTATION
 export default class NativeImageStorage implements ImageDatabase{
+
+
+    public async updateImageRecordToHead(imageRecord:ImageRecord): Promise<string> {
+        // TODO: update image record with new storage location in the modified album
+        // console.log("starting location:",imageRecord.storageLocation);
+        // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
+        // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
+        await RNFetchBlob.fs.createFile(
+            imageRecord.storageLocation.slice("file://".length),
+            imageRecord.base64Data,
+            "base64").catch(()=>{
+                console.log(`already a file at ${imageRecord.storageLocation} , carrying on`)
+        });
+        const fileName = imageRecord.storageLocation.slice(imageRecord.storageLocation.lastIndexOf("/")+1);
+        await CameraRoll.save(imageRecord.storageLocation, {type:'photo',album:ModifiedAlbum}).catch(()=>{
+            console.log(`already a file at ${imageRecord.storageLocation} in camera roll , carrying on`)
+        });
+
+
+        // console.log("modified record storage location:", imageRecord.storageLocation);
+
+        return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
+            .then(realm => {
+                // Create Realm objects and write to local storage
+                realm.write(() => {
+                    imageRecord.storageLocation = GetPathToCameraRoll(fileName, false);
+
+                    realm.create(
+                        ImageRecordSchema.name,
+                        imageRecord,
+                        Realm.UpdateMode.Modified
+                    );
+                    return  ""; // no error
+                });
+
+            })
+            .catch((error) => {
+                console.log("error on update image record:", error);
+                return error
+            });
+    }
+
+
 
     public async add(picture:ImageRecord): Promise<string>{
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    const newHash = realm.create(ImageRecordSchema.name,
+                    realm.create(ImageRecordSchema.name,
                         picture
                     );
                     // console.log(newHash.multiHash);
+                    return  ""; // no error
                 });
-                return  ""; // no error
             })
             .catch((error) => {
                 console.log( "error on add image record!",error);
@@ -70,12 +115,17 @@ export default class NativeImageStorage implements ImageDatabase{
     }
 
     public async removeImageRecord(imageRecord: ImageRecord): Promise<string> {
+
+        console.log("deleting record at: ", imageRecord.storageLocation);
+
+        await CameraRoll.deletePhotos([imageRecord.storageLocation]).catch(()=>{
+            console.log("couldn't delete that one from the camera roll")
+            });
+
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    // console.log("deleting record with key:", imageRecord.currentMultiHash);
-                    // const record = realm.create(ImageRecordSchema.name, imageRecord);
                     realm.delete(imageRecord);
                     return "deleted"; // no error
                 });

@@ -54,6 +54,7 @@ class App extends PureComponent{
         this.hashManager,
         this.blockchainManager,
         this.userPreferences,
+        this.imageStorage,
     );
     componentDidMount(): void {
         NativeUserPreferences.Initialize().then(()=>{
