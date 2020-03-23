@@ -48,7 +48,7 @@ export class NativeAtraManager implements BlockchainInterface {
                 log.dataMultiHash,
                 log.storageLocation.slice(0,6),
                 log.rootTransactionHash==""?"null":log.rootTransactionHash,
-                log.signedMetadataJson,
+                log.encryptedMetadataJson,
             ]
         };
         return JSON.stringify(jsonTransaction);

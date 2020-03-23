@@ -1,8 +1,9 @@
-import {Log, LogbookEntry, LogMetadata} from "../interfaces/Data";
+import {Log, LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, View} from "react-native";
-import {CorroboratedUnsynced, LocalOnly, Synced} from "../utils/Constants";
+import {CorroboratedUnsynced, LocalOnly, ReporterPEMKey, Synced} from "../utils/Constants";
+import {LogMetadata} from "../shared/LogMetadata";
 
 type CellProps = {
     src: string;
@@ -18,6 +19,9 @@ export default class LogCell extends React.Component<CellProps,CellState> {
 
 
     render(){
+        const shouldShowImage =  this.props.src.length > 50;
+        // console.log("encrypted json:",this.props.item.Log.encryptedMetadataJson);
+        // console.log("successfully decrypted my own log metadata!:", logMetadata.pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey])
         return (
             <View
                 style={{
@@ -31,9 +35,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
 
                     }}
             >
-                {this.props.src.length < 50 ?
-                    <></>
-                    :
+                {shouldShowImage ?
                     <ImageBackground
                         source={{uri: this.props.src}}
                         resizeMethod={"resize"}
@@ -41,13 +43,29 @@ export default class LogCell extends React.Component<CellProps,CellState> {
                     >
                         {this.props.onSelectedOverlay}
                     </ImageBackground>
+                    :
+                    <></>
+
                 }
                 {
-                    this.props.src.length < 50 ?
 
-                        <Text>{JSON.parse(this.props.item.Log.signedMetadataJson)["0"][LogMetadata.DateTag]}</Text>
-                        :
+                    shouldShowImage ?
                         <></>
+                        :
+                        <Text>
+                            {
+                                // decrypt the log metadata and show the user the date tag if no image is available
+                                new LogMetadata(
+                                null,
+                                null,
+                                null,
+                                this.props.item.Log.encryptedMetadataJson,
+                                [ReporterPEMKey.publicKey],
+                                ReporterPEMKey.privateKey).
+                                pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey][LogMetadata.DateTag]
+                            }
+                        </Text>
+
                     }
             </View>
         );

@@ -1,5 +1,4 @@
 import {FirstReporterPublicKey} from "../utils/Constants";
-import _ from "lodash";
 
 export interface LogbookStateKeeper {
     CurrentLogbookID:string
@@ -45,56 +44,6 @@ export class LogbookEntry{
 }
 
 
-export class LogMetadata {
-    // custom metadata tags:
-    public static readonly DateTag = "DateTime";
-    public static readonly GPSLat = "GPSLatitude";
-    public static readonly GPSLong = "GPSLongitude";
-    public static readonly GPSAcc = "GPSAccuracy";
-    public static readonly GPSAlt = "GPSAltitude";
-    public static readonly GPSSpeed = "GPSSpeed";
-    public static readonly ImageDescription = "ImageDescription";
-    public static readonly BlockTime = "BlockTime";
-    public static readonly FileName = "FileName";
-    private static readonly SignedHash = "SignedHash";
-    public static readonly MetadataTags = [ LogMetadata.DateTag, LogMetadata.ImageDescription, LogMetadata.GPSLat,
-        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName,
-        LogMetadata.SignedHash, LogMetadata.BlockTime];
-
-
-    public jsonObj: { [name: string]: any };
-    // retrieve from blockchain or image exif, turn into json that we want
-    constructor(jsonData:string, signedHash:string|null) {
-        const metadata = JSON.parse(jsonData);
-
-        // parsing data gotten from atra
-        if (metadata["0"] != null){
-            this.jsonObj = metadata;
-            return
-        }
-
-        // starting from scratch
-        this.jsonObj = {"0": {} };
-        for (const tag of LogMetadata.MetadataTags){
-            this.jsonObj["0"][tag]=metadata[tag];
-        }
-        if (signedHash!=null){
-            this.jsonObj["0"][LogMetadata.SignedHash] = signedHash;
-        }
-    }
-
-    public JsonData():string{
-        return (JSON.stringify(this.jsonObj));
-    }
-
-    // TODO: implement me by adding an index to the metadata, i.e. {"0":{}, "1":{}, "2":{}}
-    public appendSignedData(signedMetadata:LogMetadata){
-
-    }
-
-
-}
-
 export class Log {
 
     // TODO split into log from blockchain and log to blockchain - i.e. includes or doesn't signedMetadata
@@ -103,25 +52,25 @@ export class Log {
                 public rootTransactionHash:string,
                 public currentTransactionHash:string,
                 public dataMultiHash:string, //  // raw multihash
-                public signedMetadataJson:string, // this will include signed Hashes
+                public encryptedMetadataJson:string, // this will include signed Hashes
     ) {
     }
 
 
     // TODO: implement me
     public getTimestampsMappedToReporterKeys():Map<string,string[]>{
-        const metaObj = JSON.parse(this.signedMetadataJson);
+        const metaObj = JSON.parse(this.encryptedMetadataJson);
         const returnMap = new Map<string,string[]>();
-        returnMap.set(FirstReporterPublicKey, metaObj["0"]);
+        // returnMap.set(FirstReporterPublicKey, metaObj["0"]);
         return returnMap;
 
     }
 
     // TODO: implement me
     public getLocations():Map<string,string[]>{
-        const metaObj = JSON.parse(this.signedMetadataJson);
+        // const metaObj = JSON.parse(this.encryptedMetadataJson);
         const returnMap = new Map<string,string[]>();
-        returnMap.set(FirstReporterPublicKey, metaObj["0"]);
+        // returnMap.set(FirstReporterPublicKey, metaObj["0"]);
         return returnMap;
     }
 
@@ -163,7 +112,7 @@ export const LogSchema = {
         rootTransactionHash:'string',
         currentTransactionHash:'string',
         dataMultiHash:'string',
-        signedMetadataJson:'string',
+        encryptedMetadataJson:'string',
     }
 };
 

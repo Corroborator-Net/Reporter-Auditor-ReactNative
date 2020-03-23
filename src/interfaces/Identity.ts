@@ -6,6 +6,7 @@
 */
 
 export interface Identity{
+    Initialize():void,
     sign(base64Data:string):string
     addTrustedPeerAttestation(did:string):string;
     getMyAddress():string,

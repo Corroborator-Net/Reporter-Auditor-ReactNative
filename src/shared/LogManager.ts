@@ -2,15 +2,16 @@ import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {HashData, HashReceiver, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
-import { waitMS} from "../utils/Constants";
+import {HQPEMKey, ReporterPEMKey, waitMS} from "../utils/Constants";
 import _ from "lodash";
 import CameraRoll from "@react-native-community/cameraroll";
+import {LogMetadata} from "./LogMetadata";
 
 
 export class LogManager implements HashReceiver{
@@ -28,7 +29,6 @@ export class LogManager implements HashReceiver{
                 public imageDatabase:ImageDatabase,
                 ) {
         if (LogManager.Instance){
-            console.log("ERROR: multiple instances of log manager created");
             return LogManager.Instance;
         }
         LogManager.Instance= this;
@@ -62,7 +62,11 @@ export class LogManager implements HashReceiver{
 
             const logMetadata = new LogMetadata(
                 record.metadata,
-                "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
+                ReporterPEMKey.publicKey,
+                [HQPEMKey.publicKey],
+                null,
+                null,
+                null
             );
             const newLog = new Log(
                 oldLog.logBookAddress,
@@ -98,7 +102,11 @@ export class LogManager implements HashReceiver{
 
         const logMetadata = new LogMetadata(
             hashData.metadata,
-            "ba23e2b0f59d77d72367d2ab4c33fa339c6ec02e536d4a6fd4e866f94cdc14be"
+            ReporterPEMKey.publicKey,
+            [HQPEMKey.publicKey],
+            null,
+            null,
+            null
         );
 
         // TODO: show user alert if no logbook selected!!

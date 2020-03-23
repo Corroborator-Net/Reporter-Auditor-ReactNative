@@ -1,7 +1,8 @@
 import {LogbookDatabase} from "../interfaces/Storage";
-import {Log, LogMetadata} from "../interfaces/Data";
+import {Log} from "../interfaces/Data";
 //@ts-ignore
 import { AtraApiKey } from 'react-native-dotenv'
+import {LogMetadata} from "../shared/LogMetadata";
 
 // this is used by the logbook view in the auditor context - pass the auditor this dependency
 export default class BlockchainLogbookStorage implements LogbookDatabase {

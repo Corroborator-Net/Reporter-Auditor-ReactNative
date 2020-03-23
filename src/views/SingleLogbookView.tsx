@@ -72,8 +72,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.props.logbookStateKeeper.CurrentSelectedLogs = this.state.currentlySelectedLogs;
         // clear the selection or not? Thinking not in case of user error/fat fingers
         this.props.navigation.navigate(EditLogsViewName);
-
-
     }
 
 

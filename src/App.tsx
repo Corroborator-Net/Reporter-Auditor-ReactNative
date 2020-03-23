@@ -43,6 +43,7 @@ class App extends PureComponent{
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
+
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();
     blockchainManager = new NativeAtraManager();
@@ -57,6 +58,7 @@ class App extends PureComponent{
         this.imageStorage,
     );
     componentDidMount(): void {
+        this.identity.Initialize();
         NativeUserPreferences.Initialize().then(()=>{
             this.setState({
             loading:false

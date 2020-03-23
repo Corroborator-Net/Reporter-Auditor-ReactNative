@@ -26,20 +26,6 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
     }
 
 
-    // getUnsyncedEditedRecords(): Promise<Log[]> {
-    //     return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
-    //         .then(realm => {
-    //             // Query Realm for all unsynced image hashes
-    //             return realm.objects(LogSchema.name).
-    //             filtered('currentTransactionHash = ""');
-    //         })
-    //         .catch((error) => {
-    //             console.log(error);
-    //             return error // read error
-    //         });
-    // }
-
-
     getUnsyncedRecords(): Promise<Log[]> {
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
@@ -100,7 +86,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
 
 
     // // TODO: We need to figure out how to sort logs in order by time taken. when we get the DID signing working
-    // // TODO: the signed metadata will still be a csv, so parsing must be taken into account.
+    // // TODO: the signed metadata will be a json, so parsing must be taken into account.
     // getMostRecentRecord(logBookAddress: string): Promise<Log> {
     //     return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
     //         .then(realm => {

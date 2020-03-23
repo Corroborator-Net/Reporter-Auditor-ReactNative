@@ -1,6 +1,6 @@
 import React from "react";
 import {StyleSheet, Image, ScrollView, View, Keyboard} from "react-native";
-import {ImageRecord, LogbookEntry, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
 //@ts-ignore
@@ -11,6 +11,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
 import {AppButtonTint, waitMS} from "../utils/Constants";
 import SingleLogbookView from "./SingleLogbookView";
+import {LogMetadata} from "../shared/LogMetadata";
 
 
 type Props={

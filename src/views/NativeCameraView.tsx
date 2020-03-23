@@ -5,7 +5,7 @@ import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord, LogbookStateKeeper, LogMetadata} from "../interfaces/Data";
+import {ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
 import {LogManager} from "../shared/LogManager";
 import {
     requestCameraPermission,
@@ -18,6 +18,7 @@ import NativeUserPreferences from "../native/NativeUserPreferences";
 import {Text} from "react-native-elements";
 import RNFetchBlob from "rn-fetch-blob";
 import HashManager from "../shared/HashManager";
+import {LogMetadata} from "../shared/LogMetadata";
 
 type State={
     camera:any
