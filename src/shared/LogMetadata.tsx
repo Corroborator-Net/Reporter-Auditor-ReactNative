@@ -1,5 +1,6 @@
 // @ts-ignore
 import { Crypt } from 'hybrid-crypto-js';
+import {Identity} from "../interfaces/Identity";
 
 // created via npm library: hybrid-crypto-js
 export class RSAKeysToEncryptedAESKeyToCipherMap{
@@ -40,10 +41,10 @@ export class LogMetadata {
 
 
     public pubKeysToAESKeysToJSONDataMap: { [name: string]: any };
-    private static crypt = new Crypt({ md:'sha256' });
 
     // retrieve from blockchain or image exif, turn into json that we want
     constructor(
+        crypto:Identity,
         // PUSH DATA ARGUMENTS
         myJsonData: string | null, myKey: string | null, trustedRSAKeys:string[]|null,
         // PULL DATA ARGUMENTS
@@ -64,7 +65,7 @@ export class LogMetadata {
                         const RSAKeysToEncryptedAESKeyToCipherMap = peerMetadata[publicKey];
                         // console.log("this should be a RSAKeysToEncryptedAESKeyToCipherMap :", RSAKeysToEncryptedAESKeyToCipherMap);
                         try {
-                            const decrypted = LogMetadata.crypt.decrypt(privateKeyToDecryptMetadataWith, RSAKeysToEncryptedAESKeyToCipherMap);
+                            const decrypted = crypto.Decrypt(privateKeyToDecryptMetadataWith, RSAKeysToEncryptedAESKeyToCipherMap);
                             this.pubKeysToAESKeysToJSONDataMap[publicKey] = decrypted.message;
                         }
                         catch (e) {
@@ -97,7 +98,7 @@ export class LogMetadata {
             // console.log("encrypting with:", keysWithWhichToEncrypt);
             // the encrypt function returns an object of type: RSAKeysToEncryptedAESKeyToCipherMap
             this.pubKeysToAESKeysToJSONDataMap[myKey] =
-                LogMetadata.crypt.encrypt(keysWithWhichToEncrypt, JSON.stringify(jsonToEncrypt));
+                crypto.Encrypt(keysWithWhichToEncrypt, JSON.stringify(jsonToEncrypt));
 
         }
 

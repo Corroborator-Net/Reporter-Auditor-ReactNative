@@ -1,9 +1,8 @@
 import {Identity} from "../interfaces/Identity";
 // @ts-ignore
-import { RSA } from 'hybrid-crypto-js';
 import * as Keychain from 'react-native-keychain';
 import {Platform} from "react-native";
-// import OpenPGP, {KeyOptions} from "react-native-fast-openpgp";
+import OpenPGP, {KeyOptions} from "react-native-fast-openpgp";
 
 
 export default class NativeDID implements Identity{
@@ -31,7 +30,7 @@ export default class NativeDID implements Identity{
     }
 
     async LoggedIn(){
-        // await Keychain.resetGenericPassword();
+        await Keychain.resetGenericPassword();
         const credentials = await Keychain.getGenericPassword();
         // console.log("got credentials:", credentials);
         if (credentials!= false){
@@ -45,66 +44,57 @@ export default class NativeDID implements Identity{
 
     async GenerateAndSavePGPKeys(){
         // Native code:
-        // if (Platform.OS == 'android' || Platform.OS == 'ios' ) {
-            // console.log("generating keys");
-            // const keyOptions: KeyOptions = {
-            //     hash: "sha256",
-            //     RSABits: 1024,
-            // };
-            // const keyPair = await OpenPGP.generate({
-            //     keyOptions: keyOptions
-            // });
-            //
-            // this._PrivatePGPKey = keyPair.privateKey;
-            // this._PublicPGPKey = keyPair.publicKey;
+        if (Platform.OS != 'android' && Platform.OS != 'ios' ) {
+            console.log("no web version for this yet! checkout the hybridRSA branch to use the hybrid crypto library")
+        }
 
-            // Here's a web version for reference
-            console.log("creating rsa");
-            const rsa = new RSA({rsaStandard: 'RSA-OAEP'});
-            console.log("generating keys for hybrid crypto library, this may take minutes!!");
-            //TODO: This takes around 2 minutes sometimes!! - get a better keygen library
-            const keyPair = await rsa.generateKeyPairAsync(1024);
-            this._PrivatePGPKey = keyPair.privateKey;
-            this._PublicPGPKey = keyPair.publicKey;
+        console.log("generating keys");
+        const keyOptions: KeyOptions = {
+            hash: "sha256",
+            RSABits: 2048,
+        };
+        const keyPair = await OpenPGP.generate({
+            keyOptions: keyOptions
+        });
 
+        this._PrivatePGPKey = keyPair.privateKey;
+        this._PublicPGPKey = keyPair.publicKey;
 
-            const ACCESS_CONTROL_MAP = [
-                Keychain.ACCESS_CONTROL.USER_PRESENCE,
-            ];
-            const ACCESS_CONTROL_MAP_ANDROID = [
-                null,
-                Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-            ];
-            const SECURITY_LEVEL_MAP = [
-                Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
-                Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
-            ];
+        console.log("priv key: ", this._PrivatePGPKey);
+        console.log("pub key: ", this._PublicPGPKey);
 
-            const SECURITY_STORAGE_MAP = [
-                null,
-                Keychain.STORAGE_TYPE.FB,
-                Keychain.STORAGE_TYPE.AES,
-                Keychain.STORAGE_TYPE.RSA,
-            ];
-            const AC_MAP =
-                Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
+        const ACCESS_CONTROL_MAP = [
+            Keychain.ACCESS_CONTROL.USER_PRESENCE,
+        ];
+        const ACCESS_CONTROL_MAP_ANDROID = [
+            null,
+            Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+        ];
+        const SECURITY_LEVEL_MAP = [
+            Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
+            Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
+        ];
 
-            // TODO: how to save them to browser keychain for web/auditor user - maybe they load their own every time?
+        const SECURITY_STORAGE_MAP = [
+            null,
+            Keychain.STORAGE_TYPE.FB,
+            Keychain.STORAGE_TYPE.AES,
+            Keychain.STORAGE_TYPE.RSA,
+        ];
+        const AC_MAP =
+            Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
 
-            const saveResult = await Keychain.setGenericPassword(
-                this._PublicPGPKey,
-                this._PrivatePGPKey,
-                {
-                    accessControl: AC_MAP[0],
-                    securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],
-                    storage: Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP[2],
-                }
-            );
+        const saveResult = await Keychain.setGenericPassword(
+            this._PublicPGPKey,
+            this._PrivatePGPKey,
+            {
+                accessControl: AC_MAP[0],
+                securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],
+                storage: Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP[2],
+            }
+        );
 
-            return saveResult != false;
-        // }
-
-
+        return saveResult != false;
 
 
     }
