@@ -54,7 +54,7 @@ export default class AuthenticationView extends React.Component<Props,{}> {
                     this.props.loggedInCallback(true)
                 );
             } else {
-                this.setState({ status: 'Generating your keys, this may take a minute...',
+                this.setState({ status: 'Generating your keys, this may take a few minutes...',
                 loading:true},
                     this.generateAndSavePassword);
 
