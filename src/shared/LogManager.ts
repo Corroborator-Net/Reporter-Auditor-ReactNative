@@ -97,6 +97,7 @@ export class LogManager implements HashReceiver{
         //     peer.requestSignature(hashData.multiHash);
         // }
 
+
         const logMetadata = new LogMetadata(
             hashData.metadata,
             this.didModule.PublicPGPKey,

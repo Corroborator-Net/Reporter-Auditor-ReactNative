@@ -43,11 +43,11 @@ class App extends PureComponent{
         loggedIn:false
     };
 
-    userPreferences = NativeUserPreferences.Instance;
+
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
     identity = new NativeDID();
-
+    userPreferences = new NativeUserPreferences(this.identity);
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();
     blockchainManager = new NativeAtraManager();
@@ -61,10 +61,10 @@ class App extends PureComponent{
         this.userPreferences,
         this.imageStorage,
     );
+
     componentDidMount = async() => {
         await this.identity.Initialize();
         const loggedIn = await this.identity.LoggedIn();
-
         // if we're not logged in, show authentication view and stop loading
         this.setState({
             loading: loggedIn,
@@ -73,24 +73,37 @@ class App extends PureComponent{
 
         // if we're logged in, load user prefs
         if (loggedIn){
-            NativeUserPreferences.Initialize().then(()=>{
-                this.setState({
-                    loading:false
-                })
-            });
+            this.initializeModules()
         }
-
-
     };
+
+    initializeModules(){
+        NativeUserPreferences.Instance.Initialize().then(()=>{
+            this.setState({
+                loading:false
+            })
+        });
+    }
 
     render() {
         return (
+
             this.state.loading ?
                 LoadingSpinner
                 :
+
                 !this.state.loggedIn ?
                     <AuthenticationView
                         identity={this.identity}
+                        loggedInCallback={(loggedIn:boolean)=> {
+                            this.setState({
+                                loggedIn:loggedIn,
+                                loading:true,
+                            })
+                            if (loggedIn){
+                                this.initializeModules()
+                            }
+                        }}
                     />
                     :
                 <NavigationContainer>
@@ -149,6 +162,7 @@ class App extends PureComponent{
                                         {(props: any) =>
                                             <DetailLogView {...props}
                                                            logbookStateKeeper={this.userPreferences}
+                                                           identity={this.identity}
                                             />
                                         }
                                     </Stack.Screen>

@@ -38,6 +38,7 @@ export default class DetailLogView extends React.Component<Props, State> {
 
     parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): Array<JSX.Element>{
         let details = new Array<JSX.Element>();
+
         let metadataObj = JSON.parse(new LogMetadata(
             null,null,null,
             log.encryptedMetadataJson,

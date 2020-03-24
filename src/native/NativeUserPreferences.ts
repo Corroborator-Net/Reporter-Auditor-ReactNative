@@ -1,22 +1,28 @@
 import {
-    Log, LogbookEntry,
+    LogbookEntry,
     LogbookStateKeeper,
     RealmSchemas,
     UserPreference,
     UserPreferenceSchema
 } from "../interfaces/Data";
-import {FirstReporterPublicKey, StorageSchemaVersion, UserPreferenceKeys} from "../utils/Constants";
+import {StorageSchemaVersion, UserPreferenceKeys} from "../utils/Constants";
 import {UserPreferenceStorage} from "../interfaces/Storage";
 import Realm from "realm";
+import {Identity} from "../interfaces/Identity";
 
 
 // TODO: turn into singleton
 export default class NativeUserPreferences implements LogbookStateKeeper, UserPreferenceStorage{
 
+    private static _Instance:NativeUserPreferences;
+    private CurrentUserSettings: {[key:string]:string[]} = {};
+
+
     static get Instance(): NativeUserPreferences {
-        if (NativeUserPreferences._Instance){
-            return NativeUserPreferences._Instance;
-        }
+        return this._Instance;
+    }
+
+    constructor(public identity:Identity) {
         const DefaultsDict:{[key:string]:string[]}={
             [UserPreferenceKeys.Logbooks]:[],
             [UserPreferenceKeys.CurrentLogbook]:[],
@@ -24,21 +30,11 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
             // [UserPreferenceKeys.AutoSyncLogs]:["false"]
 
         };
-
-        this._Instance = new NativeUserPreferences();
-        this._Instance.CurrentUserSettings = DefaultsDict;
-        return this._Instance;
-    }
-    static async Initialize(){
-        return this._Instance.LoadAllSavedPreferences();
+        NativeUserPreferences._Instance = this;
+        NativeUserPreferences._Instance.CurrentUserSettings = DefaultsDict;
     }
 
-    private static _Instance:NativeUserPreferences;
-
-    private CurrentUserSettings: {[key:string]:string[]} = {};
-
-
-    private async LoadAllSavedPreferences(){
+    async Initialize(){
         for(const key of Object.keys(this.CurrentUserSettings)){
             this.CurrentUserSettings[key] = await this.GetPersistentUserPreferenceOrDefault(key);
         }
@@ -46,9 +42,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
 
         for (const logbookID of allLogbooks){
             // console.log("loading name for id:", logbookID);
-            const logbookName =
-                await this.GetPersistentUserPreferenceOrDefault(logbookID);
-            this.CurrentUserSettings[logbookID]= logbookName;
+            this.CurrentUserSettings[logbookID]= await this.GetPersistentUserPreferenceOrDefault(logbookID);
         }
     }
 
@@ -62,7 +56,7 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
         // save it to cache
         this.CurrentUserSettings[key] = value;
         // save it to storage
-        const newRecord = new UserPreference(FirstReporterPublicKey,key,value );
+        const newRecord = new UserPreference(this.identity.PublicPGPKey,key,value );
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
 

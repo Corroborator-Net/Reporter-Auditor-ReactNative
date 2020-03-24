@@ -13,14 +13,14 @@ export class RSAKeysToEncryptedAESKeyToCipherMap{
                 signature:string ) {
     }
 }
-
-class PeerLogMetadataEntry{
-    // map a reporter's public key to their AES:EncryptedJSON entry
-    pubKeyToMetadataAndAESKeyMap:{[pubKey: string]: RSAKeysToEncryptedAESKeyToCipherMap};
-    constructor(public myPublicKey:string, public metadataEntry:RSAKeysToEncryptedAESKeyToCipherMap) {
-        this.pubKeyToMetadataAndAESKeyMap= {[myPublicKey]:metadataEntry}
-    }
-}
+//
+// class PeerLogMetadataEntry{
+//     // map a reporter's public key to their AES:EncryptedJSON entry
+//     pubKeyToMetadataAndAESKeyMap:{[pubKey: string]: RSAKeysToEncryptedAESKeyToCipherMap};
+//     constructor(public myPublicKey:string, public metadataEntry:RSAKeysToEncryptedAESKeyToCipherMap) {
+//         this.pubKeyToMetadataAndAESKeyMap= {[myPublicKey]:metadataEntry}
+//     }
+// }
 
 export class LogMetadata {
     // custom metadata tags:

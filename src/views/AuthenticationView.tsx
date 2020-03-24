@@ -11,6 +11,7 @@ import {LoadingSpinner, waitMS} from "../utils/Constants";
 
 type Props = {
     identity:Identity
+    loggedInCallback:any
 }
 export default class AuthenticationView extends React.Component<Props,{}> {
     state = {
@@ -32,13 +33,15 @@ export default class AuthenticationView extends React.Component<Props,{}> {
             let end = new Date();
 
             this.setState({
-                status: `Keys saved! takes: ${end.getTime() -
-                start.getTime()} millis`,
+                status: `Keys saved! took: ${end.getTime() -
+                start.getTime()} milliseconds`,
                 loading:false
-            });
+            },
+                this.props.loggedInCallback(true)
+            );
         } catch (err) {
             this.setState({ status: 'Could not save keys, ' + err ,
-            loading:false});
+            loading:false},);
         }
     }
 
@@ -47,9 +50,11 @@ export default class AuthenticationView extends React.Component<Props,{}> {
         try {
             if ( await this.props.identity.LoggedIn()) {
                 this.setState({  status: 'Keys loaded!',
-                loading:false});
+                loading:false},
+                    this.props.loggedInCallback(true)
+                );
             } else {
-                this.setState({ status: 'Generating your keys',
+                this.setState({ status: 'Generating your keys, this may take a minute...',
                 loading:true},
                     this.generateAndSavePassword);
 
