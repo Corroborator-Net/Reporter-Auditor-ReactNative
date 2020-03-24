@@ -2,7 +2,7 @@ import {Log, LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, View} from "react-native";
-import {CorroboratedUnsynced, LocalOnly, ReporterPEMKey, Synced} from "../utils/Constants";
+import {CorroboratedUnsynced, LocalOnly, Synced} from "../utils/Constants";
 import {LogMetadata} from "../shared/LogMetadata";
 
 type CellProps = {
@@ -17,11 +17,8 @@ type CellState = {
 
 export default class LogCell extends React.Component<CellProps,CellState> {
 
-
     render(){
         const shouldShowImage =  this.props.src.length > 50;
-        // console.log("encrypted json:",this.props.item.Log.encryptedMetadataJson);
-        // console.log("successfully decrypted my own log metadata!:", logMetadata.pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey])
         return (
             <View
                 style={{
@@ -54,15 +51,16 @@ export default class LogCell extends React.Component<CellProps,CellState> {
                         :
                         <Text>
                             {
+                                // TODO: see note in single logbook view about showing blocktimes instead of decrypting all logs' metadata
                                 // decrypt the log metadata and show the user the date tag if no image is available
-                                new LogMetadata(
-                                null,
-                                null,
-                                null,
-                                this.props.item.Log.encryptedMetadataJson,
-                                [ReporterPEMKey.publicKey],
-                                ReporterPEMKey.privateKey).
-                                pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey][LogMetadata.DateTag]
+                                // new LogMetadata(
+                                // null,
+                                // null,
+                                // null,
+                                // this.props.item.Log.encryptedMetadataJson,
+                                // [ReporterPEMKey.publicKey],
+                                // ReporterPEMKey.privateKey).
+                                // pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey][LogMetadata.DateTag]
                             }
                         </Text>
 

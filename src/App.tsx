@@ -26,9 +26,11 @@ import NativeDID from "./native/NativeDID";
 import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';
-import {AppButtonTint, DetailLogViewName, EditLogsViewName} from "./utils/Constants";
+import {AppButtonTint, DetailLogViewName, EditLogsViewName, LoadingSpinner} from "./utils/Constants";
 import MultiLogbookView from "./views/MultiLogbookView";
 import EditLogView from "./views/EditLogView";
+import {Button} from "react-native-elements";
+import AuthenticationView from "./views/AuthenticationView";
 
 declare var global: {HermesInternal: null | {}};
 
@@ -37,8 +39,10 @@ const Stack = createStackNavigator();
 
 class App extends PureComponent{
     state={
-        loading:true
+        loading:true,
+        loggedIn:false
     };
+
     userPreferences = NativeUserPreferences.Instance;
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
@@ -57,19 +61,38 @@ class App extends PureComponent{
         this.userPreferences,
         this.imageStorage,
     );
-    componentDidMount(): void {
-        this.identity.Initialize();
-        NativeUserPreferences.Initialize().then(()=>{
-            this.setState({
-            loading:false
-            })
+    componentDidMount = async() => {
+        await this.identity.Initialize();
+        const loggedIn = await this.identity.LoggedIn();
+
+        // if we're not logged in, show authentication view and stop loading
+        this.setState({
+            loading: loggedIn,
+            loggedIn:loggedIn,
         });
-    }
+
+        // if we're logged in, load user prefs
+        if (loggedIn){
+            NativeUserPreferences.Initialize().then(()=>{
+                this.setState({
+                    loading:false
+                })
+            });
+        }
+
+
+    };
 
     render() {
         return (
-            this.state.loading ? <></> :
-
+            this.state.loading ?
+                LoadingSpinner
+                :
+                !this.state.loggedIn ?
+                    <AuthenticationView
+                        identity={this.identity}
+                    />
+                    :
                 <NavigationContainer>
                     <Tab.Navigator initialRouteName="Logs" tabBarOptions={{activeTintColor: AppButtonTint,}}>
 

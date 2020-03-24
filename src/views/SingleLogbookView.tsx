@@ -109,7 +109,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 
     onScreenFocus = () => {
-        console.log("should update:",SingleLogbookView.ShouldUpdateLogbookView);
+        // console.log("should update:",SingleLogbookView.ShouldUpdateLogbookView);
 
         if (this.logbookChanged() && !this.state.refreshing) {
             console.log((this.logbookChanged() && !this.state.refreshing));
@@ -176,7 +176,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         this.setState({filteredLogbookEntries: filteredLogbookEntries});
     }
 
-
+    //TODO: for the auditor side we should be loading logs' block times so we don't have to decrypt each metadata entry
+    // during LogCell instantiation and instead of the showing the decrypted timestamp just show the blocktime
     render() {
         return (
             <SafeAreaView style={styles.container}>

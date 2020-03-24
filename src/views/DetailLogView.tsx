@@ -1,15 +1,17 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
 import {ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
-import {PrependJpegString, ReporterPEMKey, waitMS} from "../utils/Constants";
+import {LoadingSpinner, PrependJpegString, waitMS} from "../utils/Constants";
 import {Button, ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
+import {Identity} from "../interfaces/Identity";
 
 
 type Props={
     route:any
     logbookStateKeeper:LogbookStateKeeper
+    identity:Identity
 }
 type State={
     currentLogEntryInformation:JSX.Element[];
@@ -39,9 +41,9 @@ export default class DetailLogView extends React.Component<Props, State> {
         let metadataObj = JSON.parse(new LogMetadata(
             null,null,null,
             log.encryptedMetadataJson,
-            [ReporterPEMKey.publicKey],
-            ReporterPEMKey.privateKey
-        ).pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey]);
+            [this.props.identity.PublicPGPKey],
+            this.props.identity.PrivatePGPKey
+        ).pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
             // console.log(metadataObj);
 
         // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
@@ -112,7 +114,7 @@ export default class DetailLogView extends React.Component<Props, State> {
     render() {
         return (
               this.state.loading ?
-                <Button loading={true} type={"clear"} loadingProps={{size:"large"}} />
+                  LoadingSpinner
                   :
             <ScrollView>
                 {this.state.currentLogbook.ImageRecord ?

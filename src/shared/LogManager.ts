@@ -3,14 +3,11 @@ import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
 import {HashData, HashReceiver, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
-import RNFetchBlob from "rn-fetch-blob";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
-import {HQPEMKey, ReporterPEMKey, waitMS} from "../utils/Constants";
 import _ from "lodash";
-import CameraRoll from "@react-native-community/cameraroll";
 import {LogMetadata} from "./LogMetadata";
 
 
@@ -62,8 +59,8 @@ export class LogManager implements HashReceiver{
 
             const logMetadata = new LogMetadata(
                 record.metadata,
-                ReporterPEMKey.publicKey,
-                [HQPEMKey.publicKey],
+                this.didModule.PublicPGPKey,
+                this.didModule.TrustedPeerPGPKeys,
                 null,
                 null,
                 null
@@ -102,8 +99,8 @@ export class LogManager implements HashReceiver{
 
         const logMetadata = new LogMetadata(
             hashData.metadata,
-            ReporterPEMKey.publicKey,
-            [HQPEMKey.publicKey],
+            this.didModule.PublicPGPKey,
+            this.didModule.TrustedPeerPGPKeys,
             null,
             null,
             null

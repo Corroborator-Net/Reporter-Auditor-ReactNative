@@ -1,4 +1,3 @@
-import {FirstReporterPublicKey} from "../utils/Constants";
 
 export interface LogbookStateKeeper {
     CurrentLogbookID:string

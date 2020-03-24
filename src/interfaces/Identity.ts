@@ -7,8 +7,13 @@
 
 export interface Identity{
     Initialize():void,
-    sign(base64Data:string):string
-    addTrustedPeerAttestation(did:string):string;
-    getMyAddress():string,
+    PublicPGPKey:string
+    PrivatePGPKey:string
+    TrustedPeerPGPKeys:string[]
+    LoggedIn():Promise<boolean>
+    GenerateAndSavePGPKeys():Promise<boolean>
+    // sign(base64Data:string):string
+    // addTrustedPeerAttestation(did:string):string;
+    // getMyAddress():string,
 }
 
