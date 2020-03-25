@@ -128,6 +128,7 @@ class App extends PureComponent{
                             {props => <NativeCameraView {...props}
                                                         logbookStateKeeper={this.userPreferences}
                                                         imageDatabase={this.imageStorage}
+                                                        identity={this.identity}
                             />}
                         </Tab.Screen>
 

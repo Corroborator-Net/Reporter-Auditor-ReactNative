@@ -5,7 +5,7 @@ import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDescription, ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
 import {LogManager} from "../shared/LogManager";
 import {
     requestCameraPermission,
@@ -19,6 +19,7 @@ import {Text} from "react-native-elements";
 import RNFetchBlob from "rn-fetch-blob";
 import HashManager from "../shared/HashManager";
 import {LogMetadata} from "../shared/LogMetadata";
+import {Identity} from "../interfaces/Identity";
 
 type State={
     camera:any
@@ -28,6 +29,7 @@ type State={
 type Props={
     imageDatabase:ImageDatabase
     logbookStateKeeper:LogbookStateKeeper
+    identity:Identity
     navigation:any
 }
 
@@ -157,19 +159,24 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             return;
         }
 
+        const imageDescription:ImageDescription ={
+            Description: NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0],
+            PublicKey:this.props.identity.PublicPGPKey,
+            LogbookAddress:this.props.logbookStateKeeper.CurrentLogbookID,
+        }
+
         const exifAppend: { [name: string]: any } = {
             [LogMetadata.GPSLat]:this.state.position.coords.latitude,
             [LogMetadata.GPSLong]: this.state.position.coords.longitude,
             [LogMetadata.GPSAlt] : this.state.position.coords.altitude,
             [LogMetadata.GPSSpeed] : this.state.position.coords.speed,
             [LogMetadata.GPSAcc] :this.state.position.coords.accuracy,
-            [LogMetadata.ImageDescription] :
-                NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0],
+            [LogMetadata.ImageDescription] : JSON.stringify(imageDescription)
         };
 
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
-        const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
+        const options = {quality: 0.2, base64: false, writeExif: exifAppend, exif: true};
         const data = await this.state.camera.takePictureAsync(options);
 
         // Add filename to metadata

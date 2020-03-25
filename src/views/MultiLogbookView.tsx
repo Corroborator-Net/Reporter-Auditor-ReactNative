@@ -1,5 +1,5 @@
 import React from "react";
-import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {FlatList, Platform, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
 import {LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
@@ -22,7 +22,7 @@ type  Props={
     blockchainInterface:BlockchainInterface;
     userPreferences:UserPreferenceStorage;
 }
-
+const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 export default class MultiLogbookView extends React.PureComponent<Props, State> {
 
     state={
@@ -43,23 +43,34 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
             logbookNames.set(logbookID, logbookName);
         }
 
-        const newLogbookButtonPlaceholder = "newLogbook";
-        if (logbooks[0]!=newLogbookButtonPlaceholder) {
-            logbooks.unshift(newLogbookButtonPlaceholder);
+        if (logbooks[1]!="custom1") {
+            logbooks.unshift("custom1");
         }
+        if (logbooks[0]!="custom0") {
+            logbooks.unshift("custom0");
+        }
+
         this.setState({
             logbooks:logbooks
         })
     }
 
-    componentDidMount = async () => {
-        await requestStoragePermission();
-        await requestWritePermission();
+    showUploadPrompt(){
+        if (isMobile){
+            
+        }
+    }
 
-        // get the current saved logbooks in user storage
-        await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Logbooks);
-        this.props.userPreferences.SetNewPersistentUserPreference("RequireReadWrite", ["GiveMePermission"]);
-        this.getLogbooksAndNames();
+
+    componentDidMount = async () => {
+        if (isMobile) {
+            await requestStoragePermission();
+            await requestWritePermission();
+            // get the current saved logbooks in user storage
+            await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Logbooks);
+            this.props.userPreferences.SetNewPersistentUserPreference("RequireReadWrite", ["GiveMePermission"]);
+            this.getLogbooksAndNames();
+        }
     };
 
 
@@ -75,7 +86,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     data={this.state.logbooks}
                     contentContainerStyle={styles.list}
                     renderItem={({item}) =>
-                        item == this.state.logbooks[0] ?
+                        item == this.state.logbooks[1] ?
                             <LogbookCell
                                 onLongPress={()=>{}}
                                 title={"Add New Logbook"}
@@ -86,20 +97,29 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 }
                             />
                             :
-                            <LogbookCell
-                                // src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
-                                // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
-                                // don't pass an image
-                                onLongPress={(newName:string)=>{
-                                    this.onLogbookNameEditingFinished(item,newName)}
-                                }
-                                title={this.state.logbookNames.get(item) || ""}
-                                onPress={() => {
-                                    this.props.logbookStateKeeper.CurrentLogbookID = item;
-                                    this.props.navigation.navigate(LogsViewName, {
-                                        title:this.state.logbookNames.get(item)});
-                                }}
-                            />
+                            item == this.state.logbooks[0] ?
+                                <LogbookCell
+                                    onLongPress={()=>{}}
+                                    title={"Manual File Upload/Check"}
+                                    onPress={ ()=>{
+                                        this.showUploadPrompt();
+                                    }}
+                                />
+                                :
+                                <LogbookCell
+                                    // src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
+                                    // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
+                                    // don't pass an image
+                                    onLongPress={(newName:string)=>{
+                                        this.onLogbookNameEditingFinished(item,newName)}
+                                    }
+                                    title={this.state.logbookNames.get(item) || ""}
+                                    onPress={() => {
+                                        this.props.logbookStateKeeper.CurrentLogbookID = item;
+                                        this.props.navigation.navigate(LogsViewName, {
+                                            title:this.state.logbookNames.get(item)});
+                                    }}
+                                />
 
                     }
                     keyExtractor={item => item}

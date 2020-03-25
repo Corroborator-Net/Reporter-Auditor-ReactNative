@@ -123,7 +123,7 @@ export interface HashData{
     base64Data:string;
 }
 
-// TODO: storing the entire image in the base64 property is too inefficient
+// TODO: storing the entire image in the base64 property is too inefficient a use of space
 export class ImageRecord implements HashData {
     public metadata:string;
     constructor( public timestamp:Date,
@@ -138,6 +138,12 @@ export class ImageRecord implements HashData {
             this.storageLocation = "file://" + storageLocation;
         }
     }
+}
+
+export type ImageDescription={
+    Description:string;
+    LogbookAddress:string;
+    PublicKey:string;
 }
 
 

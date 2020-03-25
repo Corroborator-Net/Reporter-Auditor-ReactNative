@@ -1,6 +1,6 @@
 import React from "react";
 import {StyleSheet, Image, ScrollView, View, Keyboard} from "react-native";
-import {ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDescription, ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
 //@ts-ignore
@@ -9,9 +9,10 @@ import {ImageDatabase} from "../interfaces/Storage";
 import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
-import {AppButtonTint, waitMS} from "../utils/Constants";
+import {AppButtonTint, UserPreferenceKeys, waitMS} from "../utils/Constants";
 import SingleLogbookView from "./SingleLogbookView";
 import {LogMetadata} from "../shared/LogMetadata";
+import NativeUserPreferences from "../native/NativeUserPreferences";
 
 
 type Props={
@@ -62,8 +63,14 @@ export default class EditLogView extends React.Component<Props, State> {
                 const exifObj = piexif.load(jpeg);
                 // this.listExifKeysValues(exifObj);
 
-                // console.log("EDITING TAG");
-                exifObj["0th"][270] = this.state.newImageDescription;
+                const oldImageDescription:ImageDescription = JSON.parse(exifObj["0th"][270]);
+
+                // TODO: allow user to change logbook
+                exifObj["0th"][270] = {
+                    Description: this.state.newImageDescription,
+                    LogbookAddress:oldImageDescription.LogbookAddress,
+                    PublicKey:oldImageDescription.PublicKey,
+                };
 
                 // after editing the exif, dump it into a string
                 const exifString = piexif.dump(exifObj);

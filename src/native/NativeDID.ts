@@ -47,8 +47,9 @@ export default class NativeDID implements Identity{
         console.log("creating rsa");
         const rsa = new RSA({rsaStandard: 'RSA-OAEP'});
         console.log("generating keys for hybrid crypto library, this may take minutes!!");
+
         //TODO: This takes around 2 minutes sometimes!! - get a better keygen library
-        const keyPair = await rsa.generateKeyPairAsync(2048);
+        const keyPair = await rsa.generateKeyPairAsync(1024);
         this._PrivatePGPKey = keyPair.privateKey;
         this._PublicPGPKey = keyPair.publicKey;
 

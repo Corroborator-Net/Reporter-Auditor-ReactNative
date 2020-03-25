@@ -65,6 +65,8 @@ export class LogManager implements HashReceiver{
                 null,
                 null
             );
+
+            // TODO: allow user to change logbook via exif metadata
             const newLog = new Log(
                 oldLog.logBookAddress,
                 record.storageLocation,

@@ -1,6 +1,6 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
-import {ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDescription, ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {LoadingSpinner, PrependJpegString, waitMS} from "../utils/Constants";
 import {Button, ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -60,8 +60,13 @@ export default class DetailLogView extends React.Component<Props, State> {
             const imageMetadata = JSON.parse(imageRecord.metadata);
 
             if (log.dataMultiHash == imageRecord.currentMultiHash) {
-                // we add all metadata except the above parsed stuff which we'll have to decrypt!
+                // we add all metadata except the above parsed stuff
                 for (const key of Object.keys(imageMetadata)) {
+                    if (key == LogMetadata.ImageDescription){
+                        const imageDescription:ImageDescription = JSON.parse(imageMetadata[key]);
+                        metadataObj[key] = imageDescription.Description;
+                        continue;
+                    }
                     metadataObj[key] = imageMetadata[key];
                 }
             }
