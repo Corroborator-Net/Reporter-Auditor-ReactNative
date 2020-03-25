@@ -19,8 +19,6 @@ export interface ImageDatabase {
     getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]>;
     removeImageRecord(imageRecord:ImageRecord):Promise<string>;
     updateImageRecordToHead(imageRecord:ImageRecord):Promise<string>;
-    // getImages(logs:Log[]):Promise<string[]>;
-    // getUnLoggedEditedImages():Promise<ImageRecord[]>;
 }
 
 
