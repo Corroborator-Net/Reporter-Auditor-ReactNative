@@ -5,6 +5,7 @@ import React from "react";
 export const StorageSchemaVersion = 1;
 export const FirstReporterPublicKey="188f7940020dbd1bfd2841a55ec0e4f9c58af16fb216ba0af818845710463aa2";
 
+export const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 
 //@ts-ignore
 export const waitMS = ms => new Promise(res => setTimeout(res, ms));

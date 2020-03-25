@@ -22,7 +22,7 @@ import {LogManager} from "./shared/LogManager";
 import {Mesh} from "./interfaces/PeerCorroborators";
 import {NativeAtraManager} from "./native/NativeAtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
-import NativeDID from "./native/NativeDID";
+import CrossPlatformIdentity from "./shared/CrossPlatformIdentity";
 import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';
@@ -46,7 +46,7 @@ class App extends PureComponent{
 
     hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
-    identity = new NativeDID();
+    identity = new CrossPlatformIdentity();
     userPreferences = new NativeUserPreferences(this.identity);
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();
@@ -147,6 +147,7 @@ class App extends PureComponent{
                                                               logbookStateKeeper={this.userPreferences}
                                                               blockchainInterface={this.blockchainManager}
                                                               userPreferences={this.userPreferences}
+                                                              identity={this.identity}
                                             />
                                         }
                                     </Stack.Screen>

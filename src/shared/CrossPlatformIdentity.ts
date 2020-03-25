@@ -3,9 +3,10 @@ import {Identity} from "../interfaces/Identity";
 import { RSA } from 'hybrid-crypto-js';
 import * as Keychain from 'react-native-keychain';
 import {Platform} from "react-native";
+import {isMobile} from "../utils/Constants";
 
 
-export default class NativeDID implements Identity{
+export default class CrossPlatformIdentity implements Identity{
 
     // static menmonic = "ripple scissors kick mammal hire column oak again sun offer wealth tomorrow wagon turn fatal";
     // static Wallet:Wallet = Wallet.fromMnemonic(NativeDID.menmonic);
@@ -53,50 +54,57 @@ export default class NativeDID implements Identity{
         this._PrivatePGPKey = keyPair.privateKey;
         this._PublicPGPKey = keyPair.publicKey;
 
+        if (isMobile) {
 
-        const ACCESS_CONTROL_MAP = [
-            Keychain.ACCESS_CONTROL.USER_PRESENCE,
-        ];
-        const ACCESS_CONTROL_MAP_ANDROID = [
-            null,
-            Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-        ];
-        const SECURITY_LEVEL_MAP = [
-            Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
-            Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
-        ];
+            const ACCESS_CONTROL_MAP = [
+                Keychain.ACCESS_CONTROL.USER_PRESENCE,
+            ];
+            const ACCESS_CONTROL_MAP_ANDROID = [
+                null,
+                Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+            ];
+            const SECURITY_LEVEL_MAP = [
+                Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
+                Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
+            ];
 
-        const SECURITY_STORAGE_MAP = [
-            null,
-            Keychain.STORAGE_TYPE.FB,
-            Keychain.STORAGE_TYPE.AES,
-            Keychain.STORAGE_TYPE.RSA,
-        ];
-        const AC_MAP =
-            Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
+            const SECURITY_STORAGE_MAP = [
+                null,
+                Keychain.STORAGE_TYPE.FB,
+                Keychain.STORAGE_TYPE.AES,
+                Keychain.STORAGE_TYPE.RSA,
+            ];
+            const AC_MAP =
+                Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
 
-        // TODO: how to save them to browser keychain for web/auditor user - maybe they load their own every time?
+            // TODO: how to save them to browser keychain for web/auditor user - maybe they load their own every time?
 
-        const saveResult = await Keychain.setGenericPassword(
-            this._PublicPGPKey,
-            this._PrivatePGPKey,
+            const saveResult = await Keychain.setGenericPassword(
+                this._PublicPGPKey,
+                this._PrivatePGPKey,
 
-            {
-                accessControl: AC_MAP[0],
-                securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],
-                storage: Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP[2],
-            }
-        );
+                {
+                    accessControl: AC_MAP[0],
+                    securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],
+                    storage: Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP[2],
+                }
+            );
 
-        return saveResult != false;
+            return saveResult != false;
+        }
+        else{
+            console.log("we need a web version of keychain so the department auditors can sign/encrypt things")
+            return false
+        }
     }
 
 
-    constructor() {
-
-    }
 
     public async Initialize(){
+
+    }
+
+    CorroborateData(base64Data: string): Promise<string> {
 
     }
 

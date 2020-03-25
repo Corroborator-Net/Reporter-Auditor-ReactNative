@@ -12,6 +12,7 @@ export interface Identity{
     TrustedPeerPGPKeys:string[]
     LoggedIn():Promise<boolean>
     GenerateAndSavePGPKeys():Promise<boolean>
+    CorroborateData(base64Data:string):Promise<string>;
     // sign(base64Data:string):string
     // addTrustedPeerAttestation(did:string):string;
     // getMyAddress():string,

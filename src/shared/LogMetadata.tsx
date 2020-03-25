@@ -32,8 +32,10 @@ export class LogMetadata {
     public static readonly GPSSpeed = "GPSSpeed";
     public static readonly ImageDescription = "ImageDescription";
     public static readonly FileName = "FileName";
-    public static readonly MetadataTags = [LogMetadata.DateTag, LogMetadata.ImageDescription, LogMetadata.GPSLat,
-        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName];
+    public static readonly SignedHash = "SignedHash";
+    public static readonly MetadataTagsToIncludeOnChain = [LogMetadata.DateTag, LogMetadata.ImageDescription, LogMetadata.GPSLat,
+        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName,
+    LogMetadata.SignedHash];
 
 
     public pubKeysToAESKeysToJSONDataMap: { [name: string]: any };
@@ -81,7 +83,7 @@ export class LogMetadata {
             const metadata = JSON.parse(myJsonData);
             const jsonToEncrypt:{[key:string]:string} = {};
             //  add your own
-            for (const tag of LogMetadata.MetadataTags) {
+            for (const tag of LogMetadata.MetadataTagsToIncludeOnChain) {
                 jsonToEncrypt[tag] = metadata[tag];
             }
             // either we use the trusted keys in additon to ours, or we just use ours

@@ -1,12 +1,13 @@
 import React from "react";
-import {FlatList, Platform, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
 import {LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
-import {LogsViewName, UserPreferenceKeys} from "../utils/Constants";
+import {isMobile, LogsViewName, UserPreferenceKeys} from "../utils/Constants";
 import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
-
+import DocumentPicker from 'react-native-document-picker';
+import {Identity} from "../interfaces/Identity";
 
 type State={
     logbooks:string[]
@@ -21,8 +22,9 @@ type  Props={
     logbookStateKeeper:LogbookStateKeeper;
     blockchainInterface:BlockchainInterface;
     userPreferences:UserPreferenceStorage;
+    identity:Identity;
 }
-const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
+
 export default class MultiLogbookView extends React.PureComponent<Props, State> {
 
     state={
@@ -55,9 +57,38 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         })
     }
 
-    showUploadPrompt(){
+    async showUploadPrompt(){
         if (isMobile){
-            
+            try {
+                const results = await DocumentPicker.pickMultiple({
+                    type: [DocumentPicker.types.images],
+                });
+                //TODO:
+                // load jpeg
+                // extract metadata
+                // find logbook address
+                // query blockchain interface for logs at that address
+                // hash jpeg
+                // compare logged hash to blockchain hash
+                // if match, submit: new log to chain with our keys OR - to log manager?
+
+                for (const res of results) {
+                    console.log(
+                        res.uri,
+                        res.type, // mime type
+                        res.name,
+                        res.size
+                    );
+                }
+
+
+            } catch (err) {
+                if (DocumentPicker.isCancel(err)) {
+                    // User cancelled the picker, exit any dialogs or menus and move on
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
