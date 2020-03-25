@@ -67,30 +67,7 @@ export default class NativeImageStorage implements ImageDatabase{
     }
 
 
-    public async getImages(logs:Log[]):Promise<string[]> {
 
-        return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
-            .then(realm => {
-                let imageRecords = new Array<string>();
-                for (const log of logs){
-                    const imageRecord = realm.objects(ImageRecordSchema.name).
-                    filtered("storageLocation = '" + log.storageLocation +"'")[0];
-
-                    // const imageRecord= realm.objects(schemaName).filtered("multiHash = '" + log.dataMultiHash +"'")[0];
-                    if (imageRecord){
-                        //@ts-ignore
-                        imageRecords.push(imageRecord.base64Data);
-                    }
-
-                }
-                return imageRecords;
-
-            })
-            .catch((error) => {
-                console.log( "error on get images!",error);
-                return error // read error
-            });
-    }
 
 
     public async getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]> {
@@ -132,23 +109,47 @@ export default class NativeImageStorage implements ImageDatabase{
             });
     }
 
-    public async getUnLoggedEditedImages():Promise<ImageRecord[]> {
-
-        return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
-            .then(realm => {
-
-                // TODO: order by their time stamp
-                const imageRecords = realm.objects(ImageRecordSchema.name).
-                filtered("storageLocation = ''");
-
-                return imageRecords;
-
-            })
-            .catch((error) => {
-                console.log( "error on get image record via root hash!",error);
-                return error // read error
-            });
-    }
-
+    // public async getUnLoggedEditedImages():Promise<ImageRecord[]> {
+    //
+    //     return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
+    //         .then(realm => {
+    //
+    //             // TODO: order by their time stamp
+    //             const imageRecords = realm.objects(ImageRecordSchema.name).
+    //             filtered("storageLocation = ''");
+    //
+    //             return imageRecords;
+    //
+    //         })
+    //         .catch((error) => {
+    //             console.log( "error on get image record via root hash!",error);
+    //             return error // read error
+    //         });
+    // }
+    
+    // public async getImages(logs:Log[]):Promise<string[]> {
+    //
+    //     return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
+    //         .then(realm => {
+    //             let imageRecords = new Array<string>();
+    //             for (const log of logs){
+    //                 const imageRecord = realm.objects(ImageRecordSchema.name).
+    //                 filtered("storageLocation = '" + log.storageLocation +"'")[0];
+    //
+    //                 // const imageRecord= realm.objects(schemaName).filtered("multiHash = '" + log.dataMultiHash +"'")[0];
+    //                 if (imageRecord){
+    //                     //@ts-ignore
+    //                     imageRecords.push(imageRecord.base64Data);
+    //                 }
+    //
+    //             }
+    //             return imageRecords;
+    //
+    //         })
+    //         .catch((error) => {
+    //             console.log( "error on get images!",error);
+    //             return error // read error
+    //         });
+    // }
 
 }

@@ -16,12 +16,11 @@ export interface LogbookDatabase {
 
 export interface ImageDatabase {
     add(data:HashData): Promise<string>;
-    getImages(logs:Log[]):Promise<string[]>;
     getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]>;
     removeImageRecord(imageRecord:ImageRecord):Promise<string>;
-    getUnLoggedEditedImages():Promise<ImageRecord[]>;
     updateImageRecordToHead(imageRecord:ImageRecord):Promise<string>;
-
+    // getImages(logs:Log[]):Promise<string[]>;
+    // getUnLoggedEditedImages():Promise<ImageRecord[]>;
 }
 
 
