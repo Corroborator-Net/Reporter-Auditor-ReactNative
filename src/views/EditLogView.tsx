@@ -97,8 +97,8 @@ export default class EditLogView extends React.Component<Props, State> {
         let currentDescription = `Enter new description for the ${logs.length} images`;
         if (logs.length==1){
             // add one log specific UI here
-            console.log(JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription]);
-            currentDescription = logs[0].ImageRecord.metadata//JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription];
+
+            currentDescription = ImageRecord.GetImageDescription(logs[0].ImageRecord).Description;
             // console.log("only one image's description: ", currentDescription);
         }
 

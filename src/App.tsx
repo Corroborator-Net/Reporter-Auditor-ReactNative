@@ -20,7 +20,7 @@ import SettingsView from "./views/SettingsView";
 import HashManager from "./shared/HashManager";
 import {LogManager} from "./shared/LogManager";
 import {Mesh} from "./interfaces/PeerCorroborators";
-import {NativeAtraManager} from "./native/NativeAtraManager";
+import {AtraManager} from "./shared/AtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
 import CrossPlatformIdentity from "./shared/CrossPlatformIdentity";
 import NativeUserPreferences from "./native/NativeUserPreferences";
@@ -50,7 +50,7 @@ class App extends PureComponent{
     userPreferences = new NativeUserPreferences(this.identity);
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();
-    blockchainManager = new NativeAtraManager();
+    blockchainManager = new AtraManager();
 
     logManager = new LogManager(
         this.storage,

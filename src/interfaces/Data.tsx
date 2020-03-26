@@ -1,5 +1,6 @@
 //@ts-ignore
 import {piexif} from "piexifjs";
+import {LogMetadata} from "../shared/LogMetadata";
 
 export interface LogbookStateKeeper {
     CurrentLogbookID:string
@@ -100,7 +101,7 @@ export class Log {
 
 
 export interface HashReceiver{
-    OnHashProduced(hashData:HashData):void;
+    OnNewHashProduced(hashData:HashData):void;
 }
 
 
@@ -121,13 +122,13 @@ export const LogSchema = {
 export interface HashData{
     currentMultiHash:string;
     storageLocation:string;
-    metadata:string;
+    metadataJSON:string;
     base64Data:string;
 }
 
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
 export class ImageRecord implements HashData {
-    public metadata:string;
+    public metadataJSON:string;
     public filename:string;
     private exifObject:any;
 
@@ -137,15 +138,16 @@ export class ImageRecord implements HashData {
                  public currentMultiHash:string,
                  public base64Data:string,
     ) {
-        this.metadata = "";
+        this.metadataJSON = "";
         if (base64Data != "") {
-            this.metadata = this.LoadAndSetExifObjectFromBase64(base64Data);
+            this.metadataJSON = this.LoadAndSetExifObjectFromBase64(base64Data);
         }
         if (!storageLocation.startsWith("file://")){
             this.storageLocation = "file://" + storageLocation;
         }
         this.filename = this.storageLocation.slice(this.storageLocation.lastIndexOf("/") + 1);
     }
+
 
     public LoadAndSetExifObjectFromBase64(base64Data:string):string{
         const exif = {};
@@ -162,7 +164,6 @@ export class ImageRecord implements HashData {
         }
 
         return JSON.stringify(exif);
-
     }
 
     public UpdateExifObject(newImageDescription:string):string{
@@ -185,8 +186,9 @@ export class ImageRecord implements HashData {
         return piexif.insert(exifString, `data:image/jpeg;base64,${this.base64Data}`);
     }
 
-    GetImageDescription(){
-
+    // Realm doesn't play nice with instance functions
+    static GetImageDescription(imageRecord:ImageRecord):ImageDescription{
+        return JSON.parse(JSON.parse(imageRecord.metadataJSON)[LogMetadata.ImageDescription]);
     }
 
     listExifKeysValues(exifObj:any){
@@ -222,7 +224,7 @@ export const ImageRecordSchema = {
         rootMultiHash: {type:'string', indexed:true},
         storageLocation:'string',
         base64Data:'string',
-        metadata:'string',
+        metadataJSON:'string',
         filename:'string',
     }
 };

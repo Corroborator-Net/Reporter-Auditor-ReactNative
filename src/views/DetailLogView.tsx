@@ -56,15 +56,14 @@ export default class DetailLogView extends React.Component<Props, State> {
         }
 
         if (imageRecord){
-            const imageMetadata = JSON.parse(imageRecord.metadata);
+            const imageMetadata = JSON.parse(imageRecord.metadataJSON);
 
             if (log.dataMultiHash == imageRecord.currentMultiHash) {
                 metadataObj["File Name"] = imageRecord.filename;
                 // we add all metadata except the above parsed stuff
                 for (const key of Object.keys(imageMetadata)) {
                     if (key == LogMetadata.ImageDescription){
-                        const imageDescription:ImageDescription = JSON.parse(imageMetadata[key]);
-                        metadataObj[key] = imageDescription.Description;
+                        metadataObj[key] = ImageRecord.GetImageDescription(imageRecord).Description;
                         continue;
                     }
                     metadataObj[key] = imageMetadata[key];

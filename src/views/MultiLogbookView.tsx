@@ -1,13 +1,15 @@
 import React from "react";
 import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
-import {LogbookStateKeeper} from "../interfaces/Data";
+import {ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {isMobile, LogsViewName, UserPreferenceKeys} from "../utils/Constants";
 import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
 import DocumentPicker from 'react-native-document-picker';
 import {Identity} from "../interfaces/Identity";
+import RNFetchBlob from "rn-fetch-blob";
+import HashManager from "../shared/HashManager";
 
 type State={
     logbooks:string[]
@@ -65,24 +67,28 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     type: [DocumentPicker.types.images],
                 });
 
-                //TODO:
-                // load jpeg
-                // extract metadata
-                // find logbook address
-                // query blockchain interface for logs at that address
-                // hash jpeg
-                // compare logged hash to blockchain hash
-                // if match, submit: new log to chain with our keys OR - to log manager?
-
                 for (const res of results) {
-                    console.log(
-                        res.uri,
-                        res.type, // mime type
-                        res.name,
-                        res.size
-                    );
+                    RNFetchBlob.fs.readFile(res.uri, 'base64')
+                        .then(async (data) => {
+                            // load jpeg - this could be from local file system or the cloud
+                            const imageRecord = new ImageRecord(
+                                new Date(),
+                                res.uri,
+                                "",
+                                "",
+                                data,
+                            )
+                            const logbookAddress = ImageRecord.GetImageDescription(imageRecord).LogbookAddress;
+                            const logsAtAddress = await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                            const myHash = HashManager.GetHashSync(data);
+                            const matchingLogs = logsAtAddress.filter((log)=> log.dataMultiHash == myHash);
+                            if (matchingLogs.length>0){
+                                console.log("found a matching log on the blockchain!")
+                            }
+                            //TODO: corroborate the file by adding our own transaction
+                            // if match, submit: new log to chain with our keys OR - to log manager?
+                        });
                 }
-
 
             } catch (err) {
                 if (DocumentPicker.isCancel(err)) {
@@ -91,6 +97,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     throw err;
                 }
             }
+        }
+        else{
+            // TODO: WEB platform: show a drag + drop field or have them enter a logbook address to pull from the chain/atra
         }
     }
 

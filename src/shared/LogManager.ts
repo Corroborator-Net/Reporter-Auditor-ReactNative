@@ -35,7 +35,7 @@ export class LogManager implements HashReceiver{
     }
 
 
-    public async SyncEditedOrNewLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
+    public async SyncEditedLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
         console.log("uploading edited logs:", logbookEntries.length);
 
         let editedLogsToUpload = new Array<Log>();
@@ -58,7 +58,7 @@ export class LogManager implements HashReceiver{
             await this.imageDatabase.updateImageRecordToHead(record);
 
             const logMetadata = new LogMetadata(
-                record.metadata,
+                record.metadataJSON,
                 this.didModule.PublicPGPKey,
                 this.didModule.TrustedPeerPGPKeys,
                 null,
@@ -85,7 +85,7 @@ export class LogManager implements HashReceiver{
 
 
 
-    OnHashProduced(hashData: HashData): void {
+    OnNewHashProduced(hashData: HashData): void {
 
         // console.log("hash: ", hashData.currentMultiHash);
         // return;
@@ -101,7 +101,7 @@ export class LogManager implements HashReceiver{
 
 
         const logMetadata = new LogMetadata(
-            hashData.metadata,
+            hashData.metadataJSON,
             this.didModule.PublicPGPKey,
             this.didModule.TrustedPeerPGPKeys,
             null,

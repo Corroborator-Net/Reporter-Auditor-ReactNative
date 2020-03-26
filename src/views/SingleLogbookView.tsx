@@ -82,7 +82,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             refreshing:true,
         });
 
-        LogManager.Instance.SyncEditedOrNewLogs(this.state.currentlySelectedLogs).then(async (syncing)=>{
+        LogManager.Instance.SyncEditedLogs(this.state.currentlySelectedLogs).then(async (syncing)=>{
             while (LogManager.Instance.syncingLogs || syncing){
                console.log("syncing!");
                await waitMS(1000);
@@ -167,9 +167,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             return(
                 // log.RootLog.signedMetadataJson.includes(searchText) ||
                 // log.Log.signedMetadataJson.includes(searchText) ||
-                    log.ImageRecord.metadata.toLowerCase().includes(searchText) ||
+                    log.ImageRecord.metadataJSON.toLowerCase().includes(searchText) ||
                     log.ImageRecord.storageLocation.toLowerCase().includes(searchText) ||
-                    log.RootImageRecord.metadata.toLowerCase().includes(searchText)
+                    log.RootImageRecord.metadataJSON.toLowerCase().includes(searchText)
             );
         });
 
