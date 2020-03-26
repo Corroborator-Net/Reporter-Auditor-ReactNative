@@ -181,7 +181,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
 
         // Add filename to metadata
         const fileName = data.uri.slice(data.uri.lastIndexOf("/") + 1);
-        data.exif[LogMetadata.FileName] = fileName;
+        // data.exif[LogMetadata.FileName] = fileName;
         const fullPath = GetPathToCameraRoll(fileName, true);
 
         await CameraRoll.save(data.uri, {type:'photo',album:OriginalAlbum});
@@ -191,8 +191,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             fullPath,
             "",
             "",
-            "",
-            data.exif);
+            "");
 
         RNFetchBlob.fs.readFile(imageData.storageLocation, 'base64')
             .then((data) => {
@@ -202,6 +201,8 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                 imageData.base64Data = data;
                 imageData.currentMultiHash = hash;
                 imageData.rootMultiHash = hash;
+                // just have to do this during our first save as the true exif is only included in the saved file
+                imageData.metadata = imageData.LoadAndSetExifObjectFromBase64(data);
                 // console.log("imagedata's hash:", imageData.currentMultiHash);
                 this.props.imageDatabase.add(imageData);
                 LogManager.Instance.OnHashProduced(imageData);

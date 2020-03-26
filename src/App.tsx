@@ -91,7 +91,6 @@ class App extends PureComponent{
             this.state.loading ?
                 LoadingSpinner
                 :
-
                 !this.state.loggedIn ?
                     <AuthenticationView
                         identity={this.identity}

@@ -19,7 +19,7 @@ export default class NativeImageStorage implements ImageDatabase{
             "base64").catch(()=>{
                 console.log(`already a file at ${imageRecord.storageLocation} , carrying on`)
         });
-        const fileName = imageRecord.storageLocation.slice(imageRecord.storageLocation.lastIndexOf("/")+1);
+
         await CameraRoll.save(imageRecord.storageLocation, {type:'photo',album:ModifiedAlbum}).catch(()=>{
             console.log(`already a file at ${imageRecord.storageLocation} in camera roll , carrying on`)
         });
@@ -29,7 +29,7 @@ export default class NativeImageStorage implements ImageDatabase{
             .then(realm => {
                 // Create Realm objects and write to local storage
                 realm.write(() => {
-                    imageRecord.storageLocation = GetPathToCameraRoll(fileName, false);
+                    imageRecord.storageLocation = GetPathToCameraRoll(imageRecord.filename, false);
 
                     realm.create(
                         ImageRecordSchema.name,

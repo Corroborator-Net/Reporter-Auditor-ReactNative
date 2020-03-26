@@ -24,6 +24,7 @@ type  Props={
     userPreferences:UserPreferenceStorage;
     identity:Identity;
 }
+const customButtons = 2;
 
 export default class MultiLogbookView extends React.PureComponent<Props, State> {
 
@@ -63,6 +64,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                 const results = await DocumentPicker.pickMultiple({
                     type: [DocumentPicker.types.images],
                 });
+
                 //TODO:
                 // load jpeg
                 // extract metadata
@@ -186,9 +188,10 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
         // add the new logbook to the list
         let newStateLogbooks = this.state.logbooks;
-        newStateLogbooks.splice(1,0,newLogbookID);
+        newStateLogbooks.splice(customButtons,0,newLogbookID);
 
-        this.props.userPreferences.SetNewPersistentUserPreference(UserPreferenceKeys.Logbooks, newStateLogbooks.slice(1));
+        this.props.userPreferences.SetNewPersistentUserPreference(UserPreferenceKeys.Logbooks,
+            newStateLogbooks.slice(customButtons));
 
         console.log("new logbooks to save: ", newStateLogbooks);
         const date  = new Date();

@@ -1,3 +1,5 @@
+//@ts-ignore
+import {piexif} from "piexifjs";
 
 export interface LogbookStateKeeper {
     CurrentLogbookID:string
@@ -126,16 +128,80 @@ export interface HashData{
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
 export class ImageRecord implements HashData {
     public metadata:string;
+    public filename:string;
+    private exifObject:any;
+
     constructor( public timestamp:Date,
                  public storageLocation:string,
                  public rootMultiHash:string,
                  public currentMultiHash:string,
                  public base64Data:string,
-                 exif:any,
     ) {
-        this.metadata = JSON.stringify(exif);
+        this.metadata = "";
+        if (base64Data != "") {
+            this.metadata = this.LoadAndSetExifObjectFromBase64(base64Data);
+        }
         if (!storageLocation.startsWith("file://")){
             this.storageLocation = "file://" + storageLocation;
+        }
+        this.filename = this.storageLocation.slice(this.storageLocation.lastIndexOf("/") + 1);
+    }
+
+    public LoadAndSetExifObjectFromBase64(base64Data:string):string{
+        const exif = {};
+        console.log("loading metadata from jpeg base64 data!");
+        // load the exif data for viewing
+        this.exifObject = piexif.load(`data:image/jpeg;base64,${base64Data}`);
+        for (const ifd in this.exifObject) {
+            if (ifd != "thumbnail") {
+                for (const tag in this.exifObject[ifd]) {
+                    //@ts-ignore
+                    exif[piexif.TAGS[ifd][tag]["name"]] = this.exifObject[ifd][tag];
+                }
+            }
+        }
+
+        return JSON.stringify(exif);
+
+    }
+
+    public UpdateExifObject(newImageDescription:string):string{
+
+        this.listExifKeysValues(this.exifObject);
+
+        const oldImageDescription:ImageDescription = JSON.parse(this.exifObject["0th"][270]);
+
+        // TODO: allow user to change logbook
+        this.exifObject["0th"][270] = {
+            Description: newImageDescription,
+            LogbookAddress:oldImageDescription.LogbookAddress,
+            PublicKey:oldImageDescription.PublicKey,
+        };
+
+        // after editing the exif, dump it into a string
+        const exifString = piexif.dump(this.exifObject);
+
+        // OVERWRITE the string into the jpeg - insert is not properly named!
+        return piexif.insert(exifString, `data:image/jpeg;base64,${this.base64Data}`);
+    }
+
+    GetImageDescription(){
+
+    }
+
+    listExifKeysValues(exifObj:any){
+        for (const ifd in exifObj) {
+            if (ifd == "thumbnail") {
+                continue;
+            }
+            console.log("-" + ifd);
+            for (var tag in exifObj[ifd]) {
+
+                console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
+                console.log("ifd:", ifd, "tag:", tag)
+
+
+            }
         }
     }
 }
@@ -157,6 +223,7 @@ export const ImageRecordSchema = {
         storageLocation:'string',
         base64Data:'string',
         metadata:'string',
+        filename:'string',
     }
 };
 export class UserPreference{

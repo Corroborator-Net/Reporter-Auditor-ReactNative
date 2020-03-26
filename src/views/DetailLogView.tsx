@@ -2,7 +2,7 @@ import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
 import {ImageDescription, ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {LoadingSpinner, PrependJpegString, waitMS} from "../utils/Constants";
-import {Button, ListItem} from "react-native-elements";
+import {ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
 import {Identity} from "../interfaces/Identity";
@@ -43,9 +43,8 @@ export default class DetailLogView extends React.Component<Props, State> {
             null,null,null,
             log.encryptedMetadataJson,
             [this.props.identity.PublicPGPKey],
-            this.props.identity.PrivatePGPKey
-        ).pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
-            // console.log(metadataObj);
+            this.props.identity.PrivatePGPKey).
+            pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
 
         // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
         for (const key of Object.keys(log)) {
@@ -60,6 +59,7 @@ export default class DetailLogView extends React.Component<Props, State> {
             const imageMetadata = JSON.parse(imageRecord.metadata);
 
             if (log.dataMultiHash == imageRecord.currentMultiHash) {
+                metadataObj["File Name"] = imageRecord.filename;
                 // we add all metadata except the above parsed stuff
                 for (const key of Object.keys(imageMetadata)) {
                     if (key == LogMetadata.ImageDescription){
@@ -74,6 +74,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                 metadataObj["Log Status"] = "Not Yet Logged"
             }
         }
+
 
 
         Object.keys(metadataObj).

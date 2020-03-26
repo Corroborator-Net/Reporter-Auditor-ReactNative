@@ -31,11 +31,11 @@ export class LogMetadata {
     public static readonly GPSAlt = "GPSAltitude";
     public static readonly GPSSpeed = "GPSSpeed";
     public static readonly ImageDescription = "ImageDescription";
-    public static readonly FileName = "FileName";
+    // public static readonly FileName = "FileName";
     public static readonly SignedHash = "SignedHash";
-    public static readonly MetadataTagsToIncludeOnChain = [LogMetadata.DateTag, LogMetadata.ImageDescription, LogMetadata.GPSLat,
-        LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed, LogMetadata.FileName,
-    LogMetadata.SignedHash];
+    public static readonly MetadataTagsToIncludeOnChain = [LogMetadata.DateTag, LogMetadata.ImageDescription,
+        LogMetadata.GPSLat, LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed,
+        LogMetadata.SignedHash];
 
 
     public pubKeysToAESKeysToJSONDataMap: { [name: string]: any };

@@ -34,21 +34,7 @@ export default class EditLogView extends React.Component<Props, State> {
         saving:false,
     };
 
-    listExifKeysValues(exifObj:any){
-        // for (const ifd in exifObj) {
-        //     if (ifd == "thumbnail") {
-        //         continue;
-        //     }
-        //     console.log("-" + ifd);
-        //     for (var tag in exifObj[ifd]) {
-        //
-        //         console.log("  " + piexif.TAGS[ifd][tag]["name"] + ":" + exifObj[ifd][tag]);
-        //         console.log("ifd:", ifd, "tag:", tag)
-        //
-        //
-        //     }
-        // }
-    }
+
 
     async saveEditedImageData(){
         // let the loading spinner start spinning
@@ -58,37 +44,11 @@ export default class EditLogView extends React.Component<Props, State> {
             const temp = dirs.CacheDir;
 
             for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
-                const jpeg = `data:image/jpeg;base64,${log.ImageRecord.base64Data}`;
-                // load the exif data for viewing
-                const exifObj = piexif.load(jpeg);
-                // this.listExifKeysValues(exifObj);
-
-                const oldImageDescription:ImageDescription = JSON.parse(exifObj["0th"][270]);
-
-                // TODO: allow user to change logbook
-                exifObj["0th"][270] = {
-                    Description: this.state.newImageDescription,
-                    LogbookAddress:oldImageDescription.LogbookAddress,
-                    PublicKey:oldImageDescription.PublicKey,
-                };
-
-                // after editing the exif, dump it into a string
-                const exifString = piexif.dump(exifObj);
-
-                // OVERWRITE the string into the jpeg - insert is not properly named!
-                const newJpeg = piexif.insert(exifString, jpeg);
-                const newBase64Data = newJpeg.slice("data:image/jpeg;base64,".length);
 
                 // TODO: let's get new gps coords so we know were the user edited the data
-                const oldExif = JSON.parse(log.ImageRecord.metadata);
-                const exif: { [name: string]: any } = {
-                    [LogMetadata.GPSLat]: oldExif[LogMetadata.GPSLat],
-                    [LogMetadata.GPSLong]: oldExif[LogMetadata.GPSLong],
-                    [LogMetadata.GPSAlt]: oldExif[LogMetadata.GPSAlt],
-                    [LogMetadata.GPSSpeed]: oldExif[LogMetadata.GPSSpeed],
-                    [LogMetadata.GPSAcc]: oldExif[LogMetadata.GPSAcc],
-                    [LogMetadata.ImageDescription]: exifObj["0th"][270],
-                };
+                // // TODO: allow user to change logbook
+                const newBase64Data = log.ImageRecord.UpdateExifObject(this.state.newImageDescription).
+                slice("data:image/jpeg;base64,".length);
 
                 const newHash = HashManager.GetHashSync(newBase64Data);
                 if (newHash == log.ImageRecord.currentMultiHash) {
@@ -102,16 +62,15 @@ export default class EditLogView extends React.Component<Props, State> {
                     + "_T:" + time.toLocaleTimeString();
 
 
-                const fileName = log.RootLog.storageLocation.slice(log.RootLog.storageLocation.lastIndexOf("/") + 1);
-                const newPath = temp + "/" + fileName.slice(0, fileName.length - 4) + timestamp + ".jpg";
+                // const fileName = log.RootLog.storageLocation.slice(log.RootLog.storageLocation.lastIndexOf("/") + 1);
+                const newPath = temp + "/" + log.RootImageRecord.filename.slice(0, log.RootImageRecord.filename.length - 4) + timestamp + ".jpg";
 
                 const newImageRecord = new ImageRecord(
                     time,
                     newPath,
                     log.RootLog.dataMultiHash,
                     newHash,
-                    newBase64Data,
-                    exif);
+                    newBase64Data);
 
 
                 if (log.imageRecords.length > 1) {
@@ -130,14 +89,17 @@ export default class EditLogView extends React.Component<Props, State> {
 
     }
 
+
+
     DisplayEditableMetadata(logs:LogbookEntry[]):Array<Element>{
         let details = new Array<Element>();
 
         let currentDescription = `Enter new description for the ${logs.length} images`;
         if (logs.length==1){
             // add one log specific UI here
-            currentDescription = JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription];
-            console.log("only one image's description: ", currentDescription);
+            console.log(JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription]);
+            currentDescription = logs[0].ImageRecord.metadata//JSON.parse(logs[0].ImageRecord.metadata)[LogMetadata.ImageDescription];
+            // console.log("only one image's description: ", currentDescription);
         }
 
 
@@ -157,6 +119,7 @@ export default class EditLogView extends React.Component<Props, State> {
 
     render() {
             const logs = this.props.logbookStateKeeper.CurrentSelectedLogs;
+
         return (
             <>
             <ScrollView>
