@@ -133,7 +133,7 @@ export class ImageRecord implements HashData {
     ) {
         this.metadataJSON = "";
         if (base64Data != "") {
-            this.metadataJSON = ImageRecord.GetExifObjectFromBase64(base64Data)[0];
+            this.metadataJSON = ImageRecord.GetMetadataAndExifObject(base64Data)[0];
         }
         if (!storageLocation.startsWith("file://")){
             this.storageLocation = "file://" + storageLocation;
@@ -142,7 +142,7 @@ export class ImageRecord implements HashData {
     }
 
 
-    public static GetExifObjectFromBase64(base64Data:string):[string, any]{
+    public static GetMetadataAndExifObject(base64Data:string):[string, any]{
         const exif = {};
         // console.log("loading metadata from jpeg base64 data!");
         // load the exif data for viewing
@@ -161,7 +161,7 @@ export class ImageRecord implements HashData {
 
     public static GetEditedJpeg(base64Data:string, newImageDescription:string):string{
 
-        let exifObject = ImageRecord.GetExifObjectFromBase64(base64Data)[1];
+        let exifObject = ImageRecord.GetMetadataAndExifObject(base64Data)[1];
         ImageRecord.listExifKeysValues(exifObject);
         let oldImageDescription:ImageDescription = JSON.parse(exifObject["0th"][270]);
 

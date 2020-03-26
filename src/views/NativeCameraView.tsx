@@ -166,6 +166,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             SignedLogbookAddress:this.props.identity.sign(this.props.logbookStateKeeper.CurrentLogbookID),
         };
 
+        // TODO: fix how the gps coords are formatted
         const exifAppend: { [name: string]: any } = {
             [LogMetadata.GPSLat]:this.state.position.coords.latitude,
             [LogMetadata.GPSLong]: this.state.position.coords.longitude,
@@ -175,6 +176,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             [LogMetadata.ImageDescription] : JSON.stringify(imageDescription)
         };
 
+        console.log(exifAppend);
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
         const options = {quality: 0.2, base64: false, writeExif: exifAppend, exif: true};
@@ -203,7 +205,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                 imageData.currentMultiHash = hash;
                 imageData.rootMultiHash = hash;
                 // just have to do this during our first save as the true exif is only included in the saved file
-                imageData.metadataJSON = ImageRecord.GetExifObjectFromBase64(data)[0];
+                imageData.metadataJSON = ImageRecord.GetMetadataAndExifObject(data)[0];
                 // console.log("imagedata's hash:", imageData.currentMultiHash);
                 this.props.imageDatabase.add(imageData);
                 LogManager.Instance.OnNewHashProduced(

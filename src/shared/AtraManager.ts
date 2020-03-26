@@ -27,13 +27,12 @@ export class AtraManager implements BlockchainInterface {
         // start at the end of the list
         for (i = liveRecords.length - 1; i >= 0; i--) {
             const record = (liveRecords[i]["record"]);
-            // console.log("atra record: ", record);
+            // get block time from etherscan
             const blockNumber = liveRecords[i]["event"]["blockNumber"];
-            // get block time
-            const resp = await
+            const etherscanResponse = await
                 fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
                 + "&apikey=" + EtherScanApiKey);
-            const blockJson = await resp.json();
+            const blockJson = await etherscanResponse.json();
             const blockTimeStamp = blockJson["result"]["timeStamp"];
             // make the date look like the one stored on chain
             let preDate = new Date(parseInt(blockTimeStamp) * 1000);
@@ -44,11 +43,13 @@ export class AtraManager implements BlockchainInterface {
             } else {
                 date = "Pending..."
             }
+
+
             const hash = record[0];
             const storageLocation=record[1];
             const rootTransactionHash = record[2];
 
-            // TODO: do we need to decrypt and mess with it?
+            // TODO: do we need to decrypt and mess with the metadata on chain? - perhaps to verify the embedded signature?
             const encryptedMetadata = record[3];
 
 
