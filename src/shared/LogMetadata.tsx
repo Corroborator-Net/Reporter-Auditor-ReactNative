@@ -1,18 +1,19 @@
 // @ts-ignore
 import { Crypt } from 'hybrid-crypto-js';
+import {Identity} from "../interfaces/Identity";
 
 // created via npm library: hybrid-crypto-js
-export class RSAKeysToEncryptedAESKeyToCipherMap{
-    constructor(public v:string,
-                public iv:string,
-                // the keys is a map that allows the multiple rsa public key encryption:
-                // each pub key maps to the same AES key encrypted with the RSA pub key
-                // so if you have any of the matching private keys to a key in the keys list, you can get the AES key
-                public keys:{[pubKey:string] :string},
-                cipher:string,
-                signature:string ) {
-    }
-}
+// export class RSAKeysToEncryptedAESKeyToCipherMap{
+//     constructor(public v:string,
+//                 public iv:string,
+//                 // the keys is a map that allows the multiple rsa public key encryption:
+//                 // each pub key maps to the same AES key encrypted with the RSA pub key
+//                 // so if you have any of the matching private keys to a key in the keys list, you can get the AES key
+//                 public keys:{[pubKey:string] :string},
+//                 cipher:string,
+//                 signature:string ) {
+//     }
+// }
 //
 // class PeerLogMetadataEntry{
 //     // map a reporter's public key to their AES:EncryptedJSON entry
@@ -21,6 +22,7 @@ export class RSAKeysToEncryptedAESKeyToCipherMap{
 //         this.pubKeyToMetadataAndAESKeyMap= {[myPublicKey]:metadataEntry}
 //     }
 // }
+
 
 export class LogMetadata {
     // custom metadata tags:
@@ -44,7 +46,7 @@ export class LogMetadata {
     // retrieve from blockchain or image exif, turn into json that we want
     constructor(
         // PUSH DATA ARGUMENTS
-        myJsonData: string | null, myKey: string | null, trustedRSAKeys:string[]|null,
+        myJsonData: string | null, myKeys: Identity | null,  hashToSign:string|null,
         // PULL DATA ARGUMENTS
         jsonDataToDecrypt: string | null, publicKeysThatReportedData: string[] | null, privateKeyToDecryptMetadataWith:string|null) {
         this.pubKeysToAESKeysToJSONDataMap = {};
@@ -79,23 +81,23 @@ export class LogMetadata {
         }
 
         // PUSHING NEW DATA TO A LOG - accepts json string and will package it into a RSAKeysToEncryptedAESKeyToCipherMap
-        if (myJsonData && myKey) {
+        if (myJsonData && myKeys) {
             const metadata = JSON.parse(myJsonData);
+            // must include signed hash
+            metadata[LogMetadata.SignedHash] = LogMetadata.crypt.signature(myKeys.PrivatePGPKey, hashToSign);
+
             const jsonToEncrypt:{[key:string]:string} = {};
-            //  add your own
+            //  extract the metadata we want on chain from the jpeg's whole lot of metadata
             for (const tag of LogMetadata.MetadataTagsToIncludeOnChain) {
                 jsonToEncrypt[tag] = metadata[tag];
             }
             // either we use the trusted keys in additon to ours, or we just use ours
-            let keysWithWhichToEncrypt = [myKey];
-            if (trustedRSAKeys){
-                trustedRSAKeys.push(myKey);
-                keysWithWhichToEncrypt = trustedRSAKeys;
-            }
+            let keysWithWhichToEncrypt = myKeys.TrustedPeerPGPKeys.slice();
+            keysWithWhichToEncrypt.push(myKeys.PublicPGPKey);
 
             // console.log("encrypting with:", keysWithWhichToEncrypt);
             // the encrypt function returns an object of type: RSAKeysToEncryptedAESKeyToCipherMap
-            this.pubKeysToAESKeysToJSONDataMap[myKey] =
+            this.pubKeysToAESKeysToJSONDataMap[myKeys.PublicPGPKey] =
                 LogMetadata.crypt.encrypt(keysWithWhichToEncrypt, JSON.stringify(jsonToEncrypt));
 
         }

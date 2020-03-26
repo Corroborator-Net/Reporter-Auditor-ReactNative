@@ -60,15 +60,15 @@ export default class BlockchainLogbookStorage implements LogbookDatabase {
             const storageLocation=record[1];
             const signedMetadata = record[2];
 
-            const newEntry = new Log(
-                tableID,
-                storageLocation,
-                "TBD",
-                hash,
-                new LogMetadata(signedMetadata, null).JsonData()
-            );
-
-            response.push(newEntry);
+            // const newEntry = new Log(
+            //     tableID,
+            //     storageLocation,
+            //     "TBD",
+            //     hash,
+            //     new LogMetadata(signedMetadata, null).JsonData()
+            // );
+            //
+            // response.push(newEntry);
         }
 
         return response

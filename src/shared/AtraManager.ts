@@ -120,15 +120,15 @@ export class AtraManager implements BlockchainInterface {
     publishTransaction(txn: string): Promise<string> {
         return postAtraData("https://api.atra.io/prod/v1/dtables/records",txn).then(
             (json)=>{
+                if (json["error"]){
+                    console.log("atra error to new transaction: ", json);
+                }
                 return json.recordId;
             }).catch((err)=>{
                 console.log("atra error to new transaction: ", err);
                 return err;
         })
     }
-
-
-
 }
 
 function isValidDate(d:any) {

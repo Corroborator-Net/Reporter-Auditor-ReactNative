@@ -163,6 +163,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             Description: NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0],
             PublicKey:this.props.identity.PublicPGPKey,
             LogbookAddress:this.props.logbookStateKeeper.CurrentLogbookID,
+            SignedLogbookAddress:this.props.identity.sign(this.props.logbookStateKeeper.CurrentLogbookID),
         };
 
         const exifAppend: { [name: string]: any } = {
@@ -202,10 +203,14 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                 imageData.currentMultiHash = hash;
                 imageData.rootMultiHash = hash;
                 // just have to do this during our first save as the true exif is only included in the saved file
-                imageData.metadataJSON = imageData.LoadAndSetExifObjectFromBase64(data);
+                imageData.metadataJSON = ImageRecord.GetExifObjectFromBase64(data)[0];
                 // console.log("imagedata's hash:", imageData.currentMultiHash);
                 this.props.imageDatabase.add(imageData);
-                LogManager.Instance.OnNewHashProduced(imageData);
+                LogManager.Instance.OnNewHashProduced(
+                    imageData,
+                    this.props.logbookStateKeeper.CurrentLogbookID,
+                    true
+                );
             })
     }
 

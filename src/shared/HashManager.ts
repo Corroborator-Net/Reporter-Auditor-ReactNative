@@ -1,17 +1,11 @@
-import {HashData, HashReceiver} from "../interfaces/Data";
 const crypto = require('crypto');
 
 
 export default class HashManager{
-    public hashReceivers:HashReceiver[];
-    //constructor( public hashModule:MultiHash, ) {
-    constructor(  ) {
-        this.hashReceivers = new Array<HashReceiver>();
-    }
 
-    public static TestHash(){
-        return crypto.createHash('sha256');
-    }
+    // public static TestHash(){
+    //     return crypto.createHash('sha256');
+    // }
 
     // TODO  make this async if it's a costly op
     public static GetHashSync(base64Data:string):string{

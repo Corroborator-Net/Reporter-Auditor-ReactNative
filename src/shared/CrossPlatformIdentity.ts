@@ -1,6 +1,6 @@
 import {Identity} from "../interfaces/Identity";
 // @ts-ignore
-import { RSA } from 'hybrid-crypto-js';
+import { RSA,Crypt } from 'hybrid-crypto-js';
 import * as Keychain from 'react-native-keychain';
 import {Platform} from "react-native";
 import {isMobile} from "../utils/Constants";
@@ -8,6 +8,7 @@ import {isMobile} from "../utils/Constants";
 
 export default class CrossPlatformIdentity implements Identity{
 
+    static Crypt = new Crypt();
     // static menmonic = "ripple scissors kick mammal hire column oak again sun offer wealth tomorrow wagon turn fatal";
     // static Wallet:Wallet = Wallet.fromMnemonic(NativeDID.menmonic);
     private readonly HQPEMKey = {
@@ -104,8 +105,8 @@ export default class CrossPlatformIdentity implements Identity{
 
     }
 
-    CorroborateData(base64Data: string): Promise<string> {
-
+    public sign(hash: string): string {
+        return CrossPlatformIdentity.Crypt.signature(this._PrivatePGPKey, hash);
     }
 
     // Ethereum setup:

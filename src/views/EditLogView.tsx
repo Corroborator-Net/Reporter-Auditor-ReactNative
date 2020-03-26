@@ -1,18 +1,14 @@
 import React from "react";
 import {StyleSheet, Image, ScrollView, View, Keyboard} from "react-native";
-import {ImageDescription, ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
-//@ts-ignore
-import {piexif} from "piexifjs";
 import {ImageDatabase} from "../interfaces/Storage";
 import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
-import {AppButtonTint, UserPreferenceKeys, waitMS} from "../utils/Constants";
+import {AppButtonTint, waitMS} from "../utils/Constants";
 import SingleLogbookView from "./SingleLogbookView";
-import {LogMetadata} from "../shared/LogMetadata";
-import NativeUserPreferences from "../native/NativeUserPreferences";
 
 
 type Props={
@@ -47,7 +43,8 @@ export default class EditLogView extends React.Component<Props, State> {
 
                 // TODO: let's get new gps coords so we know were the user edited the data
                 // // TODO: allow user to change logbook
-                const newBase64Data = log.ImageRecord.UpdateExifObject(this.state.newImageDescription).
+                // const trueImageRecord = Object.setPrototypeOf(log.ImageRecord, ImageRecord.prototype);
+                const newBase64Data = ImageRecord.GetEditedJpeg(log.ImageRecord.base64Data, this.state.newImageDescription).
                 slice("data:image/jpeg;base64,".length);
 
                 const newHash = HashManager.GetHashSync(newBase64Data);

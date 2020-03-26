@@ -40,7 +40,7 @@ export default class DetailLogView extends React.Component<Props, State> {
         let details = new Array<JSX.Element>();
 
         let metadataObj = JSON.parse(new LogMetadata(
-            null,null,null,
+            null,null, null,
             log.encryptedMetadataJson,
             [this.props.identity.PublicPGPKey],
             this.props.identity.PrivatePGPKey).

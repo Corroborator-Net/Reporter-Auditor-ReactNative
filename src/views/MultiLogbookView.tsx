@@ -1,7 +1,7 @@
 import React from "react";
 import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
-import {ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
+import {HashData, ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {isMobile, LogsViewName, UserPreferenceKeys} from "../utils/Constants";
@@ -10,6 +10,8 @@ import DocumentPicker from 'react-native-document-picker';
 import {Identity} from "../interfaces/Identity";
 import RNFetchBlob from "rn-fetch-blob";
 import HashManager from "../shared/HashManager";
+import {LogManager} from "../shared/LogManager";
+import {LogMetadata} from "../shared/LogMetadata";
 
 type State={
     logbooks:string[]
@@ -82,11 +84,26 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             const logsAtAddress = await this.props.blockchainInterface.getRecordsFor(logbookAddress);
                             const myHash = HashManager.GetHashSync(data);
                             const matchingLogs = logsAtAddress.filter((log)=> log.dataMultiHash == myHash);
-                            if (matchingLogs.length>0){
-                                console.log("found a matching log on the blockchain!")
+                            // no matching logs on chain
+                            if (matchingLogs.length==0){
+                                console.log("NO matching log on the blockchain!");
+                                return;
                             }
-                            //TODO: corroborate the file by adding our own transaction
-                            // if match, submit: new log to chain with our keys OR - to log manager?
+
+                            console.log("found a matching log on the blockchain!");
+
+                            const newHashToLog:HashData = {
+                                currentMultiHash:myHash,
+                                storageLocation:"file://",
+                                metadataJSON:""
+                            };
+
+                            LogManager.Instance.OnNewHashProduced(
+                                newHashToLog,
+                                logbookAddress,
+                                false
+                            );
+
                         });
                 }
 

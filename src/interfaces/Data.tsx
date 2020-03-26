@@ -100,11 +100,6 @@ export class Log {
 }
 
 
-export interface HashReceiver{
-    OnNewHashProduced(hashData:HashData):void;
-}
-
-
 export const LogSchema = {
     name:"LogSchema",
     primaryKey: 'dataMultiHash',
@@ -123,14 +118,12 @@ export interface HashData{
     currentMultiHash:string;
     storageLocation:string;
     metadataJSON:string;
-    base64Data:string;
 }
 
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
 export class ImageRecord implements HashData {
     public metadataJSON:string;
     public filename:string;
-    private exifObject:any;
 
     constructor( public timestamp:Date,
                  public storageLocation:string,
@@ -140,7 +133,7 @@ export class ImageRecord implements HashData {
     ) {
         this.metadataJSON = "";
         if (base64Data != "") {
-            this.metadataJSON = this.LoadAndSetExifObjectFromBase64(base64Data);
+            this.metadataJSON = ImageRecord.GetExifObjectFromBase64(base64Data)[0];
         }
         if (!storageLocation.startsWith("file://")){
             this.storageLocation = "file://" + storageLocation;
@@ -149,49 +142,52 @@ export class ImageRecord implements HashData {
     }
 
 
-    public LoadAndSetExifObjectFromBase64(base64Data:string):string{
+    public static GetExifObjectFromBase64(base64Data:string):[string, any]{
         const exif = {};
-        console.log("loading metadata from jpeg base64 data!");
+        // console.log("loading metadata from jpeg base64 data!");
         // load the exif data for viewing
-        this.exifObject = piexif.load(`data:image/jpeg;base64,${base64Data}`);
-        for (const ifd in this.exifObject) {
+        const exifObject = piexif.load(`data:image/jpeg;base64,${base64Data}`);
+        for (const ifd in exifObject) {
             if (ifd != "thumbnail") {
-                for (const tag in this.exifObject[ifd]) {
+                for (const tag in exifObject[ifd]) {
                     //@ts-ignore
-                    exif[piexif.TAGS[ifd][tag]["name"]] = this.exifObject[ifd][tag];
+                    exif[piexif.TAGS[ifd][tag]["name"]] = exifObject[ifd][tag];
                 }
             }
         }
-
-        return JSON.stringify(exif);
+        return [JSON.stringify(exif), exifObject];
     }
 
-    public UpdateExifObject(newImageDescription:string):string{
 
-        this.listExifKeysValues(this.exifObject);
+    public static GetEditedJpeg(base64Data:string, newImageDescription:string):string{
 
-        const oldImageDescription:ImageDescription = JSON.parse(this.exifObject["0th"][270]);
+        let exifObject = ImageRecord.GetExifObjectFromBase64(base64Data)[1];
+        ImageRecord.listExifKeysValues(exifObject);
+        let oldImageDescription:ImageDescription = JSON.parse(exifObject["0th"][270]);
 
         // TODO: allow user to change logbook
-        this.exifObject["0th"][270] = {
+        exifObject["0th"][270] = JSON.stringify({
             Description: newImageDescription,
             LogbookAddress:oldImageDescription.LogbookAddress,
             PublicKey:oldImageDescription.PublicKey,
-        };
+        });
+        // console.log("exifob:", exifObject["0th"][270]);
 
         // after editing the exif, dump it into a string
-        const exifString = piexif.dump(this.exifObject);
+        const exifString = piexif.dump(exifObject);
 
         // OVERWRITE the string into the jpeg - insert is not properly named!
-        return piexif.insert(exifString, `data:image/jpeg;base64,${this.base64Data}`);
+        return piexif.insert(exifString, `data:image/jpeg;base64,${base64Data}`);
     }
 
+
     // Realm doesn't play nice with instance functions
-    static GetImageDescription(imageRecord:ImageRecord):ImageDescription{
+    public static GetImageDescription(imageRecord:ImageRecord):ImageDescription{
         return JSON.parse(JSON.parse(imageRecord.metadataJSON)[LogMetadata.ImageDescription]);
     }
 
-    listExifKeysValues(exifObj:any){
+
+    static listExifKeysValues(exifObj:any){
         for (const ifd in exifObj) {
             if (ifd == "thumbnail") {
                 continue;
@@ -212,6 +208,7 @@ export type ImageDescription={
     Description:string;
     LogbookAddress:string;
     PublicKey:string;
+    SignedLogbookAddress:string;
 }
 
 

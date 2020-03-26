@@ -2,16 +2,17 @@ import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, HashReceiver, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {HashData, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
 import _ from "lodash";
 import {LogMetadata} from "./LogMetadata";
+import {save} from "@react-native-community/cameraroll";
 
 
-export class LogManager implements HashReceiver{
+export class LogManager{
 
     logsToSync:Log[] = [];
     syncingLogs=false;
@@ -29,7 +30,6 @@ export class LogManager implements HashReceiver{
             return LogManager.Instance;
         }
         LogManager.Instance= this;
-        hashManager.hashReceivers.push(this);
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
         this.checkForUnsyncedLogs();
     }
@@ -59,8 +59,8 @@ export class LogManager implements HashReceiver{
 
             const logMetadata = new LogMetadata(
                 record.metadataJSON,
-                this.didModule.PublicPGPKey,
-                this.didModule.TrustedPeerPGPKeys,
+                this.didModule,
+                record.currentMultiHash,
                 null,
                 null,
                 null
@@ -85,10 +85,9 @@ export class LogManager implements HashReceiver{
 
 
 
-    OnNewHashProduced(hashData: HashData): void {
+    OnNewHashProduced(hashData: HashData, targetLogbookAddress:string, saveToDisk:boolean): void {
 
-        // console.log("hash: ", hashData.currentMultiHash);
-        // return;
+
         // TODO get signature from our did module
         // const signedHash = this.didModule.sign(hashData.multiHash);
         // const signedMetaData = this.didModule.sign(hashData.timeStamp);
@@ -102,31 +101,35 @@ export class LogManager implements HashReceiver{
 
         const logMetadata = new LogMetadata(
             hashData.metadataJSON,
-            this.didModule.PublicPGPKey,
-            this.didModule.TrustedPeerPGPKeys,
+            this.didModule,
+            hashData.currentMultiHash,
             null,
             null,
             null
         );
 
+        // console.log("new json data:", logMetadata.JsonData());
+
         // TODO: show user alert if no logbook selected!!
         const newLog = new Log(
-            this.logbookStateKeeper.CurrentLogbookID,
+            targetLogbookAddress,
             hashData.storageLocation,
             "",
             "",
             hashData.currentMultiHash,
             logMetadata.JsonData()
         );
-        // console.log("new log to log: ", newLog);
+
         // log the data after if/we get signatures
-        this.logStorage.addNewRecord(newLog).then(()=> {
-                SingleLogbookView.ShouldUpdateLogbookView = true
-            }
-        );
+        if (saveToDisk) {
+            this.logStorage.addNewRecord(newLog).then(() => {
+                    SingleLogbookView.ShouldUpdateLogbookView = true
+                }
+            );
+        }
 
         if (this.currentlyConnectedToNetwork){
-            this.uploadToBlockchain(newLog);
+            this.uploadToBlockchain(newLog, saveToDisk);
         }
     }
 
@@ -154,7 +157,7 @@ export class LogManager implements HashReceiver{
             const trueLog = Object.setPrototypeOf(log, Log.prototype);
             const logToUpdate = {...trueLog};
             console.log("syncing log: ", logToUpdate);
-            await this.uploadToBlockchain(logToUpdate);
+            await this.uploadToBlockchain(logToUpdate, true);
         }
 
         console.log("should update!");
@@ -183,7 +186,7 @@ export class LogManager implements HashReceiver{
     }
 
 
-    async uploadToBlockchain(log:Log){
+    async uploadToBlockchain(log:Log, onDisk:boolean){
 
         if (!this.currentlyConnectedToNetwork){
             return ;
@@ -196,7 +199,9 @@ export class LogManager implements HashReceiver{
                     log.rootTransactionHash = recordID;
                 }
                 log.currentTransactionHash = recordID;
-                this.logStorage.updateLogWithTransactionHash(log);
+                if (onDisk){
+                    this.logStorage.updateLogWithTransactionHash(log);
+                }
 
             }).catch((err)=>{
             console.log("error on submit to blockchain:", err);
