@@ -1,6 +1,6 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
-import {ImageDescription, ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDescriptionExtraInformation, ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
 import {LoadingSpinner, PrependJpegString, waitMS} from "../utils/Constants";
 import {ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";

@@ -1,6 +1,7 @@
 // @ts-ignore
 import { Crypt } from 'hybrid-crypto-js';
 import {Identity} from "../interfaces/Identity";
+import {ImageDescriptionExtraInformation} from "../interfaces/Data";
 
 // created via npm library: hybrid-crypto-js
 // export class RSAKeysToEncryptedAESKeyToCipherMap{
@@ -29,15 +30,16 @@ export class LogMetadata {
     public static readonly DateTag = "DateTime";
     public static readonly GPSLat = "GPSLatitude";
     public static readonly GPSLong = "GPSLongitude";
-    public static readonly GPSAcc = "GPSAccuracy";
     public static readonly GPSAlt = "GPSAltitude";
-    public static readonly GPSSpeed = "GPSSpeed";
+    
+    public static readonly GPSAccuracyReplacement = "GPSDifferential";
+
     public static readonly ImageDescription = "ImageDescription";
     // public static readonly FileName = "FileName";
     public static readonly SignedHash = "SignedHash";
     public static readonly MetadataTagsToIncludeOnChain = [LogMetadata.DateTag, LogMetadata.ImageDescription,
-        LogMetadata.GPSLat, LogMetadata.GPSLong, LogMetadata.GPSAcc, LogMetadata.GPSAlt, LogMetadata.GPSSpeed,
-        LogMetadata.SignedHash];
+        LogMetadata.GPSLat, LogMetadata.GPSLong,  LogMetadata.GPSAlt, LogMetadata.SignedHash,
+        LogMetadata.GPSAccuracyReplacement];
 
 
     public pubKeysToAESKeysToJSONDataMap: { [name: string]: any };
@@ -89,13 +91,19 @@ export class LogMetadata {
             const jsonToEncrypt:{[key:string]:string} = {};
             //  extract the metadata we want on chain from the jpeg's whole lot of metadata
             for (const tag of LogMetadata.MetadataTagsToIncludeOnChain) {
+                if (tag == LogMetadata.ImageDescription){
+                    // let's just log the actual description on chain
+                    const extraInfo:ImageDescriptionExtraInformation = JSON.parse(metadata[tag]);
+                    jsonToEncrypt[tag] = extraInfo.Description;
+                    continue;
+                }
                 jsonToEncrypt[tag] = metadata[tag];
             }
             // either we use the trusted keys in additon to ours, or we just use ours
             let keysWithWhichToEncrypt = myKeys.TrustedPeerPGPKeys.slice();
             keysWithWhichToEncrypt.push(myKeys.PublicPGPKey);
 
-            // console.log("encrypting with:", keysWithWhichToEncrypt);
+            // console.log("encrypting to put on chain:", jsonToEncrypt);
             // the encrypt function returns an object of type: RSAKeysToEncryptedAESKeyToCipherMap
             this.pubKeysToAESKeysToJSONDataMap[myKeys.PublicPGPKey] =
                 LogMetadata.crypt.encrypt(keysWithWhichToEncrypt, JSON.stringify(jsonToEncrypt));

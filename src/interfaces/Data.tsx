@@ -147,6 +147,7 @@ export class ImageRecord implements HashData {
         // console.log("loading metadata from jpeg base64 data!");
         // load the exif data for viewing
         const exifObject = piexif.load(`data:image/jpeg;base64,${base64Data}`);
+        // ImageRecord.listExifKeysValues(exifObject)
         for (const ifd in exifObject) {
             if (ifd != "thumbnail") {
                 for (const tag in exifObject[ifd]) {
@@ -163,14 +164,17 @@ export class ImageRecord implements HashData {
 
         let exifObject = ImageRecord.GetMetadataAndExifObject(base64Data)[1];
         ImageRecord.listExifKeysValues(exifObject);
-        let oldImageDescription:ImageDescription = JSON.parse(exifObject["0th"][270]);
+        let oldImageDescription:ImageDescriptionExtraInformation = JSON.parse(exifObject["0th"][270]);
 
-        // TODO: allow user to change logbook
-        exifObject["0th"][270] = JSON.stringify({
+        const imageDescriptionExtraInformation:ImageDescriptionExtraInformation ={
             Description: newImageDescription,
             LogbookAddress:oldImageDescription.LogbookAddress,
-            PublicKey:oldImageDescription.PublicKey,
-        });
+            SignedLogbookAddress:oldImageDescription.SignedLogbookAddress,
+            // GPSAccuracy:oldImageDescription.GPSAccuracy
+            // PublicKey:oldImageDescription.PublicKey,
+        }
+        // TODO: allow user to change logbook
+        exifObject["0th"][270] = JSON.stringify(imageDescriptionExtraInformation);
         // console.log("exifob:", exifObject["0th"][270]);
 
         // after editing the exif, dump it into a string
@@ -182,7 +186,7 @@ export class ImageRecord implements HashData {
 
 
     // Realm doesn't play nice with instance functions
-    public static GetImageDescription(imageRecord:ImageRecord):ImageDescription{
+    public static GetImageDescription(imageRecord:ImageRecord):ImageDescriptionExtraInformation{
         return JSON.parse(JSON.parse(imageRecord.metadataJSON)[LogMetadata.ImageDescription]);
     }
 
@@ -204,10 +208,12 @@ export class ImageRecord implements HashData {
     }
 }
 
-export type ImageDescription={
+export type ImageDescriptionExtraInformation={
     Description:string;
     LogbookAddress:string;
-    PublicKey:string;
+    // do they need a public key? anyone can check the chain for the hash and see the key that reported it
+    // PublicKey:string;
+    // GPSAccuracy:number
     SignedLogbookAddress:string;
 }
 

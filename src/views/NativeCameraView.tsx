@@ -5,7 +5,7 @@ import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
 import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
-import {ImageDescription, ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDescriptionExtraInformation, ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
 import {LogManager} from "../shared/LogManager";
 import {
     requestCameraPermission,
@@ -159,24 +159,24 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
             return;
         }
 
-        const imageDescription:ImageDescription ={
+        // TODO include the public key in the jpeg itself?
+        const imageDescription:ImageDescriptionExtraInformation ={
             Description: NativeUserPreferences.Instance.GetCachedUserPreference(UserPreferenceKeys.ImageDescription)[0],
-            PublicKey:this.props.identity.PublicPGPKey,
+            // PublicKey:this.props.identity.PublicPGPKey,
             LogbookAddress:this.props.logbookStateKeeper.CurrentLogbookID,
-            SignedLogbookAddress:this.props.identity.sign(this.props.logbookStateKeeper.CurrentLogbookID),
+            SignedLogbookAddress:this.props.identity.sign(this.props.logbookStateKeeper.CurrentLogbookID)
         };
 
-        // TODO: fix how the gps coords are formatted
+
         const exifAppend: { [name: string]: any } = {
             [LogMetadata.GPSLat]:this.state.position.coords.latitude,
             [LogMetadata.GPSLong]: this.state.position.coords.longitude,
             [LogMetadata.GPSAlt] : this.state.position.coords.altitude,
-            [LogMetadata.GPSSpeed] : this.state.position.coords.speed,
-            [LogMetadata.GPSAcc] :this.state.position.coords.accuracy,
+            [LogMetadata.GPSAccuracyReplacement]: this.state.position.coords.accuracy,
             [LogMetadata.ImageDescription] : JSON.stringify(imageDescription)
         };
 
-        console.log(exifAppend);
+        // console.log("exif:", exifAppend);
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
         const options = {quality: 0.2, base64: false, writeExif: exifAppend, exif: true};
@@ -199,7 +199,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         RNFetchBlob.fs.readFile(imageData.storageLocation, 'base64')
             .then((data) => {
                 // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
-                console.log("image saved at:", imageData.storageLocation);
+                // console.log("image saved at:", imageData.storageLocation);
                 const hash = HashManager.GetHashSync(data);
                 imageData.base64Data = data;
                 imageData.currentMultiHash = hash;

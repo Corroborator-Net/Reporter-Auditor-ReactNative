@@ -83,11 +83,11 @@ export class AtraManager implements BlockchainInterface {
                     "type":"text",
                 },
                 {
-                    "name":"OriginalTransactionHash",
+                    "name":"RootTransactionHash",
                     "type":"text",
                 },
                 {
-                    "name":"SignedMetadata",
+                    "name":"EncryptedMetadata",
                     "type":"text",
                 }
 
@@ -110,7 +110,7 @@ export class AtraManager implements BlockchainInterface {
             "tableId":log.logBookAddress,
             "record":[
                 log.dataMultiHash,
-                log.storageLocation.slice(0,6),
+                log.storageLocation.slice(0,4),
                 log.rootTransactionHash==""?"null":log.rootTransactionHash,
                 log.encryptedMetadataJson,
             ]
