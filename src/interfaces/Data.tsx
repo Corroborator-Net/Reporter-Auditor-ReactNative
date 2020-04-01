@@ -2,11 +2,9 @@
 import {piexif} from "piexifjs";
 import {LogMetadata} from "../shared/LogMetadata";
 
-export interface LogbookStateKeeper {
-    CurrentLogbookID:string
-    LogbookName(logbookID:string):string
-    AvailableLogbooks:string[]
-    CurrentSelectedLogs:LogbookEntry[]
+export type LogbookAndSection ={
+    title:string
+    logs:Log[]
 }
 
 export class LogbookEntry{
@@ -14,9 +12,16 @@ export class LogbookEntry{
     constructor(public rootLog:Log, public logs:Log[], public imageRecords:ImageRecord[]) {
         // this.logs = _.filter(logs,(log) =>
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
+
         // get all logs that have the same root hash
-        this.logs = logs.filter((log)=>log.rootTransactionHash == rootLog.rootTransactionHash);
-        // if (this.logs.length>2){console.log(`I have been logged ${this.logs.length} times`)};
+        this.logs = logs.filter((log)=>log.rootTransactionHash == rootLog.rootTransactionHash
+            && rootLog.rootTransactionHash!="");
+
+        // if we're passed empty logs, just use the root log as the only logs
+        if (this.logs.length==0){
+            this.logs = [rootLog];
+        }
+
     }
     // TODO test the order of this
     get RootLog():Log{
@@ -61,7 +66,7 @@ export class Log {
 
     // TODO: implement me
     public getTimestampsMappedToReporterKeys():Map<string,string[]>{
-        const metaObj = JSON.parse(this.encryptedMetadataJson);
+        // const metaObj = JSON.parse(this.encryptedMetadataJson);
         const returnMap = new Map<string,string[]>();
         // returnMap.set(FirstReporterPublicKey, metaObj["0"]);
         return returnMap;
@@ -163,7 +168,7 @@ export class ImageRecord implements HashData {
     public static GetEditedJpeg(base64Data:string, newImageDescription:string):string{
 
         let exifObject = ImageRecord.GetMetadataAndExifObject(base64Data)[1];
-        ImageRecord.listExifKeysValues(exifObject);
+        // ImageRecord.listExifKeysValues(exifObject);
         let oldImageDescription:ImageDescriptionExtraInformation = JSON.parse(exifObject["0th"][270]);
 
         const imageDescriptionExtraInformation:ImageDescriptionExtraInformation ={
@@ -186,8 +191,12 @@ export class ImageRecord implements HashData {
 
 
     // Realm doesn't play nice with instance functions
-    public static GetImageDescription(imageRecord:ImageRecord):ImageDescriptionExtraInformation{
-        return JSON.parse(JSON.parse(imageRecord.metadataJSON)[LogMetadata.ImageDescription]);
+    public static GetExtraImageInformation(imageRecord:ImageRecord):ImageDescriptionExtraInformation|undefined{
+        try {
+           return JSON.parse(JSON.parse(imageRecord.metadataJSON)[LogMetadata.ImageDescription]);
+        }catch (e) {
+            return undefined
+        }
     }
 
 

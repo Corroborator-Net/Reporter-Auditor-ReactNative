@@ -3,22 +3,29 @@ import {
     Dimensions,
     FlatList,
     RefreshControl,
-    SafeAreaView, ScrollView,
+    SafeAreaView, ScrollView, SectionList,
     StyleSheet,
     TouchableOpacity, View
 } from "react-native";
-import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
-import {LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageDatabase} from "../interfaces/Storage";
+import {LogbookEntry} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
-import {Button, SearchBar} from "react-native-elements";
+import {Button, SearchBar, Text} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
-import {AppButtonTint, DetailLogViewName, EditLogsViewName, PrependJpegString, waitMS} from "../utils/Constants";
+import {
+    AppButtonTint,
+    DetailLogViewName,
+    EditLogsViewName,
+    PrependJpegString,
+    waitMS
+} from "../shared/Constants";
 import { LogManager} from "../shared/LogManager";
+import LogbookStateKeeper from "../shared/LogbookStateKeeper";
 
 type State={
-    logbookEntries:LogbookEntry[]
-    filteredLogbookEntries:LogbookEntry[]
+    logbookEntries:LogbookEntryAndSection[]
+    filteredLogbookEntries:LogbookEntryAndSection[]
     refreshing:boolean
     selectingMultiple:boolean
     currentlySelectedLogs:LogbookEntry[]
@@ -29,23 +36,27 @@ type State={
 }
 
 type LogbookViewProps={
-    logSource:LogbookDatabase;
     logbookStateKeeper:LogbookStateKeeper;
     imageSource:ImageDatabase;
     navigation: any;
     route:any;
 }
 
+type LogbookEntryAndSection={
+    title:string
+    data:LogbookEntry[]
+}
+
 export default class SingleLogbookView extends React.PureComponent<LogbookViewProps, State> {
 
-    static LogsPerPage = 20;
+    readonly LogsPerPage = 20;
+    readonly LogSize = 120;
     static ShouldUpdateLogbookView = false;
     previousLogbook = "";
 
-    FlatList:any=null;
     state={
-        logbookEntries:new Array<LogbookEntry>(),
-        filteredLogbookEntries:new Array<LogbookEntry>(),
+        logbookEntries:new Array<LogbookEntryAndSection>(),
+        filteredLogbookEntries:new Array<LogbookEntryAndSection>(),
         refreshing:false,
         selectingMultiple:false,
         currentlySelectedLogs:new Array<LogbookEntry>(),
@@ -58,7 +69,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 
     componentDidMount(): void {
-        this.FlatList = React.createRef();
         this.getLogs();
         this.props.navigation.addListener('focus', this.onScreenFocus);
         this.props.navigation.setOptions({
@@ -132,26 +142,33 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             currentlySelectedLogs:[]
         });
 
-        const currentLogbook=this.props.logbookStateKeeper.CurrentLogbookID;
-        console.log("loading logs for logbook: ", currentLogbook);
+        console.log("loading logs for logbook: ", this.previousLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
-        let allLogs = await this.props.logSource.getRecordsFor(currentLogbook);
+        let logbooksInSectionsWithLogs = (await this.props.logbookStateKeeper.GetAllLogsAndSectionsForCurrentLogbook());
+            // .slice(this.state.currentPage, this.LogsPerPage);
 
 
-        // we only want the ROOT logs
-        const rootLogs = (allLogs.filter(log=>log.rootTransactionHash == log.currentTransactionHash)).
-        slice(this.state.currentPage, SingleLogbookView.LogsPerPage);
-        let logbookEntries = new Array<LogbookEntry>();
+        let logsAndSections:LogbookEntryAndSection[] = [];
+        for (const logsByLogbook of logbooksInSectionsWithLogs){
+            const rootLogs = logsByLogbook.logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
 
-        for (const log of rootLogs){
-            // Get all records with the same root hash
-            const records = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.dataMultiHash);
-            const logbookEntry = new LogbookEntry(log, allLogs, records);
-            logbookEntries.push(logbookEntry);
+            let logbookEntriesInCurrentSection = new Array<LogbookEntry>();
+            for (const log of rootLogs){
+                // Get all records with the same root hash
+                const records = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.dataMultiHash);
+                // console.log("records are:", records);
+                const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, records);
+                logbookEntriesInCurrentSection.push(logbookEntry);
+            }
+
+            logsAndSections.push({
+                title:logsByLogbook.title,
+                data:logbookEntriesInCurrentSection,
+            })
         }
 
         this.setState({
-            logbookEntries:logbookEntries,
+            logbookEntries:logsAndSections,
             refreshing:false,
         });
     }
@@ -163,18 +180,93 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         searchText = searchText.toLowerCase();
 
         // TODO: search by date, log status, what else?
-        let filteredLogbookEntries = this.state.logbookEntries.filter(function (log) {
-            return(
-                // log.RootLog.signedMetadataJson.includes(searchText) ||
-                // log.Log.signedMetadataJson.includes(searchText) ||
-                    log.ImageRecord.metadataJSON.toLowerCase().includes(searchText) ||
-                    log.ImageRecord.storageLocation.toLowerCase().includes(searchText) ||
-                    log.RootImageRecord.metadataJSON.toLowerCase().includes(searchText)
-            );
-        });
+        let filteredLogbookEntries:LogbookEntry[] =[];
+        this.state.logbookEntries.forEach(
+            (value => {
+                filteredLogbookEntries = filteredLogbookEntries.concat(value.data.filter(function (log) {
+                    return(
+                        // log.RootLog.signedMetadataJson.includes(searchText) ||
+                        // log.Log.signedMetadataJson.includes(searchText) ||
+                        log.ImageRecord.metadataJSON.toLowerCase().includes(searchText) ||
+                        log.ImageRecord.storageLocation.toLowerCase().includes(searchText) ||
+                        log.RootImageRecord.metadataJSON.toLowerCase().includes(searchText)
+                    );
+                }));
+            })
+        );
 
-        this.setState({filteredLogbookEntries: filteredLogbookEntries});
+        const sectionAndEntries:LogbookEntryAndSection[] = [{data:filteredLogbookEntries, title:"Results"}];
+        this.setState({filteredLogbookEntries: sectionAndEntries});
     }
+
+
+
+
+    _renderItem = ({ item }: { item: LogbookEntry }) =>(
+        //TODO: to improve UX for selecting multiple logs, move all code into a pure component that
+        // passes whether it should display the check or circle or no icon. It shouldn't have to check state
+        <TouchableOpacity
+            onPress={() => {
+                this.onSelectLog(item)
+            }}
+            onLongPress={() => {
+                this.beginSelectingMultiple(item)
+            }}
+        >
+            <LogCell
+                src={PrependJpegString(item.ImageRecord.base64Data)}
+                // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
+                // don't pass an image
+                item={item}
+
+                navigation={this.props.navigation}
+                onSelectedOverlay={
+                    this.state.selectingMultiple ?
+                        // we're in select multiple mode, show blank or checked circles
+                        _.includes(this.state.currentlySelectedLogs, item) ?
+                            <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
+                                margin: 5,
+                                width: 30,
+                                backgroundColor: "white",
+                                borderRadius: 50,
+                            }}/>
+                            :
+                            <Icon name={"checkbox-blank-circle-outline"} size={30} color={"black"} style={{
+                                margin: 5,
+                                width: 30,
+                                backgroundColor: "white",
+                                borderRadius: 50,
+                            }}/>
+                        // we're not in select multiple mode
+                        : <></>
+                }
+            />
+        </TouchableOpacity>
+    )
+
+    //@ts-ignore - we set the height of item is fixed
+    getItemLayout = (data, index) => (
+        {length: this.LogSize, offset: this.LogSize * index, index}
+    );
+
+    _renderList = ({ section, index }:
+                       { section: LogbookEntryAndSection, index:number }) => (
+        index !== 0 ? null :
+        <View style={styles.container}>
+            <FlatList
+                initialNumToRender={8}
+                numColumns={Dimensions.get("window").width/this.LogSize}
+                maxToRenderPerBatch={10}
+                getItemLayout={this.getItemLayout}
+                data={section.data}
+                removeClippedSubviews={true}
+                extraData={this.state.rerenderSelectedCells}
+                keyExtractor={((item1, index) => item1.Log.dataMultiHash + index)}
+                renderItem={this._renderItem}
+                />
+        </View>
+    );
+
 
     //TODO: for the auditor side we should be loading logs' block times so we don't have to decrypt each metadata entry
     // during LogCell instantiation and instead of the showing the decrypted timestamp just show the blocktime
@@ -191,60 +283,26 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                     onChangeText={ (text => {this.search(text)})}
                     value={this.state.searchText}
                 />
-                <FlatList
-                        removeClippedSubviews={true}
-                        ref={ (ref) => this.FlatList = ref }
-                        initialNumToRender={8}
-                        numColumns={Dimensions.get("window").width/120}
-                        maxToRenderPerBatch={2}
-                        data={this.state.filteredLogbookEntries && this.state.searchText != ""
-                            ? this.state.filteredLogbookEntries
-                            : this.state.logbookEntries
-                        }
-                        contentContainerStyle={styles.list}
-                        renderItem={({item}) =>
-                            <TouchableOpacity
-                                onPress={()=>{this.onSelectLog(item)}}
-                                onLongPress={()=>{this.beginSelectingMultiple(item)}}
-                            >
-                            <LogCell
-                                src= {PrependJpegString(item.ImageRecord.base64Data)}
-                                // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
-                                // don't pass an image
-                                item={item}
-                                navigation={this.props.navigation}
-                                onSelectedOverlay={
-                                    this.state.selectingMultiple?
-                                        // we're in select multiple mode, show blank or checked circles
-                                        _.includes(this.state.currentlySelectedLogs,item)?
-                                            <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
-                                                margin:5,
-                                                width:30,
-                                                backgroundColor:"white",
-                                                borderRadius: 50,
-                                            }}/>
-                                        :
-                                            <Icon name={"checkbox-blank-circle-outline"} size={30} color={"black"} style={{
-                                                margin:5,
-                                                width:30,
-                                                backgroundColor:"white",
-                                                borderRadius: 50,
-                                            }}/>
-                                    // we're not in select multiple mode
-                                    : <></>
-                                }
-                            />
-                            </TouchableOpacity>
-                        }
-                        keyExtractor={item => item.Log.dataMultiHash}
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={this.state.refreshing}
-                                onRefresh={()=>this.getLogs()}/>
-                        }
-                        extraData={this.state}
+                <SectionList
+                    renderSectionHeader={({ section: { title } }) => (
+                        <Text>{title}</Text>
+                    )}
+                    // getItemLayout={this.getItemLayout}
+                    initialNumToRender={2}
+                    maxToRenderPerBatch={10}
+                    sections={this.state.filteredLogbookEntries && this.state.searchText != ""
+                        ? this.state.filteredLogbookEntries
+                        : this.state.logbookEntries
+                    }
+                    //@ts-ignore
+                    renderItem={this._renderList}
+                    keyExtractor={(item, index) => item.Log.dataMultiHash + index}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={this.state.refreshing}
+                            onRefresh={()=>this.getLogs()}/>
+                    }
                 />
-
                 {
                     this.state.selectingMultiple ?
                         this.OptionsButton()
@@ -359,7 +417,9 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
 }
 
+class listButton extends React.PureComponent{
 
+}
 
 
 

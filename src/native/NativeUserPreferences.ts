@@ -1,18 +1,17 @@
 import {
-    LogbookEntry,
-    LogbookStateKeeper,
     RealmSchemas,
     UserPreference,
     UserPreferenceSchema
 } from "../interfaces/Data";
-import {StorageSchemaVersion, UserPreferenceKeys} from "../utils/Constants";
+import {StorageSchemaVersion, UserPreferenceKeys} from "../shared/Constants";
 import {UserPreferenceStorage} from "../interfaces/Storage";
 import Realm from "realm";
 import {Identity} from "../interfaces/Identity";
 
 
 // TODO: turn into singleton
-export default class NativeUserPreferences implements LogbookStateKeeper, UserPreferenceStorage{
+export default class NativeUserPreferences implements UserPreferenceStorage{
+
 
     private static _Instance:NativeUserPreferences;
     private CurrentUserSettings: {[key:string]:string[]} = {};
@@ -102,33 +101,6 @@ export default class NativeUserPreferences implements LogbookStateKeeper, UserPr
             });
     }
 
-    // ****************************
-    // Logbook State Keeper methods:
-    // ****************************
 
-    public CurrentSelectedLogs:LogbookEntry[]=[];
-
-    LogbookName(logbookID:string):string {
-        if (logbookID ) {
-            return this.CurrentUserSettings[logbookID][0];
-        }
-        return "Not Set"
-    }
-
-    set CurrentLogbookID(logbook){
-        this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook] = [logbook];
-    }
-
-
-    // to satisfy the interface - can't have static methods
-    get CurrentLogbookID(): string {
-        // console.log("current logbook: ", this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0])
-        return this.CurrentUserSettings[UserPreferenceKeys.CurrentLogbook][0];
-    }
-
-
-    get AvailableLogbooks():string[]{
-        return this.CurrentUserSettings[UserPreferenceKeys.Logbooks];
-    }
 
 }

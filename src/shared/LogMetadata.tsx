@@ -15,14 +15,6 @@ import {ImageDescriptionExtraInformation} from "../interfaces/Data";
 //                 signature:string ) {
 //     }
 // }
-//
-// class PeerLogMetadataEntry{
-//     // map a reporter's public key to their AES:EncryptedJSON entry
-//     pubKeyToMetadataAndAESKeyMap:{[pubKey: string]: RSAKeysToEncryptedAESKeyToCipherMap};
-//     constructor(public myPublicKey:string, public metadataEntry:RSAKeysToEncryptedAESKeyToCipherMap) {
-//         this.pubKeyToMetadataAndAESKeyMap= {[myPublicKey]:metadataEntry}
-//     }
-// }
 
 
 export class LogMetadata {
@@ -81,7 +73,6 @@ export class LogMetadata {
                 }
             }
         }
-
         // PUSHING NEW DATA TO A LOG - accepts json string and will package it into a RSAKeysToEncryptedAESKeyToCipherMap
         if (myJsonData && myKeys) {
             const metadata = JSON.parse(myJsonData);
@@ -91,6 +82,11 @@ export class LogMetadata {
             const jsonToEncrypt:{[key:string]:string} = {};
             //  extract the metadata we want on chain from the jpeg's whole lot of metadata
             for (const tag of LogMetadata.MetadataTagsToIncludeOnChain) {
+
+                // ignore empty tags i.e. when we're corroborating another image/log
+                if (!metadata[tag]){
+                    continue;
+                }
                 if (tag == LogMetadata.ImageDescription){
                     // let's just log the actual description on chain
                     const extraInfo:ImageDescriptionExtraInformation = JSON.parse(metadata[tag]);

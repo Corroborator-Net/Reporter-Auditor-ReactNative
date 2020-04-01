@@ -1,11 +1,12 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
-import {ImageDescriptionExtraInformation, ImageRecord, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
-import {LoadingSpinner, PrependJpegString, waitMS} from "../utils/Constants";
+import {ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
+import {LoadingSpinner, PrependJpegString, waitMS} from "../shared/Constants";
 import {ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
 import {Identity} from "../interfaces/Identity";
+import LogbookStateKeeper from "../shared/LogbookStateKeeper";
 
 
 type Props={
@@ -38,39 +39,52 @@ export default class DetailLogView extends React.Component<Props, State> {
 
     parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): Array<JSX.Element>{
         let details = new Array<JSX.Element>();
-
-        let metadataObj = JSON.parse(new LogMetadata(
-            null,null, null,
-            log.encryptedMetadataJson,
-            [this.props.identity.PublicPGPKey],
-            this.props.identity.PrivatePGPKey).
-            pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
-
-        // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
-        for (const key of Object.keys(log)) {
-            //@ts-ignore
-            const data = log[key];
-            if (data != log.encryptedMetadataJson){
-                metadataObj[key] = data;
-            }
-        }
+        let metadataObj:{[key:string]:string} = {};
+        let logAndImageRecordMatch = true;
 
         if (imageRecord){
             const imageMetadata = JSON.parse(imageRecord.metadataJSON);
 
             if (log.dataMultiHash == imageRecord.currentMultiHash) {
+                metadataObj["Log Status"] = "Logged";
                 metadataObj["File Name"] = imageRecord.filename;
-                // we add all metadata except the above parsed stuff
-                for (const key of Object.keys(imageMetadata)) {
-                    if (key == LogMetadata.ImageDescription){
-                        metadataObj[key] = ImageRecord.GetImageDescription(imageRecord).Description;
-                        continue;
-                    }
-                    metadataObj[key] = imageMetadata[key];
-                }
             }
             else {
-                metadataObj["Log Status"] = "Not Yet Logged"
+                metadataObj["Log Status"] = "Not Yet Logged";
+                logAndImageRecordMatch = false;
+            }
+
+            // we add all metadata except the above parsed stuff
+            for (const key of Object.keys(imageMetadata)) {
+                if (key == LogMetadata.ImageDescription){
+                    const description =  ImageRecord.GetExtraImageInformation(imageRecord);
+                    metadataObj[key] = description ? description.Description: "none";
+                    continue;
+                }
+                metadataObj[key] = imageMetadata[key];
+            }
+        }
+
+        if (logAndImageRecordMatch) {
+            if (log.encryptedMetadataJson != "") {
+                const encryptedMetadata = JSON.parse(new LogMetadata(
+                    null, null, null,
+                    log.encryptedMetadataJson,
+                    [this.props.identity.PublicPGPKey],
+                    this.props.identity.PrivatePGPKey).pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
+                for (const key of Object.keys(encryptedMetadata)) {
+                    metadataObj[key] = encryptedMetadata[key];
+                }
+            }
+
+
+            // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
+            for (const key of Object.keys(log)) {
+                //@ts-ignore
+                const data = log[key];
+                if (data != log.encryptedMetadataJson) {
+                    metadataObj[key] = data;
+                }
             }
         }
 

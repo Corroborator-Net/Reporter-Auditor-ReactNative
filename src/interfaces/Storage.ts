@@ -3,6 +3,7 @@ import {HashData, ImageRecord, Log} from "./Data";
 export interface UserPreferenceStorage {
     SetNewPersistentUserPreference(key:string, value:string[]):void;
     GetPersistentUserPreferenceOrDefault(key:string):Promise<string[]>;
+    GetCachedUserPreference(key:string):string[];
 }
 
 export interface LogbookDatabase {

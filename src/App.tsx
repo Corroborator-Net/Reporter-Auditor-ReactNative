@@ -26,11 +26,19 @@ import CrossPlatformIdentity from "./shared/CrossPlatformIdentity";
 import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';
-import {AppButtonTint, DetailLogViewName, EditLogsViewName, LoadingSpinner} from "./utils/Constants";
+import {
+    AppButtonTint,
+    CorroborateLogsViewNameAndID,
+    DetailLogViewName,
+    EditLogsViewName,
+    isMobile,
+    LoadingSpinner
+} from "./shared/Constants";
 import MultiLogbookView from "./views/MultiLogbookView";
 import EditLogView from "./views/EditLogView";
-import {Button} from "react-native-elements";
 import AuthenticationView from "./views/AuthenticationView";
+import WebLogbookAndImageManager from "./web/WebLogbookAndImageManager";
+import LogbookStateKeeper from "./shared/LogbookStateKeeper";
 
 declare var global: {HermesInternal: null | {}};
 
@@ -43,14 +51,20 @@ class App extends PureComponent{
         loggedIn:false
     };
 
-
-    hashManager = new HashManager();
     storage = new NativeEncryptedLogbookStorage();
+    blockchainManager = new AtraManager();
+
+    corroboratedImagesAndLogbookManager = new WebLogbookAndImageManager();
+    hashManager = new HashManager();
     identity = new CrossPlatformIdentity();
     userPreferences = new NativeUserPreferences(this.identity);
+    //@ts-ignore // TODO: implement user prefs for web
+    logbookStateKeeper = new LogbookStateKeeper(
+        isMobile ? this.userPreferences : null,
+        isMobile ? this.storage : this.blockchainManager );
+
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();
-    blockchainManager = new AtraManager();
 
     logManager = new LogManager(
         this.storage,
@@ -58,7 +72,7 @@ class App extends PureComponent{
         this.peerCorroborators,
         this.hashManager,
         this.blockchainManager,
-        this.userPreferences,
+        this.logbookStateKeeper,
         this.imageStorage,
     );
 
@@ -125,7 +139,7 @@ class App extends PureComponent{
                             )
                         }}>
                             {props => <NativeCameraView {...props}
-                                                        logbookStateKeeper={this.userPreferences}
+                                                        logbookStateKeeper={this.logbookStateKeeper}
                                                         imageDatabase={this.imageStorage}
                                                         identity={this.identity}
                             />}
@@ -143,26 +157,33 @@ class App extends PureComponent{
                                         {(props: any) =>
                                             <MultiLogbookView {...props}
                                                               imageSource={this.imageStorage}
-                                                              logbookStateKeeper={this.userPreferences}
+                                                              logbookStateKeeper={this.logbookStateKeeper}
                                                               blockchainInterface={this.blockchainManager}
                                                               userPreferences={this.userPreferences}
                                                               identity={this.identity}
                                             />
                                         }
                                     </Stack.Screen>
+                                    <Stack.Screen name={CorroborateLogsViewNameAndID}>
+                                        {(props: any) =>
+                                            <SingleLogbookView {...props}
+                                                               imageSource={this.corroboratedImagesAndLogbookManager}
+                                                               logbookStateKeeper={this.logbookStateKeeper}
+                                            />
+                                        }
+                                    </Stack.Screen>
                                     <Stack.Screen name={"Logs"}>
                                         {(props: any) =>
                                             <SingleLogbookView {...props}
-                                                               logSource={this.storage}
                                                                imageSource={this.imageStorage}
-                                                               logbookStateKeeper={this.userPreferences}
+                                                               logbookStateKeeper={this.logbookStateKeeper}
                                             />
                                         }
                                     </Stack.Screen>
                                     <Stack.Screen name={DetailLogViewName}>
                                         {(props: any) =>
                                             <DetailLogView {...props}
-                                                           logbookStateKeeper={this.userPreferences}
+                                                           logbookStateKeeper={this.logbookStateKeeper}
                                                            identity={this.identity}
                                             />
                                         }
@@ -170,7 +191,7 @@ class App extends PureComponent{
                                     <Stack.Screen name={EditLogsViewName}>
                                         {(props: any) =>
                                             <EditLogView {...props}
-                                                         logbookStateKeeper={this.userPreferences}
+                                                         logbookStateKeeper={this.logbookStateKeeper}
                                                          logManager={this.logManager}
                                                          imageDatabase={this.imageStorage}
                                             />

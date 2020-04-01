@@ -2,14 +2,14 @@ import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, Log, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {HashData, Log, LogbookEntry} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
 import SingleLogbookView from "../views/SingleLogbookView";
 import _ from "lodash";
 import {LogMetadata} from "./LogMetadata";
-import {save} from "@react-native-community/cameraroll";
+import LogbookStateKeeper from "./LogbookStateKeeper";
 
 
 export class LogManager{

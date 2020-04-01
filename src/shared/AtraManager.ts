@@ -1,8 +1,9 @@
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Log} from "../interfaces/Data";
-
 //@ts-ignore
-import { AtraApiKey, EtherScanApiKey } from 'react-native-dotenv'
+import {AtraApiKey, EtherScanApiKey} from 'react-native-dotenv'
+import {makeID} from "./Constants";
+
 export class AtraManager implements BlockchainInterface {
 
 
@@ -135,16 +136,6 @@ export class AtraManager implements BlockchainInterface {
 function isValidDate(d:any) {
     //@ts-ignore
     return d instanceof Date && !isNaN(d);
-}
-
-function makeID(length:number):string {
-    let result           = '';
-    let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    let charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
 }
 
 // Example POST method implementation:

@@ -3,7 +3,7 @@ import {Identity} from "../interfaces/Identity";
 import { RSA,Crypt } from 'hybrid-crypto-js';
 import * as Keychain from 'react-native-keychain';
 import {Platform} from "react-native";
-import {isMobile} from "../utils/Constants";
+import {isMobile} from "./Constants";
 
 
 export default class CrossPlatformIdentity implements Identity{

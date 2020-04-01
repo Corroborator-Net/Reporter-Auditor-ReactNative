@@ -2,8 +2,7 @@ import {Log, LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, View} from "react-native";
-import {CorroboratedUnsynced, LocalOnly, Synced} from "../utils/Constants";
-import {LogMetadata} from "../shared/LogMetadata";
+import {CorroboratedUnsynced, LocalOnly, Synced} from "../shared/Constants";
 
 type CellProps = {
     src: string;
@@ -15,7 +14,7 @@ type CellProps = {
 type CellState = {
 }
 
-export default class LogCell extends React.Component<CellProps,CellState> {
+export default class LogCell extends React.PureComponent<CellProps,CellState> {
 
     render(){
         const shouldShowImage =  this.props.src.length > 50;
@@ -83,7 +82,7 @@ export default class LogCell extends React.Component<CellProps,CellState> {
         // still unpublished? check for corroborations
 
         if (!log.IsImageRecordSynced()){
-            console.log("log has no transaction hash, checking for other signatures from corroborators");
+            // console.log("log has no transaction hash, checking for other signatures from corroborators");
             const trueLog = Object.setPrototypeOf(log.Log, Log.prototype);
             const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();
             if (reporterToMetadataMap.size<=1){

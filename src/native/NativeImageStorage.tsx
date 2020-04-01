@@ -2,7 +2,7 @@ import React from "react";
 import {ImageDatabase} from "../interfaces/Storage";
 import { ImageRecord, ImageRecordSchema, RealmSchemas} from "../interfaces/Data";
 import Realm from "realm";
-import {GetPathToCameraRoll, ModifiedAlbum, StorageSchemaVersion} from "../utils/Constants"
+import {GetPathToCameraRoll, ModifiedAlbum, StorageSchemaVersion} from "../shared/Constants"
 import RNFetchBlob from "rn-fetch-blob";
 import CameraRoll from "@react-native-community/cameraroll";
 

@@ -3,7 +3,6 @@ import {Button} from "react-native-elements";
 import React from "react";
 
 export const StorageSchemaVersion = 1;
-export const FirstReporterPublicKey="188f7940020dbd1bfd2841a55ec0e4f9c58af16fb216ba0af818845710463aa2";
 
 export const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 
@@ -17,6 +16,7 @@ export const Synced = 'lightgreen';
 export const DetailLogViewName = "Details";
 export const LogsViewName = "Logs";
 export const EditLogsViewName = "EditLogs";
+export const CorroborateLogsViewNameAndID = "Uploaded Logs";
 
 export const AppButtonTint='#459cff';
 
@@ -57,3 +57,12 @@ export const LoadingSpinner =  <Button loading={true} type={"clear"} loadingProp
 //     , publicKey: "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyU/TDna0gK1rBjp6cvx9GOtuPuHgn1vY+6rYFh5ORFT4T9AiBmpABOfKCLl7u87v+CmZgJj4xnCgzz/N0s7Ts5rwuv6OZB9x+/yZDs4tfB4YnxzLDyZpS8LZe8jSQfpw11M3v/nDiInvcZOOWcrvgzVYH0RbJPznDu1HEjlDwNabCk2NI1MsrFoB9awKfJWOH3Bht5vfbbacb4YWPce2Rvn1LUkRU/U6Wa0Mu4JFGq/7z1afa6+25rXTzqVvgS6V3KxBCSTFx88D15E4UzaICYc8NqceTCbKLYZ/DsraOXNaWfsOIIN95oVXKRtJERt8qCuo1TET9mdwa4P+amVdjQIDAQAB-----END PUBLIC KEY-----"
 // }
 
+export function makeID(length: number): string {
+    let result = '';
+    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}

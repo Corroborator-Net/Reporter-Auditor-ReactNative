@@ -1,17 +1,19 @@
 import React from "react";
 import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
-import {HashData, ImageRecord, LogbookStateKeeper} from "../interfaces/Data";
+import {HashData, ImageRecord, Log, LogbookAndSection, LogbookEntry} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
-import {isMobile, LogsViewName, UserPreferenceKeys} from "../utils/Constants";
-import {requestStoragePermission, requestWritePermission} from "../utils/RequestPermissions";
+import {CorroborateLogsViewNameAndID, isMobile, LogsViewName, UserPreferenceKeys} from "../shared/Constants";
+import {requestStoragePermission, requestWritePermission} from "../native/RequestPermissions";
 import DocumentPicker from 'react-native-document-picker';
 import {Identity} from "../interfaces/Identity";
 import RNFetchBlob from "rn-fetch-blob";
 import HashManager from "../shared/HashManager";
 import {LogManager} from "../shared/LogManager";
-import {LogMetadata} from "../shared/LogMetadata";
+import LogbookStateKeeper from "../shared/LogbookStateKeeper";
+import _ from "lodash";
+import WebLogbookAndImageManager from "../web/WebLogbookAndImageManager";
 
 type State={
     logbooks:string[]
@@ -65,11 +67,18 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     async showUploadPrompt(){
         if (isMobile){
             try {
-                const results = await DocumentPicker.pickMultiple({
+                const selectedImages = await DocumentPicker.pickMultiple({
                     type: [DocumentPicker.types.images],
                 });
 
-                for (const res of results) {
+                let index = 0;
+                let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
+                let allLogsByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
+                // add unfound section
+                const unfoundKey = "Not Found";
+                const noLogbookKey = "No Logbook in metadata";
+                allLogsByLogbookAddress[unfoundKey] = new Array<Log>();
+                for (const res of selectedImages) {
                     RNFetchBlob.fs.readFile(res.uri, 'base64')
                         .then(async (data) => {
                             // load jpeg - this could be from local file system or the cloud
@@ -79,33 +88,80 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 "",
                                 "",
                                 data,
-                            )
-                            const logbookAddress = ImageRecord.GetImageDescription(imageRecord).LogbookAddress;
-                            const logsAtAddress = await this.props.blockchainInterface.getRecordsFor(logbookAddress);
-                            const myHash = HashManager.GetHashSync(data);
-                            const matchingLogs = logsAtAddress.filter((log)=> log.dataMultiHash == myHash);
-                            // no matching logs on chain
-                            if (matchingLogs.length==0){
-                                console.log("NO matching log on the blockchain!");
-                                return;
+                            );
+                            const uploadedImageHash = HashManager.GetHashSync(data);
+                            const imageInformation = ImageRecord.GetExtraImageInformation(imageRecord);
+                            const logbookAddress = imageInformation? imageInformation.LogbookAddress : noLogbookKey;
+                            let matchingLogs:Log[] = [];
+                            console.log("logbookAddress is:", logbookAddress);
+                            WebLogbookAndImageManager.Instance.addImageRecordToLogbook(imageRecord, uploadedImageHash);
+                            // let's fill logbook address with logs to check if the uploaded logs are present on chain
+                            if (imageInformation){
+                                if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]){
+                                    logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
+                                        await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                                }
+                                matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
+                                filter((log)=> log.dataMultiHash == uploadedImageHash);
+
                             }
 
-                            console.log("found a matching log on the blockchain!");
+                            // no matching logs on chain
+                            if (matchingLogs.length==0){
+                                const missingLog = new Log(logbookAddress,
+                                    "",
+                                    "",
+                                    "",
+                                    uploadedImageHash,
+                                    "");
+                                let newLogs = allLogsByLogbookAddress[unfoundKey];
+                                newLogs.push(missingLog);
+                                allLogsByLogbookAddress[unfoundKey] = newLogs;
+                                console.log("NO matching log on the blockchain", allLogsByLogbookAddress[unfoundKey]);
+                                // return;
+                            }
+                            else{
+                                const corroboratedLog = matchingLogs[0];
+                                const allLogsSharingRootLogOfCorroboratedLog =
+                                    logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
+                                    filter((log)=> log.rootTransactionHash == corroboratedLog.rootTransactionHash);
 
-                            const newHashToLog:HashData = {
-                                currentMultiHash:myHash,
-                                storageLocation:"file://",
-                                metadataJSON:""
-                            };
+                                console.log("found a matching log on the blockchain!");
 
-                            LogManager.Instance.OnNewHashProduced(
-                                newHashToLog,
-                                logbookAddress,
-                                false
-                            );
+                                if (!allLogsByLogbookAddress[logbookAddress]) {
+                                    allLogsByLogbookAddress[logbookAddress] = allLogsSharingRootLogOfCorroboratedLog;
+                                }
+                                else{
+                                    allLogsByLogbookAddress[logbookAddress].push(...allLogsSharingRootLogOfCorroboratedLog);
+                                }
 
+                            }
+
+
+                            // // corroborate the log on the chain
+                            // const newHashToLog:HashData = {
+                            //     currentMultiHash:myHash,
+                            //     storageLocation:"file",
+                            //     metadataJSON:"{}"
+                            // };
+                            //
+                            // LogManager.Instance.OnNewHashProduced(
+                            //     newHashToLog,
+                            //     logbookAddress,
+                            //     false
+                            // );
+
+                            index+=1;
+                            // console.log(index, selectedImages.length);
+                            if (index == selectedImages.length){
+                                this.NavigateToCorroboratedLogsView(allLogsByLogbookAddress)
+                            }
                         });
+
                 }
+
+
+
 
             } catch (err) {
                 if (DocumentPicker.isCancel(err)) {
@@ -118,6 +174,24 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         else{
             // TODO: WEB platform: show a drag + drop field or have them enter a logbook address to pull from the chain/atra
         }
+    }
+
+    NavigateToCorroboratedLogsView(allLogsByLogbookAddress:{[logbookAddress:string]:Log[]}){
+        // after we're finished assiging logs to "Not found" or their logbook section, make the appropriate
+        // data structure
+        let logbooksPerAddress:LogbookAndSection[] = [];
+        for (const logbook of Object.keys(allLogsByLogbookAddress)){
+            // console.log("loading logbook:", allLogsByLogbookAddress[logbook]);
+            logbooksPerAddress.push({
+                title:logbook,
+                logs:allLogsByLogbookAddress[logbook]
+            })
+        }
+
+        this.props.logbookStateKeeper.LogsToCorroborate =  logbooksPerAddress;
+        this.props.logbookStateKeeper.CurrentLogbookID = CorroborateLogsViewNameAndID;
+        this.props.navigation.navigate(CorroborateLogsViewNameAndID, {title:CorroborateLogsViewNameAndID});
+
     }
 
 

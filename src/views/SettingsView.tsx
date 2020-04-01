@@ -3,7 +3,7 @@ import { Input, Text, CheckBox } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScrollView, StyleSheet, View} from "react-native";
 import NativeUserPreferences from "../native/NativeUserPreferences";
-import {UserPreferenceKeys} from "../utils/Constants";
+import {UserPreferenceKeys} from "../shared/Constants";
 
 
 type State={

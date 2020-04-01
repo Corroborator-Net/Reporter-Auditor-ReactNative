@@ -1,14 +1,15 @@
 import React from "react";
 import {StyleSheet, Image, ScrollView, View, Keyboard} from "react-native";
-import {ImageRecord, LogbookEntry, LogbookStateKeeper} from "../interfaces/Data";
+import {ImageRecord, LogbookEntry} from "../interfaces/Data";
 import {Button, Input} from "react-native-elements";
 import {LogManager} from "../shared/LogManager";
 import {ImageDatabase} from "../interfaces/Storage";
 import HashManager from "../shared/HashManager";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RNFetchBlob from "rn-fetch-blob";
-import {AppButtonTint, waitMS} from "../utils/Constants";
+import {AppButtonTint, waitMS} from "../shared/Constants";
 import SingleLogbookView from "./SingleLogbookView";
+import LogbookStateKeeper from "../shared/LogbookStateKeeper";
 
 
 type Props={
@@ -94,8 +95,8 @@ export default class EditLogView extends React.Component<Props, State> {
         let currentDescription = `Enter new description for the ${logs.length} images`;
         if (logs.length==1){
             // add one log specific UI here
-
-            currentDescription = ImageRecord.GetImageDescription(logs[0].ImageRecord).Description;
+            const description =  ImageRecord.GetExtraImageInformation(logs[0].ImageRecord);
+            currentDescription =description ? description.Description: "none";
             // console.log("only one image's description: ", currentDescription);
         }
 

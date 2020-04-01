@@ -7,7 +7,7 @@ import {
     View,
 } from 'react-native';
 import {Identity} from "../interfaces/Identity";
-import {LoadingSpinner, waitMS} from "../utils/Constants";
+import {LoadingSpinner, waitMS} from "../shared/Constants";
 
 type Props = {
     identity:Identity

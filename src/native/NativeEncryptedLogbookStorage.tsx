@@ -1,7 +1,7 @@
 import Realm from 'realm';
 import {LogbookDatabase} from "../interfaces/Storage";
 import {Log, LogSchema, RealmSchemas} from "../interfaces/Data";
-import { StorageSchemaVersion} from "../utils/Constants"
+import { StorageSchemaVersion} from "../shared/Constants"
 
 // TODO: encrypt each record
 export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
