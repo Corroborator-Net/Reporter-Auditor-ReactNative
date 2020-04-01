@@ -42,7 +42,7 @@ export class LogManager{
         for (const entry of logbookEntries){
             const record = entry.ImageRecord;
             const oldLog = entry.Log;
-            if (record.currentMultiHash == oldLog.dataMultiHash && oldLog.currentTransactionHash!= ""){
+            if (record.currentMultiHash == oldLog.currentDataMultiHash && oldLog.currentTransactionHash!= ""){
                 console.log("skipping log upload as hash hasn't changed and the log has a transaction hash");
                 continue;
             }
@@ -73,6 +73,7 @@ export class LogManager{
                 oldLog.rootTransactionHash,
                 "",
                 record.currentMultiHash,
+                oldLog.rootDataMultiHash,
                 logMetadata.JsonData()
                 );
             editedLogsToUpload.push(newLog);
@@ -116,6 +117,7 @@ export class LogManager{
             hashData.storageLocation,
             "",
             "",
+            hashData.currentMultiHash,
             hashData.currentMultiHash,
             logMetadata.JsonData()
         );
@@ -195,6 +197,7 @@ export class LogManager{
         this.blockchainManager.publishTransaction(txn).then(
             (recordID)=>{
                 console.log("TODO: use record id to get transaction hash? keeping as record id for now: ", recordID);
+                console.log("updating log: ", log)
                 if (log.rootTransactionHash==""){
                     log.rootTransactionHash = recordID;
                 }

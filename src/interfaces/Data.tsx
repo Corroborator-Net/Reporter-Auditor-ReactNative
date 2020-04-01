@@ -14,8 +14,13 @@ export class LogbookEntry{
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
 
         // get all logs that have the same root hash
-        this.logs = logs.filter((log)=>log.rootTransactionHash == rootLog.rootTransactionHash
-            && rootLog.rootTransactionHash!="");
+        this.logs = logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash);
+        //TODO: we want to separate out logs that have different public keys than the original logger.
+        // so first is to find the true root log, that log that has the current == root transaction hash
+        // as well as the data multihashes == each other.
+
+        // TODO: why check for empty root hash? - I think for the completely new logs that a user uploads
+        //         && rootLog.rootTransactionHash!="");
 
         // if we're passed empty logs, just use the root log as the only logs
         if (this.logs.length==0){
@@ -45,7 +50,7 @@ export class LogbookEntry{
     public IsImageRecordSynced():boolean{
         // console.log("is synced?", this.Log, "record:", this.ImageRecord.currentMultiHash);
         // if they match then the image record has been logged
-        return this.Log.dataMultiHash == this.ImageRecord.currentMultiHash &&
+        return this.Log.currentDataMultiHash == this.ImageRecord.currentMultiHash &&
             this.Log.currentTransactionHash!= "";
     }
 }
@@ -58,7 +63,8 @@ export class Log {
                 public storageLocation:string, // log should have location b/c client may not have image storage to match hash to
                 public rootTransactionHash:string,
                 public currentTransactionHash:string,
-                public dataMultiHash:string, //  // raw multihash
+                public rootDataMultiHash:string, // pointer to the root multihash
+                public currentDataMultiHash:string, //  // raw multihash
                 public encryptedMetadataJson:string, // this will include signed Hashes
     ) {
     }
@@ -107,13 +113,14 @@ export class Log {
 
 export const LogSchema = {
     name:"LogSchema",
-    primaryKey: 'dataMultiHash',
+    primaryKey: 'currentDataMultiHash',
     properties:{
         logBookAddress: {type:'string', indexed:true},
         storageLocation:'string',
         rootTransactionHash:'string',
         currentTransactionHash:'string',
-        dataMultiHash:'string',
+        rootDataMultiHash:'string',
+        currentDataMultiHash:'string',
         encryptedMetadataJson:'string',
     }
 };

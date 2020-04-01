@@ -148,24 +148,42 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             // .slice(this.state.currentPage, this.LogsPerPage);
 
 
-        let logsAndSections:LogbookEntryAndSection[] = [];
-        for (const logsByLogbook of logbooksInSectionsWithLogs){
-            const rootLogs = logsByLogbook.logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
+        const onlyShowingOneLogbook = logbooksInSectionsWithLogs.length == 1;
 
-            let logbookEntriesInCurrentSection = new Array<LogbookEntry>();
+        let logsSectionedByDateAndLogbook:{[dateAndLogbook:string]:LogbookEntry[]} = {};
+        for (const logsByLogbook of logbooksInSectionsWithLogs){
+
+            console.log("logs:", logsByLogbook);
+
+            let rootLogs = logsByLogbook.logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
+            // console.log("rootlogs:", rootLogs);
+            // let logbookEntriesInCurrentSection = new Array<LogbookEntry>();
             for (const log of rootLogs){
                 // Get all records with the same root hash
-                const records = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.dataMultiHash);
-                // console.log("records are:", records);
-                const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, records);
-                logbookEntriesInCurrentSection.push(logbookEntry);
-            }
+                const imageRecords = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.currentDataMultiHash);
+                const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
+                const date = logbookEntry.RootImageRecord.timestamp.toDateString();
+                const logbookTitle = date + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));
+                if (logsSectionedByDateAndLogbook[logbookTitle]){
+                    logsSectionedByDateAndLogbook[logbookTitle].push(logbookEntry)
+                }
+                else{
+                    logsSectionedByDateAndLogbook[logbookTitle] = [logbookEntry]
+                }
 
-            logsAndSections.push({
-                title:logsByLogbook.title,
-                data:logbookEntriesInCurrentSection,
-            })
+            }
         }
+
+
+        let logsAndSections:LogbookEntryAndSection[] = [];
+        Object.keys(logsSectionedByDateAndLogbook).forEach(function (key) {
+            logsAndSections.push({
+                title:key,
+                data:logsSectionedByDateAndLogbook[key],
+            })
+        });
+
+
 
         this.setState({
             logbookEntries:logsAndSections,
@@ -261,7 +279,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                 data={section.data}
                 removeClippedSubviews={true}
                 extraData={this.state.rerenderSelectedCells}
-                keyExtractor={((item1, index) => item1.Log.dataMultiHash + index)}
+                keyExtractor={((item1, index) => item1.Log.currentDataMultiHash + index)}
                 renderItem={this._renderItem}
                 />
         </View>
@@ -296,7 +314,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                     }
                     //@ts-ignore
                     renderItem={this._renderList}
-                    keyExtractor={(item, index) => item.Log.dataMultiHash + index}
+                    keyExtractor={(item, index) => item.Log.currentDataMultiHash + index}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -414,10 +432,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             </View>
         )
     }
-
-}
-
-class listButton extends React.PureComponent{
 
 }
 

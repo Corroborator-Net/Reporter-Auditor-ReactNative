@@ -1,5 +1,5 @@
 import React from "react";
-import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {Alert, FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
 import {HashData, ImageRecord, Log, LogbookAndSection, LogbookEntry} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
@@ -12,7 +12,6 @@ import RNFetchBlob from "rn-fetch-blob";
 import HashManager from "../shared/HashManager";
 import {LogManager} from "../shared/LogManager";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
-import _ from "lodash";
 import WebLogbookAndImageManager from "../web/WebLogbookAndImageManager";
 
 type State={
@@ -82,27 +81,40 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     RNFetchBlob.fs.readFile(res.uri, 'base64')
                         .then(async (data) => {
                             // load jpeg - this could be from local file system or the cloud
+                            const uploadedImageHash = HashManager.GetHashSync(data);
+
                             const imageRecord = new ImageRecord(
                                 new Date(),
                                 res.uri,
                                 "",
-                                "",
+                                uploadedImageHash,
                                 data,
                             );
-                            const uploadedImageHash = HashManager.GetHashSync(data);
+
+                            // look in the image's metadata for a logbook id
                             const imageInformation = ImageRecord.GetExtraImageInformation(imageRecord);
                             const logbookAddress = imageInformation? imageInformation.LogbookAddress : noLogbookKey;
                             let matchingLogs:Log[] = [];
-                            console.log("logbookAddress is:", logbookAddress);
+
                             WebLogbookAndImageManager.Instance.addImageRecordToLogbook(imageRecord, uploadedImageHash);
                             // let's fill logbook address with logs to check if the uploaded logs are present on chain
                             if (imageInformation){
-                                if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]){
-                                    logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
-                                        await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                                try {
+                                    if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
+                                        logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
+                                            await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                                    }
                                 }
+                                catch (e) {
+                                    Alert.alert(
+                                        'Server Error - Try Again', e+"", [{text: 'OK'},],
+                                        { cancelable: false }
+                                    );
+                                    return;
+                                }
+                                // console.log("logs at logbook",logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]);
                                 matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
-                                filter((log)=> log.dataMultiHash == uploadedImageHash);
+                                filter((log)=> log.currentDataMultiHash == uploadedImageHash);
 
                             }
 
@@ -112,6 +124,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     "",
                                     "",
                                     "",
+                                    uploadedImageHash,
                                     uploadedImageHash,
                                     "");
                                 let newLogs = allLogsByLogbookAddress[unfoundKey];
@@ -124,36 +137,43 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 const corroboratedLog = matchingLogs[0];
                                 const allLogsSharingRootLogOfCorroboratedLog =
                                     logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
-                                    filter((log)=> log.rootTransactionHash == corroboratedLog.rootTransactionHash);
+                                    filter((log)=> log.rootDataMultiHash == corroboratedLog.rootDataMultiHash);
 
                                 console.log("found a matching log on the blockchain!");
+                                // imageRecord.
+                                // WebLogbookAndImageManager.Instance.updateImageRecordInLogbook(imageRecord, uploadedImageHash);
 
                                 if (!allLogsByLogbookAddress[logbookAddress]) {
                                     allLogsByLogbookAddress[logbookAddress] = allLogsSharingRootLogOfCorroboratedLog;
                                 }
                                 else{
-                                    allLogsByLogbookAddress[logbookAddress].push(...allLogsSharingRootLogOfCorroboratedLog);
+                                    allLogsByLogbookAddress[logbookAddress] = allLogsByLogbookAddress[logbookAddress]
+                                        .concat(allLogsSharingRootLogOfCorroboratedLog);
                                 }
 
+                                const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
+                                const pubKey = Object.keys(metadata)[0];
+                                console.log("first item in metadata:",pubKey);
+                                // if (this.props.identity.PublicPGPKey != )
+
+                                // corroborate the log on the chain
+                                const newHashToLog:HashData = {
+                                    currentMultiHash:uploadedImageHash,
+                                    storageLocation:"file",
+                                    metadataJSON:"{}"
+                                };
+
+                                LogManager.Instance.OnNewHashProduced(
+                                    newHashToLog,
+                                    logbookAddress,
+                                    false
+                                );
                             }
-
-
-                            // // corroborate the log on the chain
-                            // const newHashToLog:HashData = {
-                            //     currentMultiHash:myHash,
-                            //     storageLocation:"file",
-                            //     metadataJSON:"{}"
-                            // };
-                            //
-                            // LogManager.Instance.OnNewHashProduced(
-                            //     newHashToLog,
-                            //     logbookAddress,
-                            //     false
-                            // );
 
                             index+=1;
                             // console.log(index, selectedImages.length);
                             if (index == selectedImages.length){
+                                // console.log("all logs to display:",allLogsByLogbookAddress);
                                 this.NavigateToCorroboratedLogsView(allLogsByLogbookAddress)
                             }
                         });

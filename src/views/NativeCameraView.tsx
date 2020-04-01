@@ -116,7 +116,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                             camera:ref
                         })
                     }}
-
+                    captureAudio={false}
                     style={styles.preview}
                     type={RNCamera.Constants.Type.back}
                     flashMode={RNCamera.Constants.FlashMode.auto}
@@ -126,12 +126,12 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                         buttonPositive: 'Ok',
                         buttonNegative: 'Cancel',
                     }}
-                    androidRecordAudioPermissionOptions={{
-                        title: 'Permission to use audio recording',
-                        message: 'We need your permission to use your audio',
-                        buttonPositive: 'Ok',
-                        buttonNegative: 'Cancel',
-                    }}
+                    // androidRecordAudioPermissionOptions={{
+                    //     title: 'Permission to use audio recording',
+                    //     message: 'We need your permission to use your audio',
+                    //     buttonPositive: 'Ok',
+                    //     buttonNegative: 'Cancel',
+                    // }}
                     onGoogleVisionBarcodesDetected={({ barcodes }) => {
                         // console.log(barcodes);
                     }}

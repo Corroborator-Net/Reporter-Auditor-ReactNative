@@ -8,23 +8,38 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
     private CachedRecords:{[logbookAddress:string]:ImageRecord[]} ={};
 
 
-     addImageRecordToLogbook(data:ImageRecord, hash:string){
-         console.log("adding image record to hash:", hash)
+     addImageRecordToLogbook(imageRecord:ImageRecord, hash:string){
+         // console.log("adding image record to hash:", hash);
          if (!this.CachedRecords[hash]) {
-             this.CachedRecords[hash] = [data];
+             this.CachedRecords[hash] = [imageRecord];
          }
-     else{
-             this.CachedRecords[hash].push(data);
+         else{
+             this.CachedRecords[hash].push(imageRecord);
          }
      }
 
-    add(data: ImageRecord): Promise<string> {
-    }
+     updateImageRecordInLogbook(imageRecord:ImageRecord, hash:string){
+         if (!this.CachedRecords[hash]) {
+             this.CachedRecords[hash] = [imageRecord];
+         }
+         else{
+             const foundIndex = this.CachedRecords[hash]
+                 .findIndex(record=>record.currentMultiHash == imageRecord.currentMultiHash);
+             this.CachedRecords[hash][foundIndex] = imageRecord;
+             console.log("replaced:",this.CachedRecords[hash][foundIndex])
+
+         }
+     }
 
     getImageRecordsWithMatchingRootHash(hash: string): Promise<import("../interfaces/Data").ImageRecord[]> {
-        console.log("finding image record with hash:", hash)
+        // console.log("finding image record with hash:", hash)
         return new Promise<ImageRecord[]> ((resolve, reject) =>  {resolve(this.CachedRecords[hash])});
     }
+
+    add(data: ImageRecord): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+
     removeImageRecord(imageRecord: import("../interfaces/Data").ImageRecord): Promise<string> {
         throw new Error("Method not implemented.");
     }

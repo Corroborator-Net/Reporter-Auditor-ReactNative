@@ -45,7 +45,8 @@ export default class DetailLogView extends React.Component<Props, State> {
         if (imageRecord){
             const imageMetadata = JSON.parse(imageRecord.metadataJSON);
 
-            if (log.dataMultiHash == imageRecord.currentMultiHash) {
+            if (log.currentDataMultiHash == imageRecord.currentMultiHash &&
+                log.currentTransactionHash != "") {
                 metadataObj["Log Status"] = "Logged";
                 metadataObj["File Name"] = imageRecord.filename;
             }
@@ -71,7 +72,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                     null, null, null,
                     log.encryptedMetadataJson,
                     [this.props.identity.PublicPGPKey],
-                    this.props.identity.PrivatePGPKey).pubKeysToAESKeysToJSONDataMap[this.props.identity.PublicPGPKey]);
+                    this.props.identity.PrivatePGPKey).JsonData())[this.props.identity.PublicPGPKey];
                 for (const key of Object.keys(encryptedMetadata)) {
                     metadataObj[key] = encryptedMetadata[key];
                 }
@@ -103,8 +104,8 @@ export default class DetailLogView extends React.Component<Props, State> {
         await waitMS(1);
         const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLogbook.Log, this.state.currentLogbook.ImageRecord);
         // I might have a
-        let canShowRootInfo = this.state.currentLogbook.RootLog.dataMultiHash != "" &&
-            this.state.currentLogbook.Log.dataMultiHash != this.state.currentLogbook.RootLog.dataMultiHash;
+        let canShowRootInfo = this.state.currentLogbook.RootLog.currentDataMultiHash != "" &&
+            this.state.currentLogbook.Log.currentDataMultiHash != this.state.currentLogbook.RootLog.currentDataMultiHash;
         let rootInfo = new Array<JSX.Element>();
         if (canShowRootInfo){
             rootInfo = this.parseAndDisplayMetadata(this.state.currentLogbook.RootLog, this.state.currentLogbook.RootImageRecord)
@@ -120,11 +121,11 @@ export default class DetailLogView extends React.Component<Props, State> {
   componentDidMount(): void {
 
 
-      if (this.state.currentLogbook.Log.dataMultiHash != this.state.previousLogbookHash
+      if (this.state.currentLogbook.Log.currentDataMultiHash != this.state.previousLogbookHash
       ) {
           this.setState({
               currentLogbook: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
-              previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].Log.dataMultiHash,
+              previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].Log.currentDataMultiHash,
               loading:true
               },
               this.loadMetadata);

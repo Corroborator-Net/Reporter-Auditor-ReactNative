@@ -66,7 +66,7 @@ export default class EditLogView extends React.Component<Props, State> {
                 const newImageRecord = new ImageRecord(
                     time,
                     newPath,
-                    log.RootLog.dataMultiHash,
+                    log.RootLog.currentDataMultiHash,
                     newHash,
                     newBase64Data);
 
@@ -133,7 +133,7 @@ export default class EditLogView extends React.Component<Props, State> {
                             return (<Image
                                 source={{uri: `data:image/jpeg;base64,${log.ImageRecord.base64Data}`}}
                                 resizeMethod={"resize"}
-                                key={log.Log.dataMultiHash}
+                                key={log.Log.currentDataMultiHash}
                                 style={{width:this.getWidth(logs.length),
                                     marginHorizontal:this.getMargin(logs.length),
                                     resizeMode:"contain",
