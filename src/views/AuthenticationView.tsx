@@ -29,19 +29,22 @@ export default class AuthenticationView extends React.Component<Props,{}> {
             const gotKeys = await this.props.identity.GenerateAndSavePGPKeys();
             console.log("got keys:",gotKeys);
             if (gotKeys) {
-                this.setState({
-                        status: `Keys saved!`,
-                        loading: false
-                    },
-                    this.props.loggedInCallback(true)
-                );
+                this.props.loggedInCallback(true);
+                // this.setState({
+                //         status: `Keys saved!`,
+                //         loading: false
+                //     },
+                // this.props.loggedInCallback(true)
+                // );
             }
             else{
-                this.setState({ status: 'Could not save keys, using web?' ,
+                this.setState({
+                    status: 'Could not save keys, using web?' ,
                     loading:false},);
             }
         } catch (err) {
-            this.setState({ status: 'Could not save keys, ' + err ,
+            this.setState({
+                status: 'Could not save keys, ' + err ,
             loading:false},);
         }
     }

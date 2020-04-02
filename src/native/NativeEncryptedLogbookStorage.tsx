@@ -5,7 +5,6 @@ import { StorageSchemaVersion} from "../shared/Constants"
 
 // TODO: encrypt each record
 export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
-    public type = "local";
 
     // TODO: limit the arguments to the transaction hash and the multihash
     updateLogWithTransactionHash(log: Log): void {

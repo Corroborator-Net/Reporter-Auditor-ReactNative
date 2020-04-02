@@ -1,5 +1,5 @@
 import React from "react";
-import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
+import {Text, StyleSheet, Image, ScrollView} from "react-native";
 import {ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
 import {LoadingSpinner, PrependJpegString, waitMS} from "../shared/Constants";
 import {ListItem} from "react-native-elements";
@@ -19,7 +19,7 @@ type State={
     rootLogEntryInformation:JSX.Element[];
     showRootInfo:boolean;
     showCurrentInfo:boolean;
-    currentLogbook:LogbookEntry;
+    currentLog:LogbookEntry;
     previousLogbookHash:string;
     loading:boolean;
 }
@@ -31,11 +31,18 @@ export default class DetailLogView extends React.Component<Props, State> {
         showCurrentInfo:true,
         currentLogEntryInformation:new Array<JSX.Element>(),
         rootLogEntryInformation:new Array<JSX.Element>(),
-        currentLogbook:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
+        currentLog:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
         previousLogbookHash:"",
         loading:true,
     };
 
+    imageRecordHasBeenLogged(log:Log, imageRecord:ImageRecord):boolean{
+        // we might be displaying the most recent image record, in which case the root log will show it hasn't been logged yet
+        return (log.currentDataMultiHash == imageRecord.currentMultiHash &&
+                log.currentTransactionHash != "")
+            || (log.currentDataMultiHash == imageRecord.rootMultiHash &&
+                log.currentTransactionHash!= "")
+    }
 
     parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): Array<JSX.Element>{
         let details = new Array<JSX.Element>();
@@ -45,8 +52,7 @@ export default class DetailLogView extends React.Component<Props, State> {
         if (imageRecord){
             const imageMetadata = JSON.parse(imageRecord.metadataJSON);
 
-            if (log.currentDataMultiHash == imageRecord.currentMultiHash &&
-                log.currentTransactionHash != "") {
+            if (this.imageRecordHasBeenLogged(log,imageRecord)) {
                 metadataObj["Log Status"] = "Logged";
                 metadataObj["File Name"] = imageRecord.filename;
             }
@@ -67,14 +73,22 @@ export default class DetailLogView extends React.Component<Props, State> {
         }
 
         if (logAndImageRecordMatch) {
+            // console.log("encrypted metadata:",log.encryptedMetadataJson)
             if (log.encryptedMetadataJson != "") {
                 const encryptedMetadata = JSON.parse(new LogMetadata(
                     null, null, null,
                     log.encryptedMetadataJson,
-                    [this.props.identity.PublicPGPKey],
-                    this.props.identity.PrivatePGPKey).JsonData())[this.props.identity.PublicPGPKey];
-                for (const key of Object.keys(encryptedMetadata)) {
-                    metadataObj[key] = encryptedMetadata[key];
+                    this.props.identity.PrivatePGPKey).JsonData());
+
+                console.log("encryptedMetadata",encryptedMetadata);
+
+                if (!encryptedMetadata){
+                    metadataObj["On-Chain Encrypted Metadata"] = "Unable to Decrypt";
+                }
+                else {
+                    for (const key of Object.keys(encryptedMetadata)) {
+                        metadataObj[key] = encryptedMetadata[key];
+                    }
                 }
             }
 
@@ -82,7 +96,7 @@ export default class DetailLogView extends React.Component<Props, State> {
             // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
             for (const key of Object.keys(log)) {
                 //@ts-ignore
-                const data = log[key];
+                const data = log[key] ? log[key].toString() : log[key]
                 if (data != log.encryptedMetadataJson) {
                     metadataObj[key] = data;
                 }
@@ -102,13 +116,13 @@ export default class DetailLogView extends React.Component<Props, State> {
 
     async loadMetadata(){
         await waitMS(1);
-        const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLogbook.Log, this.state.currentLogbook.ImageRecord);
+        const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLog.Log, this.state.currentLog.ImageRecord);
         // I might have a
-        let canShowRootInfo = this.state.currentLogbook.RootLog.currentDataMultiHash != "" &&
-            this.state.currentLogbook.Log.currentDataMultiHash != this.state.currentLogbook.RootLog.currentDataMultiHash;
+        let canShowRootInfo = this.state.currentLog.RootLog.currentDataMultiHash != "" &&
+            this.state.currentLog.Log.currentDataMultiHash != this.state.currentLog.RootLog.currentDataMultiHash;
         let rootInfo = new Array<JSX.Element>();
         if (canShowRootInfo){
-            rootInfo = this.parseAndDisplayMetadata(this.state.currentLogbook.RootLog, this.state.currentLogbook.RootImageRecord)
+            rootInfo = this.parseAndDisplayMetadata(this.state.currentLog.RootLog, this.state.currentLog.RootImageRecord)
         }
         this.setState({
             currentLogEntryInformation:currentLogbookInfo,
@@ -121,10 +135,10 @@ export default class DetailLogView extends React.Component<Props, State> {
   componentDidMount(): void {
 
 
-      if (this.state.currentLogbook.Log.currentDataMultiHash != this.state.previousLogbookHash
+      if (this.state.currentLog.Log.currentDataMultiHash != this.state.previousLogbookHash
       ) {
           this.setState({
-              currentLogbook: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
+              currentLog: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
               previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].Log.currentDataMultiHash,
               loading:true
               },
@@ -138,9 +152,9 @@ export default class DetailLogView extends React.Component<Props, State> {
                   LoadingSpinner
                   :
             <ScrollView>
-                {this.state.currentLogbook.ImageRecord ?
+                {this.state.currentLog.ImageRecord ?
                     <Image
-                        source={{uri: PrependJpegString(this.state.currentLogbook.ImageRecord.base64Data)}}
+                        source={{uri: PrependJpegString(this.state.currentLog.ImageRecord.base64Data)}}
                         resizeMethod={"resize"}
                         style={styles.image}
                     />

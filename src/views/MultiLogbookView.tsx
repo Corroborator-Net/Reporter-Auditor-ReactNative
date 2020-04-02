@@ -72,11 +72,11 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
                 let index = 0;
                 let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
-                let allLogsByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
+                let allOnChainLogsInUserUploadedLogTreeByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
                 // add unfound section
                 const unfoundKey = "Not Found";
                 const noLogbookKey = "No Logbook in metadata";
-                allLogsByLogbookAddress[unfoundKey] = new Array<Log>();
+                allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
                 for (const res of selectedImages) {
                     RNFetchBlob.fs.readFile(res.uri, 'base64')
                         .then(async (data) => {
@@ -96,7 +96,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             const logbookAddress = imageInformation? imageInformation.LogbookAddress : noLogbookKey;
                             let matchingLogs:Log[] = [];
 
-                            WebLogbookAndImageManager.Instance.addImageRecordToLogbook(imageRecord, uploadedImageHash);
+                            WebLogbookAndImageManager.Instance.addImageRecordAtHash(imageRecord, uploadedImageHash);
                             // let's fill logbook address with logs to check if the uploaded logs are present on chain
                             if (imageInformation){
                                 try {
@@ -112,7 +112,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     );
                                     return;
                                 }
-                                // console.log("logs at logbook",logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]);
+                                console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
                                 matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
                                 filter((log)=> log.currentDataMultiHash == uploadedImageHash);
 
@@ -126,55 +126,60 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     "",
                                     uploadedImageHash,
                                     uploadedImageHash,
-                                    "");
-                                let newLogs = allLogsByLogbookAddress[unfoundKey];
+                                    "",
+                                    "",
+                                    null
+                                    );
+                                let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey];
                                 newLogs.push(missingLog);
-                                allLogsByLogbookAddress[unfoundKey] = newLogs;
-                                console.log("NO matching log on the blockchain", allLogsByLogbookAddress[unfoundKey]);
-                                // return;
+                                allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = newLogs;
+                                console.log("NO matching log on the blockchain", allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey]);
                             }
                             else{
-                                const corroboratedLog = matchingLogs[0];
-                                const allLogsSharingRootLogOfCorroboratedLog =
-                                    logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
-                                    filter((log)=> log.rootDataMultiHash == corroboratedLog.rootDataMultiHash);
+                                // For any log in the tree, get all logs in the tree so the tree can be constructed later
+                                const [allLogsInLogTree, originalLog] = Log.GetAllLogsInTreeFromAnyLogInTree(matchingLogs,
+                                        logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]);
 
-                                console.log("found a matching log on the blockchain!");
-                                // imageRecord.
-                                // WebLogbookAndImageManager.Instance.updateImageRecordInLogbook(imageRecord, uploadedImageHash);
+                                // update the root multihash with a trunk log's hash
+                                imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
+                                console.log("all logs in tree",JSON.stringify(allLogsInLogTree, null, 2) );
 
-                                if (!allLogsByLogbookAddress[logbookAddress]) {
-                                    allLogsByLogbookAddress[logbookAddress] = allLogsSharingRootLogOfCorroboratedLog;
+                                WebLogbookAndImageManager.Instance.updateImageRecordAtHash(
+                                    imageRecord,
+                                    originalLog.rootDataMultiHash);
+
+                                if (!allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]) {
+                                    allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allLogsInLogTree;
                                 }
                                 else{
-                                    allLogsByLogbookAddress[logbookAddress] = allLogsByLogbookAddress[logbookAddress]
-                                        .concat(allLogsSharingRootLogOfCorroboratedLog);
+                                    allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]
+                                        .concat(allLogsInLogTree);
                                 }
 
-                                const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
-                                const pubKey = Object.keys(metadata)[0];
-                                console.log("first item in metadata:",pubKey);
+                                // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
+                                // const pubKey = Object.keys(metadata)[0];
+                                // console.log("first item in metadata:",pubKey);
                                 // if (this.props.identity.PublicPGPKey != )
 
                                 // corroborate the log on the chain
-                                const newHashToLog:HashData = {
-                                    currentMultiHash:uploadedImageHash,
-                                    storageLocation:"file",
-                                    metadataJSON:"{}"
-                                };
-
-                                LogManager.Instance.OnNewHashProduced(
-                                    newHashToLog,
-                                    logbookAddress,
-                                    false
-                                );
+                                // const newHashToLog:HashData = {
+                                //     currentMultiHash:uploadedImageHash,
+                                //     storageLocation:"file",
+                                //     metadataJSON:"{}"
+                                // };
+                                //
+                                // LogManager.Instance.OnNewHashProduced(
+                                //     newHashToLog,
+                                //     logbookAddress,
+                                //     false
+                                // );
                             }
 
                             index+=1;
                             // console.log(index, selectedImages.length);
                             if (index == selectedImages.length){
                                 // console.log("all logs to display:",allLogsByLogbookAddress);
-                                this.NavigateToCorroboratedLogsView(allLogsByLogbookAddress)
+                                this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
                             }
                         });
 

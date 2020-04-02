@@ -8,7 +8,7 @@ import {
     TouchableOpacity, View
 } from "react-native";
 import {ImageDatabase} from "../interfaces/Storage";
-import {LogbookEntry} from "../interfaces/Data";
+import {Log, LogbookEntry} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
 import {Button, SearchBar, Text} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -153,11 +153,10 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         let logsSectionedByDateAndLogbook:{[dateAndLogbook:string]:LogbookEntry[]} = {};
         for (const logsByLogbook of logbooksInSectionsWithLogs){
 
-            console.log("logs:", logsByLogbook);
+            // TODO: get rootlogs? more like make a DAG get image records via the DAG
+            let rootLogs = Log.GetRootLogsByFirstLoggedPublicKey(logsByLogbook.logs);
+             console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
 
-            let rootLogs = logsByLogbook.logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
-            // console.log("rootlogs:", rootLogs);
-            // let logbookEntriesInCurrentSection = new Array<LogbookEntry>();
             for (const log of rootLogs){
                 // Get all records with the same root hash
                 const imageRecords = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.currentDataMultiHash);

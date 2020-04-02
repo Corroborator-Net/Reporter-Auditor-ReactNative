@@ -29,22 +29,21 @@ export class AtraManager implements BlockchainInterface {
             const record = atraResponse["record"];
             const recordID = atraResponse["atraRecordId"];
 
-            // TODO: uncomment following to get block time from etherscan
-            // const blockNumber = liveRecords[i]["event"]["blockNumber"];
-            // const etherscanResponse = await
-            //     fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
-            //     + "&apikey=" + EtherScanApiKey);
-            // const blockJson = await etherscanResponse.json();
-            // const blockTimeStamp = blockJson["result"]["timeStamp"];
-            // // make the date look like the one stored on chain
-            // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
-            //
-            // let date="";
-            // if (isValidDate(preDate)) {
-            //     date = Log.getFormattedDateString(preDate);
-            // } else {
-            //     date = "Pending..."
-            // }
+            const blockNumber = liveRecords[i]["event"]["blockNumber"];
+            const etherscanResponse = await
+                fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
+                + "&apikey=" + EtherScanApiKey);
+            const blockJson = await etherscanResponse.json();
+            const blockTimeStamp = blockJson["result"]["timeStamp"];
+            // make the date look like the one stored on chain
+            let preDate = new Date(parseInt(blockTimeStamp) * 1000);
+
+            let date="";
+            if (isValidDate(preDate)) {
+                date = Log.getFormattedDateString(preDate);
+            } else {
+                date = "Pending..."
+            }
 
             // const str = JSON.stringify(atraResponse, null, 2); // spacing level = 2
             // console.log("record from the chain:",str);
@@ -53,11 +52,12 @@ export class AtraManager implements BlockchainInterface {
 
             const hash = record[0];
             const rootHash = record[1];
-            const storageLocation=record[2];
-            const rootTransactionHash = record[3];
+            const loggingKey = record[2];
+            const storageLocation=record[3];
+            const rootTransactionHash = record[4];
 
             // TODO: do we need to decrypt and mess with the metadata on chain? - perhaps to verify the embedded signature?
-            const encryptedMetadata = record[4];
+            const encryptedMetadata = record[5];
 
 
             const newEntry = new Log(
@@ -68,7 +68,9 @@ export class AtraManager implements BlockchainInterface {
                 recordID,
                 rootHash,
                 hash,
-                encryptedMetadata
+                encryptedMetadata,
+                loggingKey,
+                preDate,
             );
 
             logs.push(newEntry);
@@ -89,6 +91,10 @@ export class AtraManager implements BlockchainInterface {
                 },
                 {
                     "name":"RootHash",
+                    "type":"text",
+                },
+                {
+                    "name":"LoggingKey",
                     "type":"text",
                 },
                 {
@@ -124,6 +130,7 @@ export class AtraManager implements BlockchainInterface {
             "record":[
                 log.currentDataMultiHash,
                 log.rootDataMultiHash,
+                log.loggingPublicKey,
                 log.storageLocation.slice(0,4),
                 log.rootTransactionHash==""? this.emptyPlaceholder :log.rootTransactionHash,
                 log.encryptedMetadataJson,

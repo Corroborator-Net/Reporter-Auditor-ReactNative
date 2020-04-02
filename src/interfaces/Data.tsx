@@ -9,16 +9,23 @@ export type LogbookAndSection ={
 
 export class LogbookEntry{
 
+    private CorroboratingLogs:{[logCurrentMultiHash:string]:Log[]};
+
     constructor(public rootLog:Log, public logs:Log[], public imageRecords:ImageRecord[]) {
         // this.logs = _.filter(logs,(log) =>
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
 
         // get all logs that have the same root hash
         this.logs = logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash);
-        //TODO: we want to separate out logs that have different public keys than the original logger.
-        // so first is to find the true root log, that log that has the current == root transaction hash
-        // as well as the data multihashes == each other.
 
+        // get corroborating logs that are root logs of their own right
+        //TODO: might this count our root log as a corroborating log of itself?
+        this.CorroboratingLogs = {};
+        for (const ourLog of this.logs){
+            this.CorroboratingLogs[ourLog.currentDataMultiHash] = logs.filter((potentialCorroboratingLog)=>
+                potentialCorroboratingLog.rootDataMultiHash == potentialCorroboratingLog.currentDataMultiHash
+                && potentialCorroboratingLog.currentDataMultiHash == ourLog.currentDataMultiHash)
+        }
         // TODO: why check for empty root hash? - I think for the completely new logs that a user uploads
         //         && rootLog.rootTransactionHash!="");
 
@@ -27,7 +34,18 @@ export class LogbookEntry{
             this.logs = [rootLog];
         }
 
+        //TODO: we want to separate out logs that have different public keys than the original logger.
+        // so first is to find the true root log, that log that has the current == root transaction hash
+        // as well as the data multihashes == each other.
+
+
     }
+
+    GetCorroboratingLog(currentMultiHash:string):Log[]{
+        return this.CorroboratingLogs[currentMultiHash];
+    }
+
+
     // TODO test the order of this
     get RootLog():Log{
         // console.log("root log hash: ", this.rootLog.dataMultiHash);
@@ -66,7 +84,53 @@ export class Log {
                 public rootDataMultiHash:string, // pointer to the root multihash
                 public currentDataMultiHash:string, //  // raw multihash
                 public encryptedMetadataJson:string, // this will include signed Hashes
+                public loggingPublicKey:string,
+                public blockTime:Date|null,
     ) {
+    }
+
+    static GetAllLogsInTreeFromAnyLogInTree(logsWithMatchingHashes:Log[], allLogsSharingLogbook:Log[]):[Log[], Log]{
+
+        console.log("all logs",JSON.stringify(allLogsSharingLogbook, null, 2));
+
+        // get log in trunk for revision branch
+        const originalLog = Log.GetEarliestLogViaBlockTime(logsWithMatchingHashes);
+        console.log("got trunk log from all logs in logbook",JSON.stringify(originalLog, null, 2) );
+        // get all logs in trunk
+        const trunkLogs =  allLogsSharingLogbook.filter((log)=>
+            log.rootDataMultiHash == originalLog.rootDataMultiHash);
+
+        console.log("got all trunk logs",JSON.stringify(trunkLogs, null, 2) );
+
+        let entireTree:Log[]=trunkLogs.slice();
+        // get all branches and add them to the entire tree array
+        for (const trunkLog of trunkLogs){
+            entireTree.concat(allLogsSharingLogbook.filter(logAlongBranch=>
+                logAlongBranch.rootDataMultiHash == trunkLog.currentDataMultiHash))
+        }
+        return [entireTree, originalLog];
+
+    }
+
+    static GetEarliestLogViaBlockTime(logs:Log[]):Log{
+        return logs.reduce(function(prev, curr) {
+            return prev.blockTime < curr.blockTime ? prev : curr;
+        });
+    }
+
+    // TODO: assumes the user isn't corroborating their own logs
+    static GetRootLogsByFirstLoggedPublicKey(logs:Log[]):Log[]{
+        // getting the logs from the web, should contain block time
+        if (logs[0] && logs[0].blockTime) {
+            // get the earliest log
+            const firstLog = Log.GetEarliestLogViaBlockTime(logs);
+            return logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash &&
+                                log.loggingPublicKey == firstLog.loggingPublicKey)
+        }
+        else{
+            return logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash);
+        }
+
     }
 
 
@@ -122,6 +186,8 @@ export const LogSchema = {
         rootDataMultiHash:'string',
         currentDataMultiHash:'string',
         encryptedMetadataJson:'string',
+        loggingPublicKey:'string',
+        blockTime:'date?'
     }
 };
 

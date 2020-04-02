@@ -2,7 +2,7 @@ import {Platform} from "react-native";
 import {Button} from "react-native-elements";
 import React from "react";
 
-export const StorageSchemaVersion = 1;
+export const StorageSchemaVersion = 2;
 
 export const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 

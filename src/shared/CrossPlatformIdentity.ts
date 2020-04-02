@@ -17,6 +17,7 @@ export default class CrossPlatformIdentity implements Identity{
 
     private _PublicPGPKey:string = "";
     private _PrivatePGPKey:string = "";
+    // TODO: commented out HQ until Atra can handle more keys
     private _TrustedPeerPGPKeys:string[] = [this.HQPEMKey.publicKey];
 
     get PublicPGPKey():string{
