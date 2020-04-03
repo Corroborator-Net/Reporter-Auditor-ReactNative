@@ -32,6 +32,7 @@ export class LogManager{
         LogManager.Instance= this;
         NetInfo.addEventListener(state => {this.onNetworkConnectionChange(state)});
         this.checkForUnsyncedLogs();
+        return this
     }
 
 
@@ -75,7 +76,7 @@ export class LogManager{
                 record.currentMultiHash,
                 logMetadata.JsonData(),
                 this.didModule.PublicPGPKey,
-                null
+                null, null
                 );
             editedLogsToUpload.push(newLog);
         }
@@ -89,7 +90,7 @@ export class LogManager{
 
     OnNewHashProduced(hashData: HashData, targetLogbookAddress:string, saveToDisk:boolean): void {
 
-
+        console.log("newhash!");
         // TODO get signature from our did module
         // const signedHash = this.didModule.sign(hashData.multiHash);
         // const signedMetaData = this.didModule.sign(hashData.timeStamp);
@@ -125,7 +126,7 @@ export class LogManager{
             hashData.currentMultiHash,
             logMetadata.JsonData(),
             this.didModule.PublicPGPKey,
-            null
+            null, null
         );
 
         // log the data after if/we get signatures

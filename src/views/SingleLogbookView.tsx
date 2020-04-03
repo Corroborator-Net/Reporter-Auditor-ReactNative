@@ -160,6 +160,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             for (const log of rootLogs){
                 // Get all records with the same root hash
                 const imageRecords = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.currentDataMultiHash);
+                // console.log("imagerecords:", imageRecords);
                 const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
                 const date = logbookEntry.RootImageRecord.timestamp.toDateString();
                 const logbookTitle = date + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));

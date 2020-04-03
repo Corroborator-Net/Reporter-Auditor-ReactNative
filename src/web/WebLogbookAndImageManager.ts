@@ -36,7 +36,8 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
      }
 
     getImageRecordsWithMatchingRootHash(hash: string): Promise<import("../interfaces/Data").ImageRecord[]> {
-        console.log("finding image record with hash:", hash)
+        console.log("finding image record with hash:", hash);
+        // console.log("got imagerecord:",this.CachedRecords[hash][0].rootMultiHash)
         return new Promise<ImageRecord[]> ((resolve, reject) =>  {resolve(this.CachedRecords[hash])});
     }
 

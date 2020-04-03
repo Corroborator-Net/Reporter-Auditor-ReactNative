@@ -15,6 +15,10 @@ export class LogbookEntry{
         // this.logs = _.filter(logs,(log) =>
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
 
+        if (imageRecords.length==0){
+            console.log("WARNING: you didn't give me any image records")
+        }
+
         // get all logs that have the same root hash
         this.logs = logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash);
 
@@ -86,21 +90,22 @@ export class Log {
                 public encryptedMetadataJson:string, // this will include signed Hashes
                 public loggingPublicKey:string,
                 public blockTime:Date|null,
+                public blockNumber:number|null,
     ) {
     }
 
     static GetAllLogsInTreeFromAnyLogInTree(logsWithMatchingHashes:Log[], allLogsSharingLogbook:Log[]):[Log[], Log]{
 
-        console.log("all logs",JSON.stringify(allLogsSharingLogbook, null, 2));
+        // console.log("all logs",JSON.stringify(allLogsSharingLogbook, null, 2));
 
         // get log in trunk for revision branch
-        const originalLog = Log.GetEarliestLogViaBlockTime(logsWithMatchingHashes);
-        console.log("got trunk log from all logs in logbook",JSON.stringify(originalLog, null, 2) );
+        const originalLog = Log.GetEarliestLogViaBlockNumber(logsWithMatchingHashes);
+        // console.log("got trunk log from all logs in logbook",JSON.stringify(originalLog, null, 2) );
         // get all logs in trunk
         const trunkLogs =  allLogsSharingLogbook.filter((log)=>
             log.rootDataMultiHash == originalLog.rootDataMultiHash);
 
-        console.log("got all trunk logs",JSON.stringify(trunkLogs, null, 2) );
+        // console.log("got all trunk logs",JSON.stringify(trunkLogs, null, 2) );
 
         let entireTree:Log[]=trunkLogs.slice();
         // get all branches and add them to the entire tree array
@@ -112,18 +117,19 @@ export class Log {
 
     }
 
-    static GetEarliestLogViaBlockTime(logs:Log[]):Log{
+    // TODO: what if the files have the same block number?
+    static GetEarliestLogViaBlockNumber(logs:Log[]):Log{
         return logs.reduce(function(prev, curr) {
-            return prev.blockTime < curr.blockTime ? prev : curr;
+            return prev.blockNumber < curr.blockNumber ? prev : curr;
         });
     }
 
     // TODO: assumes the user isn't corroborating their own logs
     static GetRootLogsByFirstLoggedPublicKey(logs:Log[]):Log[]{
         // getting the logs from the web, should contain block time
-        if (logs[0] && logs[0].blockTime) {
+        if (logs[0] && logs[0].blockNumber) {
             // get the earliest log
-            const firstLog = Log.GetEarliestLogViaBlockTime(logs);
+            const firstLog = Log.GetEarliestLogViaBlockNumber(logs);
             return logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash &&
                                 log.loggingPublicKey == firstLog.loggingPublicKey)
         }
@@ -187,7 +193,8 @@ export const LogSchema = {
         currentDataMultiHash:'string',
         encryptedMetadataJson:'string',
         loggingPublicKey:'string',
-        blockTime:'date?'
+        blockTime:'date?',
+        blockNumber:'int?'
     }
 };
 

@@ -31,6 +31,7 @@ export default class NativeUserPreferences implements UserPreferenceStorage{
         };
         NativeUserPreferences._Instance = this;
         NativeUserPreferences._Instance.CurrentUserSettings = DefaultsDict;
+        return this
     }
 
     async Initialize(){

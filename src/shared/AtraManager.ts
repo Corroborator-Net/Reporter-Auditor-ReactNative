@@ -10,8 +10,8 @@ export class AtraManager implements BlockchainInterface {
 
 
 
-
-    // gets the records in order of most recent to oldest
+    //TODO: etherscan won't let us get blocktimes for every single log so quickly, we need to space it out or filter
+    // what we need somehow
     async getRecordsFor(logBookAddress:string):Promise<Log[]> {
         const logs = new Array<Log>();
         const resp = await fetch("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
@@ -30,20 +30,27 @@ export class AtraManager implements BlockchainInterface {
             const recordID = atraResponse["atraRecordId"];
 
             const blockNumber = liveRecords[i]["event"]["blockNumber"];
-            const etherscanResponse = await
-                fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
-                + "&apikey=" + EtherScanApiKey);
-            const blockJson = await etherscanResponse.json();
-            const blockTimeStamp = blockJson["result"]["timeStamp"];
-            // make the date look like the one stored on chain
-            let preDate = new Date(parseInt(blockTimeStamp) * 1000);
 
-            let date="";
-            if (isValidDate(preDate)) {
-                date = Log.getFormattedDateString(preDate);
-            } else {
-                date = "Pending..."
-            }
+            // TODO: if you want the block times, you have to request them at less than 5/second
+            // const etherscanResponse = await
+            //     fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
+            //     + "&apikey=" + EtherScanApiKey).catch((error)=>
+            //     {
+            //         console.log("ERROR:",etherscanResponse);
+            //         throw new Error("Getting blocktime: " + error)
+            //     });
+            // console.log("etherscan response:",etherscanResponse);
+            // const blockJson = await etherscanResponse.json();
+            // const blockTimeStamp = blockJson["result"]["timeStamp"];
+            // // make the date look like the one stored on chain
+            // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
+            //
+            // let date="";
+            // if (isValidDate(preDate)) {
+            //     date = Log.getFormattedDateString(preDate);
+            // } else {
+            //     date = "Pending..."
+            // }
 
             // const str = JSON.stringify(atraResponse, null, 2); // spacing level = 2
             // console.log("record from the chain:",str);
@@ -70,7 +77,8 @@ export class AtraManager implements BlockchainInterface {
                 hash,
                 encryptedMetadata,
                 loggingKey,
-                preDate,
+                null,
+                blockNumber
             );
 
             logs.push(newEntry);

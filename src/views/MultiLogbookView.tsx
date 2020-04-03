@@ -99,6 +99,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             WebLogbookAndImageManager.Instance.addImageRecordAtHash(imageRecord, uploadedImageHash);
                             // let's fill logbook address with logs to check if the uploaded logs are present on chain
                             if (imageInformation){
+                                console.log("filling logbooks with logs from blockchain!");
                                 try {
                                     if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
                                         logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
@@ -112,7 +113,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     );
                                     return;
                                 }
-                                console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
+                                // console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
                                 matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
                                 filter((log)=> log.currentDataMultiHash == uploadedImageHash);
 
@@ -128,6 +129,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     uploadedImageHash,
                                     "",
                                     "",
+                                    null,
                                     null
                                     );
                                 let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey];
@@ -142,7 +144,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
                                 // update the root multihash with a trunk log's hash
                                 imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
-                                console.log("all logs in tree",JSON.stringify(allLogsInLogTree, null, 2) );
+                                // console.log("all logs in tree",JSON.stringify(allLogsInLogTree, null, 2) );
 
                                 WebLogbookAndImageManager.Instance.updateImageRecordAtHash(
                                     imageRecord,

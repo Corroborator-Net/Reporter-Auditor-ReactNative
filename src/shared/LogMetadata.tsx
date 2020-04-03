@@ -47,15 +47,6 @@ export class LogMetadata {
         this.encryptedData = jsonDataToDecrypt ? jsonDataToDecrypt : "";
         // PULLING DATA FROM OTHER LOG - optional decryption
         if (jsonDataToDecrypt && privateKeyToDecryptMetadataWith) {
-            // let jsonData;
-            // try{
-            //     jsonData = jsonDataToDecrypt;
-            //     console.log("json data parsed:", jsonData);
-            // }
-            // catch (error) {
-            //     console.log("json data an object and not a string", error);
-            //     jsonData = jsonDataToDecrypt;
-            // }
 
             // console.log("got peer metadata: ", peerMetadata);
             // TODO: user must pass a key with which to decrypt the metadata!
@@ -67,6 +58,7 @@ export class LogMetadata {
                 }
                 catch (e) {
                     console.log("couldn't decrypt the cipher with the private key supplied", e);
+                    this.encryptedData="";
                 }
             }
         }
