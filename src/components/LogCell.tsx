@@ -83,15 +83,15 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
 
         if (!log.IsImageRecordSynced()){
             // console.log("log has no transaction hash, checking for other signatures from corroborators");
-            const trueLog = Object.setPrototypeOf(log.Log, Log.prototype);
-            const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();
-            if (reporterToMetadataMap.size<=1){
-                return LocalOnly;
-            }
-            else{
+            // const trueLog = Object.setPrototypeOf(log.HeadLog, Log.prototype);
+            // const reporterToMetadataMap = trueLog.getTimestampsMappedToReporterKeys();
+            // if (reporterToMetadataMap.size<=1){
+            //     return LocalOnly;
+            // }
+            // else{
                 // we have multiple signed metadata records
                 return CorroboratedUnsynced;
-            }
+            // }
         }
 
         return Synced;

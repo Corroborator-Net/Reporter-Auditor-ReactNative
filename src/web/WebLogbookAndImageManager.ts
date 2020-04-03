@@ -8,31 +8,31 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
     private CachedRecords:{[imageHash:string]:ImageRecord[]} ={};
 
 
-     addImageRecordAtHash(imageRecord:ImageRecord, hash:string){
-         console.log("adding image record to hash:", hash);
-         this.CachedRecords[hash] = [imageRecord];
-         // if (!this.CachedRecords[hash]) {
-         //     this.CachedRecords[hash] = [imageRecord];
-         // }
-         // else{
-         //     this.CachedRecords[hash].push(imageRecord);
-         // }
+     addImageRecordAtRootHash(imageRecord:ImageRecord){
+         console.log("adding image record to hash:", imageRecord.rootMultiHash);
+         // this.CachedRecords[hash] = [imageRecord];
+         if (!this.CachedRecords[imageRecord.rootMultiHash]) {
+             this.CachedRecords[imageRecord.rootMultiHash] = [imageRecord];
+         }
+         else{
+             this.CachedRecords[imageRecord.rootMultiHash].push(imageRecord);
+         }
      }
 
-     updateImageRecordAtHash(imageRecord:ImageRecord, hash:string){
-         this.CachedRecords[hash] = [imageRecord];
-         console.log("updating record at:", hash);
+     updateImageRecordAtRootHash(imageRecord:ImageRecord){
+         // this.CachedRecords[hash] = [imageRecord];
+         console.log("updating record at:", imageRecord.rootMultiHash);
 
-         // if (!this.CachedRecords[hash]) {
-         //     this.CachedRecords[hash] = [imageRecord];
-         // }
-         // else{
-         //     const foundIndex = this.CachedRecords[hash]
-         //         .findIndex(record=>record.currentMultiHash == imageRecord.currentMultiHash);
-         //     this.CachedRecords[hash][foundIndex] = imageRecord;
-         //     console.log("replaced:",this.CachedRecords[hash][foundIndex].currentMultiHash)
-         //
-         // }
+         if (!this.CachedRecords[imageRecord.rootMultiHash]) {
+             this.CachedRecords[imageRecord.rootMultiHash] = [imageRecord];
+         }
+         else{
+             const foundIndex = this.CachedRecords[imageRecord.rootMultiHash]
+                 .findIndex(record=>record.currentMultiHash == imageRecord.currentMultiHash);
+             this.CachedRecords[imageRecord.rootMultiHash][foundIndex] = imageRecord;
+             console.log("replaced:",this.CachedRecords[imageRecord.rootMultiHash][foundIndex].currentMultiHash)
+
+         }
      }
 
     getImageRecordsWithMatchingRootHash(hash: string): Promise<import("../interfaces/Data").ImageRecord[]> {

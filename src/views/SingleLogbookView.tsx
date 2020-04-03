@@ -205,8 +205,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                     return(
                         // log.RootLog.signedMetadataJson.includes(searchText) ||
                         // log.Log.signedMetadataJson.includes(searchText) ||
-                        log.ImageRecord.metadataJSON.toLowerCase().includes(searchText) ||
-                        log.ImageRecord.storageLocation.toLowerCase().includes(searchText) ||
+                        log.HeadImageRecord.metadataJSON.toLowerCase().includes(searchText) ||
+                        log.HeadImageRecord.storageLocation.toLowerCase().includes(searchText) ||
                         log.RootImageRecord.metadataJSON.toLowerCase().includes(searchText)
                     );
                 }));
@@ -232,7 +232,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
             }}
         >
             <LogCell
-                src={PrependJpegString(item.ImageRecord.base64Data)}
+                src={PrependJpegString(item.HeadImageRecord.base64Data)}
                 // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
                 // don't pass an image
                 item={item}
@@ -279,7 +279,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                 data={section.data}
                 removeClippedSubviews={true}
                 extraData={this.state.rerenderSelectedCells}
-                keyExtractor={((item1, index) => item1.Log.currentDataMultiHash + index)}
+                keyExtractor={((item1, index) => item1.RootLog.currentDataMultiHash + index)}
                 renderItem={this._renderItem}
                 />
         </View>
@@ -314,7 +314,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                     }
                     //@ts-ignore
                     renderItem={this._renderList}
-                    keyExtractor={(item, index) => item.Log.currentDataMultiHash + index}
+                    keyExtractor={(item, index) => item.RootLog.currentDataMultiHash + index}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}

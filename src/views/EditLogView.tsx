@@ -42,14 +42,15 @@ export default class EditLogView extends React.Component<Props, State> {
 
             for (const log of this.props.logbookStateKeeper.CurrentSelectedLogs) {
 
+
                 // TODO: let's get new gps coords so we know were the user edited the data
                 // // TODO: allow user to change logbook
                 // const trueImageRecord = Object.setPrototypeOf(log.ImageRecord, ImageRecord.prototype);
-                const newBase64Data = ImageRecord.GetEditedJpeg(log.ImageRecord.base64Data, this.state.newImageDescription).
+                const newBase64Data = ImageRecord.GetEditedJpeg(log.HeadImageRecord.base64Data, this.state.newImageDescription).
                 slice("data:image/jpeg;base64,".length);
 
                 const newHash = HashManager.GetHashSync(newBase64Data);
-                if (newHash == log.ImageRecord.currentMultiHash) {
+                if (newHash == log.HeadImageRecord.currentMultiHash) {
                     console.log("data is unchanged");
                     continue;
                 }
@@ -95,7 +96,7 @@ export default class EditLogView extends React.Component<Props, State> {
         let currentDescription = `Enter new description for the ${logs.length} images`;
         if (logs.length==1){
             // add one log specific UI here
-            const description =  ImageRecord.GetExtraImageInformation(logs[0].ImageRecord);
+            const description =  ImageRecord.GetExtraImageInformation(logs[0].HeadImageRecord);
             currentDescription =description ? description.Description: "none";
             // console.log("only one image's description: ", currentDescription);
         }
@@ -123,17 +124,18 @@ export default class EditLogView extends React.Component<Props, State> {
             <ScrollView>
                 {logs.length==1 ?
                     <Image
-                        source={{uri: `data:image/jpeg;base64,${logs[0].ImageRecord.base64Data}`}}
+                        source={{uri: `data:image/jpeg;base64,${logs[0].HeadImageRecord.base64Data}`}}
                         resizeMethod={"resize"}
                         style={styles.image}
                     />
                 :
+                    // show the images from left to right, overlapping them if there's too many
                     <View style={{flex:1,flexDirection:"row", height:300,  justifyContent:"flex-start"}}>
                         {logs.map((log)=>{
                             return (<Image
-                                source={{uri: `data:image/jpeg;base64,${log.ImageRecord.base64Data}`}}
+                                source={{uri: `data:image/jpeg;base64,${log.HeadImageRecord.base64Data}`}}
                                 resizeMethod={"resize"}
-                                key={log.Log.currentDataMultiHash}
+                                key={log.HeadLog.currentDataMultiHash}
                                 style={{width:this.getWidth(logs.length),
                                     marginHorizontal:this.getMargin(logs.length),
                                     resizeMode:"contain",

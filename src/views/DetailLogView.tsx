@@ -1,5 +1,5 @@
 import React from "react";
-import {Text, StyleSheet, Image, ScrollView} from "react-native";
+import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
 import {ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
 import {LoadingSpinner, PrependJpegString, waitMS} from "../shared/Constants";
 import {ListItem} from "react-native-elements";
@@ -15,23 +15,20 @@ type Props={
     identity:Identity
 }
 type State={
-    currentLogEntryInformation:JSX.Element[];
-    rootLogEntryInformation:JSX.Element[];
-    showRootInfo:boolean;
-    showCurrentInfo:boolean;
-    currentLog:LogbookEntry;
+    // currentLogEntryInformation:JSX.Element[];
+    currentLogBookEntry:LogbookEntry;
     previousLogbookHash:string;
     loading:boolean;
+    showInfo:boolean[];
 }
 
 export default class DetailLogView extends React.Component<Props, State> {
 
     state={
-        showRootInfo:false,
-        showCurrentInfo:true,
-        currentLogEntryInformation:new Array<JSX.Element>(),
-        rootLogEntryInformation:new Array<JSX.Element>(),
-        currentLog:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
+        showInfo:new Array(100).fill(false),
+        // currentLogEntryInformation:new Array<JSX.Element>(),
+        // rootLogEntryInformation:new Array<JSX.Element>(),
+        currentLogBookEntry:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
         previousLogbookHash:"",
         loading:true,
     };
@@ -44,10 +41,10 @@ export default class DetailLogView extends React.Component<Props, State> {
                 log.currentTransactionHash!= "")
     }
 
-    parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): Array<JSX.Element>{
+    parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): JSX.Element{
         let details = new Array<JSX.Element>();
         let metadataObj:{[key:string]:string} = {};
-        let logAndImageRecordMatch = true;
+        let logAndImageRecordMatch = false;
 
         if (imageRecord){
             const imageMetadata = JSON.parse(imageRecord.metadataJSON);
@@ -55,10 +52,10 @@ export default class DetailLogView extends React.Component<Props, State> {
             if (this.imageRecordHasBeenLogged(log,imageRecord)) {
                 metadataObj["Log Status"] = "Logged";
                 metadataObj["File Name"] = imageRecord.filename;
+                logAndImageRecordMatch = true;
             }
             else {
                 metadataObj["Log Status"] = "Not Yet Logged";
-                logAndImageRecordMatch = false;
             }
 
             // we add all metadata except the above parsed stuff
@@ -80,7 +77,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                     log.encryptedMetadataJson,
                     this.props.identity.PrivatePGPKey).JsonData());
 
-                console.log("encryptedMetadata",encryptedMetadata);
+                // console.log("encryptedMetadata",encryptedMetadata);
 
                 if (!encryptedMetadata){
                     metadataObj["On-Chain Encrypted Metadata"] = "Unable to Decrypt";
@@ -110,23 +107,23 @@ export default class DetailLogView extends React.Component<Props, State> {
         {
             details.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataObj[key]}</Text>);
         });
-        return details;
+        return <View>{details}</View>;
     }
 
 
     async loadMetadata(){
         await waitMS(1);
-        const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLog.Log, this.state.currentLog.ImageRecord);
-        // I might have a
-        let canShowRootInfo = this.state.currentLog.RootLog.currentDataMultiHash != "" &&
-            this.state.currentLog.Log.currentDataMultiHash != this.state.currentLog.RootLog.currentDataMultiHash;
-        let rootInfo = new Array<JSX.Element>();
-        if (canShowRootInfo){
-            rootInfo = this.parseAndDisplayMetadata(this.state.currentLog.RootLog, this.state.currentLog.RootImageRecord)
-        }
+        // const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLog.Log, this.state.currentLog.ImageRecord);
+        // // I might have a
+        // let canShowRootInfo = this.state.currentLog.RootLog.currentDataMultiHash != "" &&
+        //     this.state.currentLog.Log.currentDataMultiHash != this.state.currentLog.RootLog.currentDataMultiHash;
+        // let rootInfo = new Array<JSX.Element>();
+        // if (canShowRootInfo){
+        //     rootInfo = this.parseAndDisplayMetadata(this.state.currentLog.RootLog, this.state.currentLog.RootImageRecord)
+        // }
         this.setState({
-            currentLogEntryInformation:currentLogbookInfo,
-            rootLogEntryInformation:rootInfo,
+            // currentLogEntryInformation:currentLogbookInfo,
+            // rootLogEntryInformation:rootInfo,
             loading:false
         })
     }
@@ -135,11 +132,11 @@ export default class DetailLogView extends React.Component<Props, State> {
   componentDidMount(): void {
 
 
-      if (this.state.currentLog.Log.currentDataMultiHash != this.state.previousLogbookHash
+      if (this.state.currentLogBookEntry.HeadLog.currentDataMultiHash != this.state.previousLogbookHash
       ) {
           this.setState({
-              currentLog: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
-              previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].Log.currentDataMultiHash,
+              currentLogBookEntry: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
+              previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].HeadLog.currentDataMultiHash,
               loading:true
               },
               this.loadMetadata);
@@ -147,49 +144,44 @@ export default class DetailLogView extends React.Component<Props, State> {
   }
 
     render() {
+
         return (
               this.state.loading ?
                   LoadingSpinner
                   :
             <ScrollView>
-                {this.state.currentLog.ImageRecord ?
+                {this.state.currentLogBookEntry.HeadImageRecord ?
                     <Image
-                        source={{uri: PrependJpegString(this.state.currentLog.ImageRecord.base64Data)}}
+                        source={{uri: PrependJpegString(this.state.currentLogBookEntry.HeadImageRecord.base64Data)}}
                         resizeMethod={"resize"}
                         style={styles.image}
                     />
                     :
                     <></>
                 }
-                <ListItem
-                    onPress={()=>this.setState({showCurrentInfo:!this.state.showCurrentInfo})}
-                    title={"Most Recent Log Metadata"}
-                    containerStyle={styles.title}
-                    chevron={this.state.showCurrentInfo ?
-                        <Icon name={"chevron-down"} size={20} color={"black"}/>
-                        :
-                        <Icon name={"chevron-right"} size={20} color={"black"}/>
-                    }
-                >
-                </ListItem>
-                {this.state.showCurrentInfo ?  this.state.currentLogEntryInformation : <></>}
+                {this.state.currentLogBookEntry.RevisionsInOrder.map((node, index)=>{
+                    return (<ListItem
+                        onPress={()=>{
+                            let prevInfo = this.state.showInfo;
+                            prevInfo[index] = !prevInfo[index];
+                            this.setState({showInfo:prevInfo})
+                        }}
+                        title={"Most Recent Log Metadata"}
+                        containerStyle={styles.title}
+                        chevron={this.state.showInfo[index] ?
+                            <Icon name={"chevron-down"} size={20} color={"black"}/>
+                            :
+                            <Icon name={"chevron-right"} size={20} color={"black"}/>
+                        }
+                        subtitle={this.state.showInfo[index] ?
+                            this.parseAndDisplayMetadata(node.log, node.imageRecordIsBlank ? null : node.imageRecord)
+                            : <></>}
+                        >
 
-                { this.state.rootLogEntryInformation.length>1 ?
-                <ListItem
-                    onPress={()=>this.setState({showRootInfo:!this.state.showRootInfo})}
-                    title={"Original Log Metadata"}
-                    containerStyle={styles.title}
-                    chevron={this.state.showRootInfo ?
-                      <Icon name={"chevron-down"} size={20} color={"black"}/>
-                          :
-                      <Icon name={"chevron-right"} size={20} color={"black"}/>
-                    }
-                >
-                </ListItem>
-                    :
-                    <></>
+                        </ListItem>
+                            )})
                 }
-                {this.state.showRootInfo ? this.state.rootLogEntryInformation:<></>}
+
             </ScrollView>
 
         );

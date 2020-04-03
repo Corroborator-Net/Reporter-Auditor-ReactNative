@@ -41,8 +41,8 @@ export class LogManager{
 
         let editedLogsToUpload = new Array<Log>();
         for (const entry of logbookEntries){
-            const record = entry.ImageRecord;
-            const oldLog = entry.Log;
+            const record = entry.HeadImageRecord;
+            const oldLog = entry.HeadLog;
             if (record.currentMultiHash == oldLog.currentDataMultiHash && oldLog.currentTransactionHash!= ""){
                 console.log("skipping log upload as hash hasn't changed and the log has a transaction hash");
                 continue;
@@ -76,7 +76,7 @@ export class LogManager{
                 record.currentMultiHash,
                 logMetadata.JsonData(),
                 this.didModule.PublicPGPKey,
-                null, null
+                (new Date().getTime() / 1000)
                 );
             editedLogsToUpload.push(newLog);
         }
@@ -126,7 +126,8 @@ export class LogManager{
             hashData.currentMultiHash,
             logMetadata.JsonData(),
             this.didModule.PublicPGPKey,
-            null, null
+            (new Date().getTime() / 1000)
+
         );
 
         // log the data after if/we get signatures

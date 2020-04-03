@@ -77,7 +77,6 @@ export class AtraManager implements BlockchainInterface {
                 hash,
                 encryptedMetadata,
                 loggingKey,
-                null,
                 blockNumber
             );
 
