@@ -64,134 +64,15 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     }
 
     async showUploadPrompt(){
+        let selectedImages;
         if (isMobile){
             try {
-                const selectedImages = await DocumentPicker.pickMultiple({
+                selectedImages = await DocumentPicker.pickMultiple({
                     type: [DocumentPicker.types.images],
                 });
-
-                let index = 0;
-                let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
-                let allOnChainLogsInUserUploadedLogTreeByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
-                // add unfound section
-                const unfoundKey = "Not Found";
-                const noLogbookKey = "No Logbook in metadata";
-                allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
-                for (const res of selectedImages) {
-                    RNFetchBlob.fs.readFile(res.uri, 'base64')
-                        .then(async (data) => {
-                            // load jpeg - this could be from local file system or the cloud
-                            const uploadedImageHash = HashManager.GetHashSync(data);
-
-                            const imageRecord = new ImageRecord(
-                                new Date(),
-                                res.uri,
-                                "",
-                                uploadedImageHash,
-                                data,
-                            );
-
-                            // look in the image's metadata for a logbook id
-                            const imageInformation = ImageRecord.GetExtraImageInformation(imageRecord);
-                            const logbookAddress = imageInformation? imageInformation.LogbookAddress : noLogbookKey;
-                            let matchingLogs:Log[] = [];
-
-                            WebLogbookAndImageManager.Instance.addImageRecordAtHash(imageRecord, uploadedImageHash);
-                            // let's fill logbook address with logs to check if the uploaded logs are present on chain
-                            if (imageInformation){
-                                console.log("filling logbooks with logs from blockchain!");
-                                try {
-                                    if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
-                                        logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
-                                            await this.props.blockchainInterface.getRecordsFor(logbookAddress);
-                                    }
-                                }
-                                catch (e) {
-                                    Alert.alert(
-                                        'Server Error - Try Again', e+"", [{text: 'OK'},],
-                                        { cancelable: false }
-                                    );
-                                    return;
-                                }
-                                // console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
-                                matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
-                                filter((log)=> log.currentDataMultiHash == uploadedImageHash);
-
-                            }
-
-                            // no matching logs on chain
-                            if (matchingLogs.length==0){
-                                const missingLog = new Log(logbookAddress,
-                                    "",
-                                    "",
-                                    "",
-                                    uploadedImageHash,
-                                    uploadedImageHash,
-                                    "",
-                                    "",
-                                    null,
-                                    null
-                                    );
-                                let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey];
-                                newLogs.push(missingLog);
-                                allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = newLogs;
-                                console.log("NO matching log on the blockchain", allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey]);
-                            }
-                            else{
-                                // For any log in the tree, get all logs in the tree so the tree can be constructed later
-                                const [allLogsInLogTree, originalLog] = Log.GetAllLogsInTreeFromAnyLogInTree(matchingLogs,
-                                        logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]);
-
-                                // update the root multihash with a trunk log's hash
-                                imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
-                                // console.log("all logs in tree",JSON.stringify(allLogsInLogTree, null, 2) );
-
-                                WebLogbookAndImageManager.Instance.updateImageRecordAtHash(
-                                    imageRecord,
-                                    originalLog.rootDataMultiHash);
-
-                                if (!allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]) {
-                                    allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allLogsInLogTree;
-                                }
-                                else{
-                                    allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]
-                                        .concat(allLogsInLogTree);
-                                }
-
-                                // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
-                                // const pubKey = Object.keys(metadata)[0];
-                                // console.log("first item in metadata:",pubKey);
-                                // if (this.props.identity.PublicPGPKey != )
-
-                                // corroborate the log on the chain
-                                // const newHashToLog:HashData = {
-                                //     currentMultiHash:uploadedImageHash,
-                                //     storageLocation:"file",
-                                //     metadataJSON:"{}"
-                                // };
-                                //
-                                // LogManager.Instance.OnNewHashProduced(
-                                //     newHashToLog,
-                                //     logbookAddress,
-                                //     false
-                                // );
-                            }
-
-                            index+=1;
-                            // console.log(index, selectedImages.length);
-                            if (index == selectedImages.length){
-                                // console.log("all logs to display:",allLogsByLogbookAddress);
-                                this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
-                            }
-                        });
-
-                }
-
-
-
-
             } catch (err) {
                 if (DocumentPicker.isCancel(err)) {
+                    return
                     // User cancelled the picker, exit any dialogs or menus and move on
                 } else {
                     throw err;
@@ -200,6 +81,129 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         }
         else{
             // TODO: WEB platform: show a drag + drop field or have them enter a logbook address to pull from the chain/atra
+        }
+
+        if (!selectedImages || selectedImages.length==0){
+            console.log("no selected images!");
+            return
+        }
+
+        let index = 0;
+        let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
+        let allOnChainLogsInUserUploadedLogTreeByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
+        // add unfound section
+        const unfoundKey = "Not Found";
+        const noLogbookKey = "No Logbook in metadata";
+        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
+        for (const res of selectedImages) {
+            RNFetchBlob.fs.readFile(res.uri, 'base64')
+                .then(async (data) => {
+                    // load jpeg - this could be from local file system or the cloud
+                    const uploadedImageHash = HashManager.GetHashSync(data);
+
+                    const imageRecord = new ImageRecord(
+                        new Date(),
+                        res.uri,
+                        "",
+                        uploadedImageHash,
+                        data,
+                    );
+
+                    // look in the image's metadata for a logbook id
+                    const imageInformation = ImageRecord.GetExtraImageInformation(imageRecord);
+                    const logbookAddress = imageInformation? imageInformation.LogbookAddress : noLogbookKey;
+                    let matchingLogs:Log[] = [];
+
+                    WebLogbookAndImageManager.Instance.addImageRecordAtHash(imageRecord, uploadedImageHash);
+                    // let's fill logbook address with logs to check if the uploaded logs are present on chain
+                    if (imageInformation){
+                        console.log("filling logbooks with logs from blockchain!");
+                        try {
+                            if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
+                                logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
+                                    await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                            }
+                        }
+                        catch (e) {
+                            Alert.alert(
+                                'Server Error - Try Again', e+"", [{text: 'OK'},],
+                                { cancelable: false }
+                            );
+                            return;
+                        }
+                        // console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
+                        matchingLogs = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].
+                        filter((log)=> log.currentDataMultiHash == uploadedImageHash);
+
+                    }
+
+                    // no matching logs on chain
+                    if (matchingLogs.length==0){
+                        const missingLog = new Log(logbookAddress,
+                            "",
+                            "",
+                            "",
+                            uploadedImageHash,
+                            uploadedImageHash,
+                            "",
+                            "",
+                            null,
+                            null
+                        );
+                        let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey];
+                        newLogs.push(missingLog);
+                        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = newLogs;
+                        console.log("NO matching log on the blockchain", allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey]);
+                    }
+                    else{
+                        // For any log in the tree, get all logs in the tree so the tree can be constructed later
+                        const [allLogsInLogTree, originalLog] = Log.GetAllLogsInTreeFromAnyLogInTree(matchingLogs,
+                            logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]);
+
+                        // update the root multihash with a trunk log's hash
+                        imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
+                        // console.log("all logs in tree",JSON.stringify(allLogsInLogTree, null, 2) );
+
+                        WebLogbookAndImageManager.Instance.updateImageRecordAtHash(
+                            imageRecord,
+                            originalLog.rootDataMultiHash);
+
+                        if (!allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]) {
+                            allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allLogsInLogTree;
+                        }
+                        else{
+                            allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]
+                                .concat(allLogsInLogTree);
+                        }
+
+                        // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
+                        // const pubKey = Object.keys(metadata)[0];
+                        // console.log("first item in metadata:",pubKey);
+                        // if (this.props.identity.PublicPGPKey != )
+
+                        // TODO: enable corroboration as read receipt!
+                        // corroborate the log on the chain
+                        // const newHashToLog:HashData = {
+                        //     currentMultiHash:uploadedImageHash,
+                        //     storageLocation:"file",
+                        //     metadataJSON:"{}"
+                        // };
+                        //
+                        // LogManager.Instance.OnNewHashProduced(
+                        //     newHashToLog,
+                        //     logbookAddress,
+                        //     false
+                        // );
+                    }
+
+                    index+=1;
+                    // console.log(index, selectedImages.length);
+                    if (index == selectedImages.length){
+                        // console.log("all logs to display:",allLogsByLogbookAddress);
+                        this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
+                    }
+                });
+
         }
     }
 
