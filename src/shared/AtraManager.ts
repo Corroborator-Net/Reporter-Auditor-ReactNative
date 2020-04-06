@@ -2,11 +2,12 @@ import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Log} from "../interfaces/Data";
 //@ts-ignore
 import {AtraApiKey, EtherScanApiKey} from 'react-native-dotenv'
-import {makeID} from "./Constants";
+import {makeID, prettyPrint} from "./Constants";
 
 export class AtraManager implements BlockchainInterface {
 
     readonly emptyPlaceholder="null";
+    approximateBlockMultiplier:number|null = null;
 
 
 
@@ -26,32 +27,37 @@ export class AtraManager implements BlockchainInterface {
         // start at the end of the list
         for (i = liveRecords.length - 1; i >= 0; i--) {
             const atraResponse = (liveRecords[i]);
+            // prettyPrint("resp:", atraResponse);
             const record = atraResponse["record"];
             const recordID = atraResponse["atraRecordId"];
 
-            const blockNumber = liveRecords[i]["event"]["blockNumber"];
+            let blockNumber = liveRecords[i]["event"]["blockNumber"];
 
-            // TODO: if you want the block times, you have to request them at less than 5/second
-            // const etherscanResponse = await
-            //     fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
-            //     + "&apikey=" + EtherScanApiKey).catch((error)=>
-            //     {
-            //         console.log("ERROR:",etherscanResponse);
-            //         throw new Error("Getting blocktime: " + error)
-            //     });
-            // console.log("etherscan response:",etherscanResponse);
-            // const blockJson = await etherscanResponse.json();
-            // const blockTimeStamp = blockJson["result"]["timeStamp"];
-            // // make the date look like the one stored on chain
-            // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
-            //
-            // let date="";
-            // if (isValidDate(preDate)) {
-            //     date = Log.getFormattedDateString(preDate);
-            // } else {
-            //     date = "Pending..."
-            // }
+            // TODO: get an api that gives us more requests than 5/second so we can calculate each blocktime
+            if(!this.approximateBlockMultiplier) {
+                const etherscanResponse = await
+                    fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
+                        + "&apikey=" + EtherScanApiKey).catch((error) => {
+                        console.log("ERROR:", etherscanResponse);
+                        throw new Error("Getting blocktime: " + error)
+                    });
+                // console.log("etherscan response:", etherscanResponse);
+                const blockJson = await etherscanResponse.json();
+                const blockTimeStamp = blockJson["result"]["timeStamp"];
+                // make the date look like the one stored on chain
+                // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
+                this.approximateBlockMultiplier = (parseInt(blockTimeStamp)*1000) / blockNumber;
+                //
+                // let date="";
+                // if (isValidDate(preDate)) {
+                //     date = Log.getFormattedDateString(preDate);
+                // } else {
+                //     date = "Pending..."
+                // }
 
+            }
+            blockNumber = parseInt(blockNumber) * this.approximateBlockMultiplier;
+            // console.log("new blocktime:", blockNumber)
             // const str = JSON.stringify(atraResponse, null, 2); // spacing level = 2
             // console.log("record from the chain:",str);
             // console.log("recordid from the chain:",recordID);

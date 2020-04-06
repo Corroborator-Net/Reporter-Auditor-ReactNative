@@ -1,12 +1,12 @@
 import {LogbookEntry} from "../interfaces/Data";
-import {CorroborateLogsViewNameAndID, UserPreferenceKeys} from "./Constants";
+import {CorroborateLogsViewNameAndID, prettyPrint, UserPreferenceKeys} from "./Constants";
 import {LogbookDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {LogbookAndSection} from "../interfaces/Data";
+import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 
 
 
 export default class LogbookStateKeeper {
-
 
     public LogsToCorroborate:LogbookAndSection[] = [];
     public CurrentSelectedLogs:LogbookEntry[]=[];
@@ -14,7 +14,8 @@ export default class LogbookStateKeeper {
     private _CurrentLogbookID:string = "";
 
     constructor(public userPreferences:UserPreferenceStorage,
-                public logbookStorage:LogbookDatabase) {
+                public logbookStorage:LogbookDatabase,
+                public blockchainInterface:BlockchainInterface) {
     }
 
 
@@ -47,10 +48,20 @@ export default class LogbookStateKeeper {
         if (this._CurrentLogbookID == CorroborateLogsViewNameAndID){
             return this.LogsToCorroborate
         }
+        let localLogs = await this.logbookStorage.getRecordsFor(this._CurrentLogbookID);
+
+        // if any of the local logs and bchain logs share the current transaction hash, they're the same entry
+        let uniqueLogsOnChain = (await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID)).filter((log)=>{
+            return localLogs.findIndex((localLog)=>{
+               return localLog.currentTransactionHash == log.currentTransactionHash
+            })<0
+        });
+
+        // prettyPrint("uniquelogs:", uniqueLogsOnChain);
 
         return [{
             title: this._CurrentLogbookID,
-            logs: await this.logbookStorage.getRecordsFor(this._CurrentLogbookID)
+            logs:localLogs.concat(uniqueLogsOnChain)
         }];
 
     }

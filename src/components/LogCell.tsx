@@ -1,24 +1,44 @@
-import {Log, LogbookEntry} from "../interfaces/Data";
+import { LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
-import {ImageBackground, StyleSheet, View} from "react-native";
-import {CorroboratedUnsynced, LocalOnly, Synced} from "../shared/Constants";
+import {ImageBackground, StyleSheet, TouchableOpacity, View} from "react-native";
+import {CorroboratedUnsynced, Synced} from "../shared/Constants";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 type CellProps = {
     src: string;
     item:LogbookEntry;
-    navigation:any;
-    onSelectedOverlay:HTMLElement
+    onSelectLog:any,
+    beginSelectingMultiple:any
+    selectingMultiple:boolean
 }
 
 type CellState = {
+    selected:boolean
 }
 
 export default class LogCell extends React.PureComponent<CellProps,CellState> {
 
+    state={
+        selected:false
+    };
+
     render(){
         const shouldShowImage =  this.props.src.length > 50;
+
         return (
+            <TouchableOpacity
+                onPress={() => {
+                    this.props.onSelectLog(this.props.item);
+                    if (this.props.selectingMultiple){
+                        this.setState({selected:!this.state.selected})
+                    }
+                }}
+                onLongPress={() => {
+                    this.props.beginSelectingMultiple(this.props.item);
+                    this.setState({selected:this.props.selectingMultiple})
+                }}
+            >
             <View
                 style={{
                     backgroundColor: this.getColorForLog(this.props.item),
@@ -37,7 +57,45 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
                         resizeMethod={"resize"}
                         style={styles.image}
                     >
-                        {this.props.onSelectedOverlay}
+                        {/*TODO: check if selecting multiple has changed, if so set our state.selected to false*/}
+                        {this.props.selectingMultiple ?
+                             this.state.selected ?
+
+                            <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
+                                margin: 5,
+                                width: 30,
+                                backgroundColor: "white",
+                                borderRadius: 50,
+                            }}/>
+                            :
+                            <Icon name={"checkbox-blank-circle-outline"} size={30} color={"black"} style={{
+                                margin: 5,
+                                width: 30,
+                                backgroundColor: "white",
+                                borderRadius: 50,
+                            }}/>
+                            : <></>
+                        }
+                        {/* check if head log is corroborated*/}
+                        {this.props.item.OrderedRevisionsStartingAtHead[0].corroboratingLogs.length>0 ?
+
+                            <Icon name={"cloud-outline"} size={19.5} color={"black"} style={{
+                                width: 20,
+                                backgroundColor: "white",
+                                borderRadius: 5,
+                                right:5,
+                                bottom:5,
+                                position:"absolute",
+                            }}/>
+                            :
+                            <Icon name={"cloud-off-outline"} size={19.5} color={"black"} style={{
+                                width: 20,
+                                backgroundColor: "white",
+                                borderRadius: 5,
+                                right:5,
+                                bottom:5,
+                                position:"absolute",
+                            }}/>}
                     </ImageBackground>
                     :
                     <></>
@@ -50,21 +108,15 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
                         :
                         <Text>
                             {
-                                // TODO: see note in single logbook view about showing blocktimes instead of decrypting all logs' metadata
-                                // decrypt the log metadata and show the user the date tag if no image is available
-                                // new LogMetadata(
-                                // null,
-                                // null,
-                                // null,
-                                // this.props.item.Log.encryptedMetadataJson,
-                                // [ReporterPEMKey.publicKey],
-                                // ReporterPEMKey.privateKey).
-                                // pubKeysToAESKeysToJSONDataMap[ReporterPEMKey.publicKey][LogMetadata.DateTag]
+                                "Log @ " +
+                                this.props.item.HeadLog.blockTimeOrLocalTimeOrBlockNumber
                             }
                         </Text>
 
                     }
             </View>
+            </TouchableOpacity>
+
         );
     }
 

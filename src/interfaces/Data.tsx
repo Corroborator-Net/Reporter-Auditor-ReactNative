@@ -2,6 +2,7 @@
 import {piexif} from "piexifjs";
 import {LogMetadata} from "../shared/LogMetadata";
 import _ from "lodash";
+import {prettyPrint} from "../shared/Constants";
 
 
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
@@ -131,20 +132,28 @@ export class RevisionNode {
 
 export class LogbookEntry{
 
+
     public OrderedRevisionsStartingAtHead:RevisionNode[]=[];
     private MostRecentEditedRecord:ImageRecord|null = null;
+    private OwnersKey:string;
 
     getCorroboratingLogs(log:Log,logs:Log[]):Log[]{
-        return logs.filter((potentialCorroboratingLog)=>
+        const corroboratingLogs = logs.filter((potentialCorroboratingLog)=>
             // a corroborating log has its root and current multihash equal to each other
             potentialCorroboratingLog.rootDataMultiHash == potentialCorroboratingLog.currentDataMultiHash
             // and they both equal the log's current hash
-            && potentialCorroboratingLog.currentDataMultiHash == log.currentDataMultiHash)
+            && potentialCorroboratingLog.currentDataMultiHash == log.currentDataMultiHash
+            // TODO: check to make sure the signed hash matches the logging public key
+            && potentialCorroboratingLog.loggingPublicKey != this.OwnersKey);
+
+        // prettyPrint("corroborating logs found!:", corroboratingLogs);
+        return corroboratingLogs;
     }
 
 
     getTrunkLogsInOrder(rootLog:Log, logs:Log[]):Log[]{
-        return (logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash)
+        return (logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash
+            && log.loggingPublicKey == rootLog.loggingPublicKey)
             .sort((log1, log2)=>{
             return log1.blockTimeOrLocalTimeOrBlockNumber - log2.blockTimeOrLocalTimeOrBlockNumber}));
     }
@@ -165,50 +174,51 @@ export class LogbookEntry{
     }
 
 
-    //TODO: pick out the edited image so we can keep it around, as of now it's not being found b/c
-    // it doesn't belong to a log.
-    constructor(private rootLog:Log, logs:Log[], private imageRecordsWithMatchingRootHash:ImageRecord[]) {
+    // TODO traverse the allLogsInSameLogbook in O(n) by using a hash map in a for loop
+    constructor(private rootLog:Log, allLogsInSameLogbook:Log[], private imageRecordsWithMatchingRootHash:ImageRecord[]) {
         // this.logs = _.filter(logs,(log) =>
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
-        this.imageRecordsWithMatchingRootHash = imageRecordsWithMatchingRootHash.slice();
 
-        if (this.imageRecordsWithMatchingRootHash.length==0){
+        this.OwnersKey = rootLog.loggingPublicKey;
+
+        if (!imageRecordsWithMatchingRootHash || imageRecordsWithMatchingRootHash.length==0){
             console.log("WARNING: you didn't give me any image records")
         }
+        this.imageRecordsWithMatchingRootHash = imageRecordsWithMatchingRootHash.slice();
 
         // get all logs that have the same root hash
-        let trunkLogs = this.getTrunkLogsInOrder(rootLog, logs);
+        let trunkLogs = this.getTrunkLogsInOrder(rootLog, allLogsInSameLogbook);
 
         // pop each image record as we go, the only image records left should be those without a log.
         // order them by most recent and the most recent will be the most recent version of the edited log
 
-        const imageRecordsToEdit = imageRecordsWithMatchingRootHash.slice();
+        const imageRecordsArrayToEdit = imageRecordsWithMatchingRootHash.slice();
         for (const trunkLog of trunkLogs){
-            const indexOfRecord = imageRecordsToEdit
+            const indexOfRecord = imageRecordsArrayToEdit
                 .findIndex(imageRecord=>imageRecord.currentMultiHash == trunkLog.currentDataMultiHash);
+
             let imageRecord:ImageRecord|null = null;
             if (indexOfRecord>-1){
-                imageRecord = imageRecordsToEdit.splice(indexOfRecord,1)[0];
+                imageRecord = imageRecordsArrayToEdit.splice(indexOfRecord,1)[0];
             }
 
             this.OrderedRevisionsStartingAtHead.unshift(new RevisionNode(
                 trunkLog,
-                this.getCorroboratingLogs(trunkLog,logs),
+                this.getCorroboratingLogs(trunkLog,allLogsInSameLogbook),
                 imageRecord
             ))
         }
-        if (imageRecordsToEdit.length>0){
-            console.log("WE HAVE EXTRA IMAGE RECORDS! let's handle the mid edit records", imageRecordsToEdit.length);
-            this.MostRecentEditedRecord = imageRecordsToEdit.sort((record1,record2)=>{
+        if (imageRecordsArrayToEdit.length>0){
+            console.log("WE HAVE EXTRA IMAGE RECORDS! let's handle the mid edit records", imageRecordsArrayToEdit.length);
+            this.MostRecentEditedRecord = imageRecordsArrayToEdit.sort((record1,record2)=>{
                 return record1.timestamp.getTime() - record2.timestamp.getTime()
-            })[imageRecordsToEdit.length-1];
+            })[imageRecordsArrayToEdit.length-1];
         }
 
     }
 
 
     get RootLog():Log{
-        // console.log("root log hash: ", this.rootLog.dataMultiHash);
         return this.rootLog;
     }
 
@@ -280,7 +290,18 @@ export class Log {
 
     // TODO: what if the files have the same block number?
     static GetEarliestLogViaBlockNumber(logs:Log[]):Log{
-        return logs.reduce(function(prev, curr) {
+        // eliminate logs with just blocktimes
+        // const logsWithLocalTimes = (logs.filter(log=>log.blockTimeOrLocalTimeOrBlockNumber > timeNearLaunch));
+        // const containsMixOfBlockTimesAndLocalTimes = logsWithLocalTimes.length < logs.length
+        //                                              && logsWithLocalTimes.length > 0;
+        // if (containsMixOfBlockTimesAndLocalTimes){
+        //     // just use the local times
+        //     return logs.reduce(function(prev, curr) {
+        //             return prev.blockTimeOrLocalTimeOrBlockNumber < curr.blockTimeOrLocalTimeOrBlockNumber ? prev : curr;
+        //         });
+        // }
+        // return logs.filter(log=>log.blockTimeOrLocalTimeOrBlockNumber>timeNearLaunch)
+            return logs.reduce(function(prev, curr) {
             return prev.blockTimeOrLocalTimeOrBlockNumber < curr.blockTimeOrLocalTimeOrBlockNumber ? prev : curr;
         });
     }

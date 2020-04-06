@@ -5,7 +5,7 @@ import {
     RefreshControl,
     SafeAreaView, ScrollView, SectionList,
     StyleSheet,
-    TouchableOpacity, View
+    View
 } from "react-native";
 import {ImageDatabase} from "../interfaces/Storage";
 import {Log, LogbookEntry} from "../interfaces/Data";
@@ -33,9 +33,10 @@ type State={
     currentPage:number
     showingOptionsButton:boolean
     searchText:string
+
 }
 
-type LogbookViewProps={
+type Props={
     logbookStateKeeper:LogbookStateKeeper;
     imageSource:ImageDatabase;
     navigation: any;
@@ -47,7 +48,7 @@ type LogbookEntryAndSection={
     data:LogbookEntry[]
 }
 
-export default class SingleLogbookView extends React.PureComponent<LogbookViewProps, State> {
+export default class SingleLogbookView extends React.PureComponent<Props, State> {
 
     readonly LogsPerPage = 20;
     readonly LogSize = 120;
@@ -138,6 +139,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbookID;
         this.setState({
+            selectingMultiple:false,
             refreshing:true,
             currentlySelectedLogs:[]
         });
@@ -153,14 +155,13 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
         let logsSectionedByDateAndLogbook:{[dateAndLogbook:string]:LogbookEntry[]} = {};
         for (const logsByLogbook of logbooksInSectionsWithLogs){
 
-            // TODO: get rootlogs? more like make a DAG get image records via the DAG
             let rootLogs = Log.GetRootLogsByFirstLoggedPublicKey(logsByLogbook.logs);
              // console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
 
             for (const log of rootLogs){
                 // Get all records with the same root hash
                 const imageRecords = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.currentDataMultiHash);
-                // console.log("imagerecords:", imageRecords);
+                // console.log("imagerecords:", imageRecords.length);
                 const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
                 const date = logbookEntry.RootImageRecord.timestamp.toDateString();
                 const logbookTitle = date + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));
@@ -182,6 +183,8 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
                 data:logsSectionedByDateAndLogbook[key],
             })
         });
+
+
 
 
 
@@ -218,48 +221,18 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     }
 
 
-
+// select multiple is passed upon every longpress
 
     _renderItem = ({ item }: { item: LogbookEntry }) =>(
-        //TODO: to improve UX for selecting multiple logs, move all code into a pure component that
-        // passes whether it should display the check or circle or no icon. It shouldn't have to check state
-        <TouchableOpacity
-            onPress={() => {
-                this.onSelectLog(item)
-            }}
-            onLongPress={() => {
-                this.beginSelectingMultiple(item)
-            }}
-        >
             <LogCell
+                beginSelectingMultiple={()=>this.beginSelectingMultiple(item)}
+                onSelectLog={()=>this.onSelectLog(item)}
+                selectingMultiple={this.state.selectingMultiple}
                 src={PrependJpegString(item.HeadImageRecord.base64Data)}
-                // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
-                // don't pass an image
+                // {"data:image/jpeg;base64,"}
+                // to test local-only storage on auditor side, don't pass an image
                 item={item}
-
-                navigation={this.props.navigation}
-                onSelectedOverlay={
-                    this.state.selectingMultiple ?
-                        // we're in select multiple mode, show blank or checked circles
-                        _.includes(this.state.currentlySelectedLogs, item) ?
-                            <Icon name={"check-circle-outline"} size={30} color={"black"} style={{
-                                margin: 5,
-                                width: 30,
-                                backgroundColor: "white",
-                                borderRadius: 50,
-                            }}/>
-                            :
-                            <Icon name={"checkbox-blank-circle-outline"} size={30} color={"black"} style={{
-                                margin: 5,
-                                width: 30,
-                                backgroundColor: "white",
-                                borderRadius: 50,
-                            }}/>
-                        // we're not in select multiple mode
-                        : <></>
-                }
             />
-        </TouchableOpacity>
     )
 
     //@ts-ignore - we set the height of item is fixed
@@ -286,8 +259,6 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
     );
 
 
-    //TODO: for the auditor side we should be loading logs' block times so we don't have to decrypt each metadata entry
-    // during LogCell instantiation and instead of the showing the decrypted timestamp just show the blocktime
     render() {
         return (
             <SafeAreaView style={styles.container}>

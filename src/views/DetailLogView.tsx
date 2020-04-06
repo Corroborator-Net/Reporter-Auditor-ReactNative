@@ -41,7 +41,8 @@ export default class DetailLogView extends React.Component<Props, State> {
                 log.currentTransactionHash!= "")
     }
 
-    parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): JSX.Element{
+    // TODO: show number of times corroborated
+    parseAndDisplayMetadata(log:Log, corroboratedTimes:number, imageRecord:ImageRecord|null): JSX.Element{
         let details = new Array<JSX.Element>();
         let metadataObj:{[key:string]:string} = {};
         let imageRecordHasBeenLogged = false;
@@ -170,13 +171,20 @@ export default class DetailLogView extends React.Component<Props, State> {
                         title={index==this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length-1 ? "Root Log Metadata":
                         index == 0 ? "Most Recent Log Metadata" : "Log @ " + node.log.blockTimeOrLocalTimeOrBlockNumber}
                         containerStyle={styles.title}
+                        badge={{
+                            value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}
+                        }}
                         chevron={this.state.showInfo[index] ?
                             <Icon name={"chevron-down"} size={20} color={"black"}/>
                             :
                             <Icon name={"chevron-right"} size={20} color={"black"}/>
                         }
                         subtitle={this.state.showInfo[index] ?
-                            this.parseAndDisplayMetadata(node.log, node.imageRecordIsBlank ? null : node.imageRecord)
+                            this.parseAndDisplayMetadata(
+                                node.log,
+                                node.corroboratingLogs.length,
+                                node.imageRecordIsBlank ? null : node.imageRecord
+                            )
                             : <></>}
                         >
 

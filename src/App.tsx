@@ -61,7 +61,8 @@ class App extends PureComponent{
     //@ts-ignore // TODO: implement user prefs for web
     logbookStateKeeper = new LogbookStateKeeper(
         isMobile ? this.userPreferences : null,
-        isMobile ? this.storage : this.blockchainManager );
+        isMobile ? this.storage : this.blockchainManager ,
+                      this.blockchainManager);
 
     peerCorroborators = new Mesh();
     imageStorage = new NativeImageStorage();

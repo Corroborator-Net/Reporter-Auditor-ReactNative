@@ -175,21 +175,21 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                         // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
                         // const pubKey = Object.keys(metadata)[0];
                         // console.log("first item in metadata:",pubKey);
-                        // if (this.props.identity.PublicPGPKey != )
+                        // if (this.props.identity.PublicPGPKey !=  )
 
                         // TODO: enable corroboration as read receipt!
                         // corroborate the log on the chain
-                        // const newHashToLog:HashData = {
-                        //     currentMultiHash:uploadedImageHash,
-                        //     storageLocation:"file",
-                        //     metadataJSON:"{}"
-                        // };
-                        //
-                        // LogManager.Instance.OnNewHashProduced(
-                        //     newHashToLog,
-                        //     logbookAddress,
-                        //     false
-                        // );
+                        const newHashToLog:HashData = {
+                            currentMultiHash:uploadedImageHash,
+                            storageLocation:"file",
+                            metadataJSON:"{}"
+                        };
+
+                        LogManager.Instance.OnNewHashProduced(
+                            newHashToLog,
+                            logbookAddress,
+                            false
+                        );
                     }
 
                     index+=1;
