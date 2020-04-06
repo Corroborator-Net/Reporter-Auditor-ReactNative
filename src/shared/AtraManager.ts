@@ -2,7 +2,7 @@ import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Log} from "../interfaces/Data";
 //@ts-ignore
 import {AtraApiKey, EtherScanApiKey} from 'react-native-dotenv'
-import {makeID, prettyPrint} from "./Constants";
+import fetchWithTimeout, {makeID, prettyPrint} from "./Constants";
 
 export class AtraManager implements BlockchainInterface {
 
@@ -15,13 +15,17 @@ export class AtraManager implements BlockchainInterface {
     // what we need somehow
     async getRecordsFor(logBookAddress:string):Promise<Log[]> {
         const logs = new Array<Log>();
-        const resp = await fetch("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
+        const resp = await fetchWithTimeout("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
             headers: {
                 "x-api-key": AtraApiKey
             }}).catch((error)=>{
             throw new Error("Getting logs: " + error)
         });
         const json = await resp.json();
+        if (json["error"]){
+            throw new Error("Getting logs: " + json["error"])
+        }
+
         const liveRecords = json["live"];
         let i;
         // start at the end of the list

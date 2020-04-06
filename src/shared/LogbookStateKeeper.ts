@@ -3,6 +3,7 @@ import {CorroborateLogsViewNameAndID, prettyPrint, UserPreferenceKeys} from "./C
 import {LogbookDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {LogbookAndSection} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
+import {Alert} from "react-native";
 
 
 
@@ -50,19 +51,34 @@ export default class LogbookStateKeeper {
         }
         let localLogs = await this.logbookStorage.getRecordsFor(this._CurrentLogbookID);
 
-        // if any of the local logs and bchain logs share the current transaction hash, they're the same entry
-        let uniqueLogsOnChain = (await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID)).filter((log)=>{
-            return localLogs.findIndex((localLog)=>{
-               return localLog.currentTransactionHash == log.currentTransactionHash
-            })<0
-        });
+
+        try {
+            // if any of the local logs and bchain logs share the current transaction hash, they're the same entry
+            let uniqueLogsOnChain = (await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID)).filter((log)=>{
+                return localLogs.findIndex((localLog)=>{
+                    return localLog.currentTransactionHash == log.currentTransactionHash
+                })<0
+            });
+            return [{
+                title: this._CurrentLogbookID,
+                logs:localLogs.concat(uniqueLogsOnChain)
+            }];
+        }
+        catch (e) {
+            Alert.alert(
+                "Server Error - Couldn't Get Corroborating Logs", e+"", [{text: 'OK'},],
+                { cancelable: false }
+            );
+            return [{
+                title: this._CurrentLogbookID,
+                logs:localLogs
+            }];
+        }
+
 
         // prettyPrint("uniquelogs:", uniqueLogsOnChain);
 
-        return [{
-            title: this._CurrentLogbookID,
-            logs:localLogs.concat(uniqueLogsOnChain)
-        }];
+
 
     }
 

@@ -1,4 +1,4 @@
-import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {ImageDatabase} from "../interfaces/Storage";
 import {ImageRecord} from "../interfaces/Data";
 
 // this is used by the logbook view in the auditor context - pass the auditor this dependency
@@ -9,7 +9,7 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
 
 
      addImageRecordAtRootHash(imageRecord:ImageRecord){
-         console.log("adding image record to hash:", imageRecord.rootMultiHash);
+         // console.log("adding image record to hash:", imageRecord.rootMultiHash);
          // this.CachedRecords[hash] = [imageRecord];
          if (!this.CachedRecords[imageRecord.rootMultiHash]) {
              this.CachedRecords[imageRecord.rootMultiHash] = [imageRecord];
@@ -21,7 +21,7 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
 
      updateImageRecordAtRootHash(imageRecord:ImageRecord){
          // this.CachedRecords[hash] = [imageRecord];
-         console.log("updating record at:", imageRecord.rootMultiHash);
+         // console.log("updating record at:", imageRecord.rootMultiHash);
 
          if (!this.CachedRecords[imageRecord.rootMultiHash]) {
              this.CachedRecords[imageRecord.rootMultiHash] = [imageRecord];
@@ -36,7 +36,7 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
      }
 
     getImageRecordsWithMatchingRootHash(hash: string): Promise<import("../interfaces/Data").ImageRecord[]> {
-        console.log("finding image record with hash:", hash);
+        // console.log("finding image record with hash:", hash);
         // console.log("got imagerecord:",this.CachedRecords[hash][0].rootMultiHash)
         return new Promise<ImageRecord[]> ((resolve, reject) =>  {resolve(this.CachedRecords[hash])});
     }

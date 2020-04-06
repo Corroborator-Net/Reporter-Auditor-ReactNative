@@ -58,8 +58,6 @@ export function GetPathToCameraRoll(fileName:string, original:boolean){
 export const LoadingSpinner =  <Button loading={true} type={"clear"} loadingProps={{size:"large"}} />;
 
 
-
-
 export function makeID(length: number): string {
     let result = '';
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -68,4 +66,14 @@ export function makeID(length: number): string {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
+}
+
+export default function fetchWithTimeout(url:string, options:any, timeout = 10000):Promise<Response> {
+    //@ts-ignore
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Server Request Timeout')), timeout)
+        )
+    ]);
 }

@@ -87,6 +87,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
             console.log("no selected images!");
             return
         }
+        this.setState({
+            refreshingLogs:true
+        });
 
         let index = 0;
         let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
@@ -214,6 +217,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                 logs:allLogsByLogbookAddress[logbook]
             })
         }
+        this.setState({
+            refreshingLogs:false
+        });
 
         this.props.logbookStateKeeper.LogsToCorroborate =  logbooksPerAddress;
         this.props.logbookStateKeeper.CurrentLogbookID = CorroborateLogsViewNameAndID;

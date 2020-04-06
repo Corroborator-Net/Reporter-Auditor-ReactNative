@@ -216,7 +216,7 @@ export class LogbookEntry{
             ))
         }
         if (imageRecordsArrayToEdit.length>0){
-            console.log("WE HAVE EXTRA IMAGE RECORDS! let's handle the mid edit records", imageRecordsArrayToEdit.length);
+            // console.log("WE HAVE EXTRA IMAGE RECORDS! let's handle the mid edit records", imageRecordsArrayToEdit.length);
             this.MostRecentEditedRecord = imageRecordsArrayToEdit.sort((record1,record2)=>{
                 return record1.timestamp.getTime() - record2.timestamp.getTime()
             })[imageRecordsArrayToEdit.length-1];

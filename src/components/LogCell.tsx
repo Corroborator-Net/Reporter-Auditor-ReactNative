@@ -2,7 +2,7 @@ import { LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, TouchableOpacity, View} from "react-native";
-import {CorroboratedUnsynced, Synced} from "../shared/Constants";
+import {CorroboratedUnsynced, prettyPrint, Synced} from "../shared/Constants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 
@@ -18,11 +18,22 @@ type CellState = {
     selected:boolean
 }
 
+
+
+
+
 export default class LogCell extends React.PureComponent<CellProps,CellState> {
 
     state={
         selected:false
     };
+
+    componentDidUpdate(prevProps: Readonly<CellProps>, prevState: Readonly<CellState>, snapshot?: any): void {
+        if (!prevProps.selectingMultiple){
+            this.setState({selected:false})
+        }
+    }
+
 
     render(){
         const shouldShowImage =  this.props.src.length > 50;
