@@ -48,7 +48,7 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
     removeImageRecord(imageRecord: import("../interfaces/Data").ImageRecord): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    updateImageRecordToHead(imageRecord: import("../interfaces/Data").ImageRecord): Promise<string> {
+    addRecordToModifiedAlbumAndUpdateLocation(imageRecord: import("../interfaces/Data").ImageRecord): Promise<string> {
         throw new Error("Method not implemented.");
     }
 

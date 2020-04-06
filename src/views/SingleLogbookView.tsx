@@ -155,7 +155,7 @@ export default class SingleLogbookView extends React.PureComponent<LogbookViewPr
 
             // TODO: get rootlogs? more like make a DAG get image records via the DAG
             let rootLogs = Log.GetRootLogsByFirstLoggedPublicKey(logsByLogbook.logs);
-             console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
+             // console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
 
             for (const log of rootLogs){
                 // Get all records with the same root hash

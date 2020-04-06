@@ -67,17 +67,18 @@ export default class EditLogView extends React.Component<Props, State> {
                 const newImageRecord = new ImageRecord(
                     time,
                     newPath,
-                    log.RootLog.currentDataMultiHash,
+                    log.RootLog.rootDataMultiHash,
                     newHash,
                     newBase64Data);
 
+                await this.props.imageDatabase.add(newImageRecord);
 
-                if (log.imageRecords.length > 1) {
-                    await this.props.imageDatabase.add(newImageRecord);
-
-                } else {
-                    await this.props.imageDatabase.add(newImageRecord);
-                }
+                // if (log.imageRecordsWithMatchingRootHash.length > 1) {
+                //     await this.props.imageDatabase.add(newImageRecord);
+                //
+                // } else {
+                //     await this.props.imageDatabase.add(newImageRecord);
+                // }
 
             }
         }

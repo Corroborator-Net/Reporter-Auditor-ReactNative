@@ -10,7 +10,7 @@ import CameraRoll from "@react-native-community/cameraroll";
 export default class NativeImageStorage implements ImageDatabase{
 
 
-    public async updateImageRecordToHead(imageRecord:ImageRecord): Promise<string> {
+    public async addRecordToModifiedAlbumAndUpdateLocation(imageRecord:ImageRecord): Promise<string> {
         // saving to the cache and then the camera roll is the platform agnostic way to do it as fs.CameraDir and
         // fs.DCIMDir are android only, and in addition the saved images don't show up in the camera roll
         await RNFetchBlob.fs.createFile(

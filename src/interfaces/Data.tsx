@@ -1,6 +1,7 @@
 //@ts-ignore
 import {piexif} from "piexifjs";
 import {LogMetadata} from "../shared/LogMetadata";
+import _ from "lodash";
 
 
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
@@ -130,7 +131,8 @@ export class RevisionNode {
 
 export class LogbookEntry{
 
-    public RevisionsInOrder:RevisionNode[]=[];
+    public OrderedRevisionsStartingAtHead:RevisionNode[]=[];
+    private MostRecentEditedRecord:ImageRecord|null = null;
 
     getCorroboratingLogs(log:Log,logs:Log[]):Log[]{
         return logs.filter((potentialCorroboratingLog)=>
@@ -140,63 +142,92 @@ export class LogbookEntry{
             && potentialCorroboratingLog.currentDataMultiHash == log.currentDataMultiHash)
     }
 
+
     getTrunkLogsInOrder(rootLog:Log, logs:Log[]):Log[]{
         return (logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash)
             .sort((log1, log2)=>{
             return log1.blockTimeOrLocalTimeOrBlockNumber - log2.blockTimeOrLocalTimeOrBlockNumber}));
     }
 
+
+    getAndRemoveNonRootAndNonHeadRecords():ImageRecord[]{
+        const nonRootNorHeadRecords = this.imageRecordsWithMatchingRootHash.filter((record)=>{
+            return record.currentMultiHash != this.RootImageRecord.currentMultiHash &&
+                record.currentMultiHash != this.HeadImageRecord.currentMultiHash
+        });
+        // filter out non root and non head records from out imageRecords array
+        this.imageRecordsWithMatchingRootHash = this.imageRecordsWithMatchingRootHash.filter((record)=>{
+            return !_.includes(nonRootNorHeadRecords,record)
+            });
+
+        // console.log("non root nor head records length:", nonRootNorHeadRecords.length);
+        return nonRootNorHeadRecords
+    }
+
+
     //TODO: pick out the edited image so we can keep it around, as of now it's not being found b/c
     // it doesn't belong to a log.
-    constructor(public rootLog:Log, logs:Log[], public imageRecords:ImageRecord[]) {
+    constructor(private rootLog:Log, logs:Log[], private imageRecordsWithMatchingRootHash:ImageRecord[]) {
         // this.logs = _.filter(logs,(log) =>
             // _.some(imageRecords, (imageRecord)=> log.dataMultiHash == imageRecord.currentMultiHash));
+        this.imageRecordsWithMatchingRootHash = imageRecordsWithMatchingRootHash.slice();
 
-        if (imageRecords.length==0){
+        if (this.imageRecordsWithMatchingRootHash.length==0){
             console.log("WARNING: you didn't give me any image records")
         }
 
         // get all logs that have the same root hash
         let trunkLogs = this.getTrunkLogsInOrder(rootLog, logs);
 
-        //TODO SHOULD CONTAIN THE ROOT LOG!
-        console.log( "TRUNK LOGS CONTAINS ROOT LOG?",trunkLogs.filter(log=>log==rootLog).length>0);
+        // pop each image record as we go, the only image records left should be those without a log.
+        // order them by most recent and the most recent will be the most recent version of the edited log
 
-        let index =0;
+        const imageRecordsToEdit = imageRecordsWithMatchingRootHash.slice();
         for (const trunkLog of trunkLogs){
-            console.log("creating revision node at time (make sure I'm in order):",trunkLog.blockTimeOrLocalTimeOrBlockNumber);
-            const imageRecord = this.imageRecords.filter((imageRecord)=>{
-                return imageRecord.currentMultiHash == trunkLog.currentDataMultiHash
-            })[0];
-            this.RevisionsInOrder.push(new RevisionNode(
+            const indexOfRecord = imageRecordsToEdit
+                .findIndex(imageRecord=>imageRecord.currentMultiHash == trunkLog.currentDataMultiHash);
+            let imageRecord:ImageRecord|null = null;
+            if (indexOfRecord>-1){
+                imageRecord = imageRecordsToEdit.splice(indexOfRecord,1)[0];
+            }
+
+            this.OrderedRevisionsStartingAtHead.unshift(new RevisionNode(
                 trunkLog,
                 this.getCorroboratingLogs(trunkLog,logs),
                 imageRecord
             ))
-
         }
+        if (imageRecordsToEdit.length>0){
+            console.log("WE HAVE EXTRA IMAGE RECORDS! let's handle the mid edit records", imageRecordsToEdit.length);
+            this.MostRecentEditedRecord = imageRecordsToEdit.sort((record1,record2)=>{
+                return record1.timestamp.getTime() - record2.timestamp.getTime()
+            })[imageRecordsToEdit.length-1];
+        }
+
     }
 
 
-    // TODO test the order of this
     get RootLog():Log{
         // console.log("root log hash: ", this.rootLog.dataMultiHash);
         return this.rootLog;
     }
 
     get HeadLog():Log{
-        return this.RevisionsInOrder[this.RevisionsInOrder.length-1].log
+        return this.OrderedRevisionsStartingAtHead[0].log
     }
 
     //TODO: right now we're assuming that the head image log is always the one that will be edited. This might not be
     // true from the auditor side. They may want to edit a root image record. I think we can safely ignore this possibility
     // for now, though, as the reporter only keeps copies of the original and modified and none in between.
     get HeadImageRecord():ImageRecord{
-        return this.RevisionsInOrder[this.RevisionsInOrder.length-1].imageRecord;
+        if (this.MostRecentEditedRecord){
+            return this.MostRecentEditedRecord
+        }
+        return this.OrderedRevisionsStartingAtHead[0].imageRecord;
     }
 
     get RootImageRecord():ImageRecord{
-        return this.RevisionsInOrder[0].imageRecord;
+        return this.OrderedRevisionsStartingAtHead[this.OrderedRevisionsStartingAtHead.length-1].imageRecord;
     }
 
 

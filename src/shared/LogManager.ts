@@ -2,7 +2,7 @@ import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, Log, LogbookEntry} from "../interfaces/Data";
+import {HashData, ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
@@ -36,6 +36,8 @@ export class LogManager{
     }
 
 
+
+
     public async SyncEditedLogs(logbookEntries:LogbookEntry[]): Promise<boolean>{
         console.log("uploading edited logs:", logbookEntries.length);
 
@@ -48,15 +50,15 @@ export class LogManager{
                 continue;
             }
 
+            // TODO: make this forloop a method on a logbook entry - get nonroot and nonhead image records
             // delete old image records and images in the camera roll if they exist
-            for (const oldRecord of entry.imageRecords){
+            const nonRootNorHeadRecords = entry.getAndRemoveNonRootAndNonHeadRecords();
+            for (const oldRecord of nonRootNorHeadRecords){
                 // we have multiple image records. let's remove the current head then
-                if (oldRecord.currentMultiHash != entry.RootImageRecord.currentMultiHash &&
-                    oldRecord.currentMultiHash != record.currentMultiHash){
-                    await this.imageDatabase.removeImageRecord(oldRecord);
-                }
+                await this.imageDatabase.removeImageRecord(oldRecord);
             }
-            await this.imageDatabase.updateImageRecordToHead(record);
+
+            await this.imageDatabase.addRecordToModifiedAlbumAndUpdateLocation(record);
 
             const logMetadata = new LogMetadata(
                 record.metadataJSON,

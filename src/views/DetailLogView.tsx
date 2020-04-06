@@ -44,7 +44,7 @@ export default class DetailLogView extends React.Component<Props, State> {
     parseAndDisplayMetadata(log:Log, imageRecord:ImageRecord|null): JSX.Element{
         let details = new Array<JSX.Element>();
         let metadataObj:{[key:string]:string} = {};
-        let logAndImageRecordMatch = false;
+        let imageRecordHasBeenLogged = false;
 
         if (imageRecord){
             const imageMetadata = JSON.parse(imageRecord.metadataJSON);
@@ -52,7 +52,7 @@ export default class DetailLogView extends React.Component<Props, State> {
             if (this.imageRecordHasBeenLogged(log,imageRecord)) {
                 metadataObj["Log Status"] = "Logged";
                 metadataObj["File Name"] = imageRecord.filename;
-                logAndImageRecordMatch = true;
+                imageRecordHasBeenLogged = true;
             }
             else {
                 metadataObj["Log Status"] = "Not Yet Logged";
@@ -69,7 +69,7 @@ export default class DetailLogView extends React.Component<Props, State> {
             }
         }
 
-        if (logAndImageRecordMatch) {
+        if (imageRecordHasBeenLogged || !imageRecord) {
             // console.log("encrypted metadata:",log.encryptedMetadataJson)
             if (log.encryptedMetadataJson != "") {
                 const encryptedMetadata = JSON.parse(new LogMetadata(
@@ -159,14 +159,16 @@ export default class DetailLogView extends React.Component<Props, State> {
                     :
                     <></>
                 }
-                {this.state.currentLogBookEntry.RevisionsInOrder.map((node, index)=>{
+                {this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{
                     return (<ListItem
                         onPress={()=>{
                             let prevInfo = this.state.showInfo;
                             prevInfo[index] = !prevInfo[index];
                             this.setState({showInfo:prevInfo})
                         }}
-                        title={"Most Recent Log Metadata"}
+                        key={node.log.currentDataMultiHash + index}
+                        title={index==this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length-1 ? "Root Log Metadata":
+                        index == 0 ? "Most Recent Log Metadata" : "Log @ " + node.log.blockTimeOrLocalTimeOrBlockNumber}
                         containerStyle={styles.title}
                         chevron={this.state.showInfo[index] ?
                             <Icon name={"chevron-down"} size={20} color={"black"}/>

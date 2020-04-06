@@ -19,7 +19,7 @@ export interface ImageDatabase {
     add(data:HashData): Promise<string>;
     getImageRecordsWithMatchingRootHash(hash:string):Promise<ImageRecord[]>;
     removeImageRecord(imageRecord:ImageRecord):Promise<string>;
-    updateImageRecordToHead(imageRecord:ImageRecord):Promise<string>;
+    addRecordToModifiedAlbumAndUpdateLocation(imageRecord:ImageRecord):Promise<string>;
 }
 
 
