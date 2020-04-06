@@ -137,13 +137,20 @@ export class LogbookEntry{
     private MostRecentEditedRecord:ImageRecord|null = null;
     private OwnersKey:string;
 
+    //TODO: we should allow corroborations by the owner of the logbook,
+    // as I can see it the algo is:
+    // currentHash==rootHash
+    // && transactionHash != rootLog.transactionHash
+    // && currentHash == anotherLogs.currentHash where anotherLogs.currentHash != anothersLogs.rootHash
+    // we have a corroborating log no matter who logged it
     getCorroboratingLogs(log:Log,logs:Log[]):Log[]{
         const corroboratingLogs = logs.filter((potentialCorroboratingLog)=>
             // a corroborating log has its root and current multihash equal to each other
             potentialCorroboratingLog.rootDataMultiHash == potentialCorroboratingLog.currentDataMultiHash
             // and they both equal the log's current hash
             && potentialCorroboratingLog.currentDataMultiHash == log.currentDataMultiHash
-            // TODO: check to make sure the signed hash matches the logging public key
+
+            // TODO: furthermore, check to make sure the signed hash matches the logging public key
             && potentialCorroboratingLog.loggingPublicKey != this.OwnersKey);
 
         // prettyPrint("corroborating logs found!:", corroboratingLogs);

@@ -5,6 +5,7 @@ import {ImageBackground, StyleSheet, TouchableOpacity, View} from "react-native"
 import {CorroboratedUnsynced, Synced} from "../shared/Constants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
+
 type CellProps = {
     src: string;
     item:LogbookEntry;
@@ -79,20 +80,22 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
                         {/* check if head log is corroborated*/}
                         {this.props.item.OrderedRevisionsStartingAtHead[0].corroboratingLogs.length>0 ?
 
-                            <Icon name={"cloud-outline"} size={19.5} color={"black"} style={{
-                                width: 20,
+                            <Icon name={"cloud-outline"} size={20} color={"black"}  style={{
+                                width: 30,
                                 backgroundColor: "white",
-                                borderRadius: 5,
+                                borderRadius: 10,
                                 right:5,
+                                textAlign:"center",
                                 bottom:5,
                                 position:"absolute",
                             }}/>
                             :
-                            <Icon name={"cloud-off-outline"} size={19.5} color={"black"} style={{
-                                width: 20,
+                            <Icon name={"cloud-off-outline"} size={20}  color={"black"} style={{
+                                width: 30,
                                 backgroundColor: "white",
-                                borderRadius: 5,
+                                borderRadius: 10,
                                 right:5,
+                                textAlign:"center",
                                 bottom:5,
                                 position:"absolute",
                             }}/>}
