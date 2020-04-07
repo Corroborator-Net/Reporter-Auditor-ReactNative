@@ -1,5 +1,5 @@
 import {LogbookEntry} from "../interfaces/Data";
-import {CorroborateLogsViewNameAndID, prettyPrint, UserPreferenceKeys} from "./Constants";
+import {CorroborateLogsViewNameAndID, UserPreferenceKeys} from "./Constants";
 import {LogbookDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {LogbookAndSection} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
@@ -21,7 +21,9 @@ export default class LogbookStateKeeper {
 
 
     LogbookName(logbookID:string):string {
-        if (logbookID ) {
+        // console.log("user prefs:",this.userPreferences);
+
+        if (logbookID != "") {
             return this.userPreferences.GetCachedUserPreference(logbookID)[0];
         }
         return "Not Set"
