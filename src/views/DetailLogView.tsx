@@ -30,8 +30,6 @@ export default class DetailLogView extends React.Component<Props, State> {
 
     state={
         showInfo:new Array(100).fill(false),
-        // currentLogEntryInformation:new Array<JSX.Element>(),
-        // rootLogEntryInformation:new Array<JSX.Element>(),
         currentLogBookEntry:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
         previousLogbookHash:"",
     };
@@ -62,7 +60,6 @@ export default class DetailLogView extends React.Component<Props, State> {
         let i = 1;
         for (const corroLog of node.corroboratingLogs){
             // prettyPrint("corrolog:",corroLog);
-            // console.log("corroborated on ", corroLog.blockTimeOrLocalTimeOrBlockNumber/1000);
             metadataDictionary["Corroborated " + OrdinalSuffixOf(i)] =
                 GetLocalTimeFromSeconds(corroLog.blockTimeOrLocalTime/1000);
             metadataDictionary[OrdinalSuffixOf(i) + " Corroborator"] = corroLog.loggingPublicKey==this.props.identity.PublicPGPKey ?
