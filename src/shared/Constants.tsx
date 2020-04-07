@@ -2,7 +2,7 @@ import {Platform} from "react-native";
 import {Button} from "react-native-elements";
 import React from "react";
 
-export const StorageSchemaVersion = 2;
+export const StorageSchemaVersion = 1;
 
 export const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 
@@ -28,6 +28,12 @@ export const TestHQPEMKey={privateKey: "-----BEGIN RSA PRIVATE KEY----- MIIEpAIB
     , publicKey: "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyU/TDna0gK1rBjp6cvx9GOtuPuHgn1vY+6rYFh5ORFT4T9AiBmpABOfKCLl7u87v+CmZgJj4xnCgzz/N0s7Ts5rwuv6OZB9x+/yZDs4tfB4YnxzLDyZpS8LZe8jSQfpw11M3v/nDiInvcZOOWcrvgzVYH0RbJPznDu1HEjlDwNabCk2NI1MsrFoB9awKfJWOH3Bht5vfbbacb4YWPce2Rvn1LUkRU/U6Wa0Mu4JFGq/7z1afa6+25rXTzqVvgS6V3KxBCSTFx88D15E4UzaICYc8NqceTCbKLYZ/DsraOXNaWfsOIIN95oVXKRtJERt8qCuo1TET9mdwa4P+amVdjQIDAQAB-----END PUBLIC KEY-----"
 };
 
+
+export const KeysToNamesMap = {
+    [TestHQPEMKey.publicKey]:"Denver PD Headquarters"
+}
+
+
 export const UserPreferenceKeys={
     ImageDescription:"Image Description",
     CurrentLogbook:"Current Logbook",
@@ -37,6 +43,21 @@ export const UserPreferenceKeys={
 
 export function PrependJpegString(imageData:string):string{
 return `data:image/jpeg;base64,${imageData}`;
+}
+
+export function OrdinalSuffixOf(i:number):string {
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
 }
 
 
@@ -76,4 +97,10 @@ export default function fetchWithTimeout(url:string, options:any, timeout = 1000
             setTimeout(() => reject(new Error('Server Request Timeout')), timeout)
         )
     ]);
+}
+
+export function GetLocalTimeFromSeconds(seconds:number){
+    let d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+    d.setUTCSeconds(seconds);
+    return d.toDateString()
 }

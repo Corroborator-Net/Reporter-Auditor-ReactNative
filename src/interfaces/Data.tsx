@@ -162,7 +162,7 @@ export class LogbookEntry{
         return (logs.filter((log)=>log.rootDataMultiHash == rootLog.rootDataMultiHash
             && log.loggingPublicKey == rootLog.loggingPublicKey)
             .sort((log1, log2)=>{
-            return log1.blockTimeOrLocalTimeOrBlockNumber - log2.blockTimeOrLocalTimeOrBlockNumber}));
+            return log1.blockTimeOrLocalTime - log2.blockTimeOrLocalTime}));
     }
 
 
@@ -268,7 +268,7 @@ export class Log {
                 public currentDataMultiHash:string, //  // raw multihash
                 public encryptedMetadataJson:string, // this will include signed Hashes
                 public loggingPublicKey:string,
-                public blockTimeOrLocalTimeOrBlockNumber:number,
+                public blockTimeOrLocalTime:number,
     ) {
     }
 
@@ -295,28 +295,17 @@ export class Log {
 
     }
 
-    // TODO: what if the files have the same block number?
+    // TODO: what if the files have the same block time?
     static GetEarliestLogViaBlockNumber(logs:Log[]):Log{
-        // eliminate logs with just blocktimes
-        // const logsWithLocalTimes = (logs.filter(log=>log.blockTimeOrLocalTimeOrBlockNumber > timeNearLaunch));
-        // const containsMixOfBlockTimesAndLocalTimes = logsWithLocalTimes.length < logs.length
-        //                                              && logsWithLocalTimes.length > 0;
-        // if (containsMixOfBlockTimesAndLocalTimes){
-        //     // just use the local times
-        //     return logs.reduce(function(prev, curr) {
-        //             return prev.blockTimeOrLocalTimeOrBlockNumber < curr.blockTimeOrLocalTimeOrBlockNumber ? prev : curr;
-        //         });
-        // }
-        // return logs.filter(log=>log.blockTimeOrLocalTimeOrBlockNumber>timeNearLaunch)
             return logs.reduce(function(prev, curr) {
-            return prev.blockTimeOrLocalTimeOrBlockNumber < curr.blockTimeOrLocalTimeOrBlockNumber ? prev : curr;
+            return prev.blockTimeOrLocalTime < curr.blockTimeOrLocalTime ? prev : curr;
         });
     }
 
     // TODO: assumes the user isn't corroborating their own logs
     static GetRootLogsByFirstLoggedPublicKey(logs:Log[]):Log[]{
         // getting the logs from the web, should contain block time
-        if (logs[0] && logs[0].blockTimeOrLocalTimeOrBlockNumber) {
+        if (logs[0] && logs[0].blockTimeOrLocalTime) {
             // get the earliest log
             const firstLog = Log.GetEarliestLogViaBlockNumber(logs);
             return logs.filter(log=>log.rootTransactionHash == log.currentTransactionHash &&
@@ -382,7 +371,7 @@ export const LogSchema = {
         currentDataMultiHash:'string',
         encryptedMetadataJson:'string',
         loggingPublicKey:'string',
-        blockTimeOrLocalTimeOrBlockNumber:'int',
+        blockTimeOrLocalTime:'int',
     }
 };
 

@@ -2,7 +2,7 @@ import { LogbookEntry} from "../interfaces/Data";
 import React from "react";
 import {Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, TouchableOpacity, View} from "react-native";
-import {CorroboratedUnsynced, prettyPrint, Synced} from "../shared/Constants";
+import {CorroboratedUnsynced, GetLocalTimeFromSeconds, Synced} from "../shared/Constants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 
@@ -122,8 +122,8 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
                         :
                         <Text>
                             {
-                                "Log @ " +
-                                this.props.item.HeadLog.blockTimeOrLocalTimeOrBlockNumber
+                                "Log on " +
+                                GetLocalTimeFromSeconds(this.props.item.HeadLog.blockTimeOrLocalTime)
                             }
                         </Text>
 

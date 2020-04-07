@@ -13,6 +13,7 @@ import HashManager from "../shared/HashManager";
 import {LogManager} from "../shared/LogManager";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
 import WebLogbookAndImageManager from "../web/WebLogbookAndImageManager";
+import DeviceInfo from 'react-native-device-info'
 
 type State={
     logbooks:string[]
@@ -29,7 +30,8 @@ type  Props={
     userPreferences:UserPreferenceStorage;
     identity:Identity;
 }
-const customButtons = 2;
+
+let customButtons = 0;
 
 export default class MultiLogbookView extends React.PureComponent<Props, State> {
 
@@ -51,13 +53,15 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
             logbookNames.set(logbookID, logbookName);
         }
 
-        if (logbooks[1]!="custom1") {
-            logbooks.unshift("custom1");
-        }
+
         if (logbooks[0]!="custom0") {
+            customButtons = 1;
             logbooks.unshift("custom0");
         }
-
+        if (logbooks[1]!="custom1" && DeviceInfo.isEmulatorSync()) {
+            logbooks.splice(1,0,"custom1");
+            customButtons=2;
+        }
         this.setState({
             logbooks:logbooks
         })
@@ -124,7 +128,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                         try {
                             if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
                                 logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
-                                    await this.props.blockchainInterface.getRecordsFor(logbookAddress);
+                                    await this.props.blockchainInterface.getRecordsFor(logbookAddress, null);
                             }
                         }
                         catch (e) {
@@ -175,12 +179,12 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 .concat(allLogsInLogTree);
                         }
 
+                        // TODO allow corroborations by owners' keys
                         // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
                         // const pubKey = Object.keys(metadata)[0];
                         // console.log("first item in metadata:",pubKey);
                         // if (this.props.identity.PublicPGPKey !=  )
 
-                        // TODO: enable corroboration as read receipt!
                         // corroborate the log on the chain
                         const newHashToLog:HashData = {
                             currentMultiHash:uploadedImageHash,
@@ -252,7 +256,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     data={this.state.logbooks}
                     contentContainerStyle={styles.list}
                     renderItem={({item}) =>
-                        item == this.state.logbooks[1] ?
+                        item == this.state.logbooks[0] ?
                             <LogbookCell
                                 onLongPress={()=>{}}
                                 title={"Add New Logbook"}
@@ -263,10 +267,10 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 }
                             />
                             :
-                            item == this.state.logbooks[0] ?
+                            item == this.state.logbooks[1] && DeviceInfo.isEmulatorSync() ?
                                 <LogbookCell
                                     onLongPress={()=>{}}
-                                    title={"Manual File Upload/Check"}
+                                    title={"Check and Corroborate Files"}
                                     onPress={ ()=>{
                                         this.showUploadPrompt();
                                     }}
@@ -319,6 +323,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     async AddNewLogbook(){
         const newLogbookID = await this.props.blockchainInterface.getNewLogbook();
 
+        // console.log("custom buttons:", customButtons);
         // add the new logbook to the list
         let newStateLogbooks = this.state.logbooks;
         newStateLogbooks.splice(customButtons,0,newLogbookID);

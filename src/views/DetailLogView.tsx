@@ -1,7 +1,13 @@
 import React from "react";
 import {Text, StyleSheet, Image, ScrollView, View} from "react-native";
-import {ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
-import {LoadingSpinner, PrependJpegString, waitMS} from "../shared/Constants";
+import {ImageRecord, Log, LogbookEntry, RevisionNode} from "../interfaces/Data";
+import {
+    GetLocalTimeFromSeconds,
+    KeysToNamesMap,
+    OrdinalSuffixOf,
+    PrependJpegString,
+    prettyPrint
+} from "../shared/Constants";
 import {ListItem} from "react-native-elements";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
@@ -15,10 +21,8 @@ type Props={
     identity:Identity
 }
 type State={
-    // currentLogEntryInformation:JSX.Element[];
     currentLogBookEntry:LogbookEntry;
     previousLogbookHash:string;
-    loading:boolean;
     showInfo:boolean[];
 }
 
@@ -30,7 +34,6 @@ export default class DetailLogView extends React.Component<Props, State> {
         // rootLogEntryInformation:new Array<JSX.Element>(),
         currentLogBookEntry:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
         previousLogbookHash:"",
-        loading:true,
     };
 
     imageRecordHasBeenLogged(log:Log, imageRecord:ImageRecord):boolean{
@@ -41,115 +44,109 @@ export default class DetailLogView extends React.Component<Props, State> {
                 log.currentTransactionHash!= "")
     }
 
-    // TODO: show number of times corroborated
-    parseAndDisplayMetadata(log:Log, corroboratedTimes:number, imageRecord:ImageRecord|null): JSX.Element{
-        let details = new Array<JSX.Element>();
-        let metadataObj:{[key:string]:string} = {};
-        let imageRecordHasBeenLogged = false;
 
-        if (imageRecord){
-            const imageMetadata = JSON.parse(imageRecord.metadataJSON);
 
-            if (this.imageRecordHasBeenLogged(log,imageRecord)) {
-                metadataObj["Log Status"] = "Logged";
-                metadataObj["File Name"] = imageRecord.filename;
-                imageRecordHasBeenLogged = true;
+    parseAndDisplayMetadata(node:RevisionNode, index:number): JSX.Element{
+        let metadataDictionary:{[key:string]:string} = {};
+
+        if (!node.imageRecordIsBlank){
+            if (this.imageRecordHasBeenLogged(node.log,node.imageRecord)) {
+                metadataDictionary["Log Status"] = "Logged";
+                metadataDictionary["File Name"] = node.imageRecord.filename;
             }
             else {
-                metadataObj["Log Status"] = "Not Yet Logged";
-            }
-
-            // we add all metadata except the above parsed stuff
-            for (const key of Object.keys(imageMetadata)) {
-                if (key == LogMetadata.ImageDescription){
-                    const description =  ImageRecord.GetExtraImageInformation(imageRecord);
-                    metadataObj[key] = description ? description.Description: "none";
-                    continue;
-                }
-                metadataObj[key] = imageMetadata[key];
+                metadataDictionary["Log Status"] = "Not Yet Logged";
             }
         }
 
-        if (imageRecordHasBeenLogged || !imageRecord) {
-            // console.log("encrypted metadata:",log.encryptedMetadataJson)
-            if (log.encryptedMetadataJson != "") {
+        let i = 1;
+        for (const corroLog of node.corroboratingLogs){
+            // prettyPrint("corrolog:",corroLog);
+            // console.log("corroborated on ", corroLog.blockTimeOrLocalTimeOrBlockNumber/1000);
+            metadataDictionary["Corroborated " + OrdinalSuffixOf(i)] =
+                GetLocalTimeFromSeconds(corroLog.blockTimeOrLocalTime/1000);
+            metadataDictionary[OrdinalSuffixOf(i) + " Corroborator"] = corroLog.loggingPublicKey==this.props.identity.PublicPGPKey ?
+                "You" :
+                KeysToNamesMap[corroLog.loggingPublicKey] ;
+            i+=1;
+        }
+        if (node.corroboratingLogs.length==0){
+            metadataDictionary["Corroborated"] = "0 times"
+        }
+
+
+        if (this.state.showInfo[index]) {
+            if (!node.imageRecordIsBlank) {
+                const imageMetadata = JSON.parse(node.imageRecord.metadataJSON);
+
+                // we add all metadata except the above parsed stuff
+                for (const key of Object.keys(imageMetadata)) {
+                    if (key == LogMetadata.ImageDescription) {
+                        const description = ImageRecord.GetExtraImageInformation(node.imageRecord);
+                        metadataDictionary[key] = description ? description.Description : "none";
+                        continue;
+                    }
+                    metadataDictionary[key] = imageMetadata[key];
+                }
+            }
+
+            // image is not be paired to all non-head, non-root trunk logs, so the image is null
+            // if (imageRecordHasBeenLogged || !imageRecord) {
+            if (node.log.encryptedMetadataJson != "") {
                 const encryptedMetadata = JSON.parse(new LogMetadata(
                     null, null, null,
-                    log.encryptedMetadataJson,
+                    node.log.encryptedMetadataJson,
                     this.props.identity.PrivatePGPKey).JsonData());
 
-                // console.log("encryptedMetadata",encryptedMetadata);
-
-                if (!encryptedMetadata){
-                    metadataObj["On-Chain Encrypted Metadata"] = "Unable to Decrypt";
-                }
-                else {
+                if (!encryptedMetadata) {
+                    metadataDictionary["On-Chain Encrypted Metadata"] = "Unable to Decrypt";
+                } else {
                     for (const key of Object.keys(encryptedMetadata)) {
-                        metadataObj[key] = encryptedMetadata[key];
+                        metadataDictionary[key] = encryptedMetadata[key];
                     }
                 }
             }
 
-
             // get the other log key+values that aren't in the signed metadata (i.e. multihash, etc.)
-            for (const key of Object.keys(log)) {
+            for (const key of Object.keys(node.log)) {
                 //@ts-ignore
-                const data = log[key] ? log[key].toString() : log[key]
-                if (data != log.encryptedMetadataJson) {
-                    metadataObj[key] = data;
+                const data = node.log[key] ? node.log[key].toString() : node.log[key]
+                if (data != node.log.encryptedMetadataJson) {
+                    metadataDictionary[key] = data;
                 }
             }
         }
 
 
-
-        Object.keys(metadataObj).
+        let details = new Array<JSX.Element>();
+        Object.keys(metadataDictionary).
         forEach(function eachKey(key)
         {
-            details.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataObj[key]}</Text>);
+            details.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataDictionary[key]}</Text>);
         });
         return <View>{details}</View>;
     }
 
 
-    async loadMetadata(){
-        await waitMS(1);
-        // const currentLogbookInfo  = this.parseAndDisplayMetadata(this.state.currentLog.Log, this.state.currentLog.ImageRecord);
-        // // I might have a
-        // let canShowRootInfo = this.state.currentLog.RootLog.currentDataMultiHash != "" &&
-        //     this.state.currentLog.Log.currentDataMultiHash != this.state.currentLog.RootLog.currentDataMultiHash;
-        // let rootInfo = new Array<JSX.Element>();
-        // if (canShowRootInfo){
-        //     rootInfo = this.parseAndDisplayMetadata(this.state.currentLog.RootLog, this.state.currentLog.RootImageRecord)
-        // }
-        this.setState({
-            // currentLogEntryInformation:currentLogbookInfo,
-            // rootLogEntryInformation:rootInfo,
-            loading:false
-        })
-    }
-
-
   componentDidMount(): void {
-
-
       if (this.state.currentLogBookEntry.HeadLog.currentDataMultiHash != this.state.previousLogbookHash
       ) {
           this.setState({
               currentLogBookEntry: this.props.logbookStateKeeper.CurrentSelectedLogs[0],
               previousLogbookHash: this.props.logbookStateKeeper.CurrentSelectedLogs[0].HeadLog.currentDataMultiHash,
-              loading:true
-              },
-              this.loadMetadata);
+              });
       }
+
   }
+
+  getTitle(node:RevisionNode, index:number):string{
+      return "Log v" + index +" on "+ GetLocalTimeFromSeconds(node.log.blockTimeOrLocalTime)
+  }
+
 
     render() {
 
         return (
-              this.state.loading ?
-                  LoadingSpinner
-                  :
             <ScrollView>
                 {this.state.currentLogBookEntry.HeadImageRecord ?
                     <Image
@@ -168,8 +165,8 @@ export default class DetailLogView extends React.Component<Props, State> {
                             this.setState({showInfo:prevInfo})
                         }}
                         key={node.log.currentDataMultiHash + index}
-                        title={index==this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length-1 ? "Root Log Metadata":
-                        index == 0 ? "Most Recent Log Metadata" : "Log @ " + node.log.blockTimeOrLocalTimeOrBlockNumber}
+                        title={this.getTitle(node,
+                            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}
                         containerStyle={styles.title}
                         badge={{
                             value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}
@@ -179,13 +176,7 @@ export default class DetailLogView extends React.Component<Props, State> {
                             :
                             <Icon name={"chevron-right"} size={20} color={"black"}/>
                         }
-                        subtitle={this.state.showInfo[index] ?
-                            this.parseAndDisplayMetadata(
-                                node.log,
-                                node.corroboratingLogs.length,
-                                node.imageRecordIsBlank ? null : node.imageRecord
-                            )
-                            : <></>}
+                        subtitle={this.parseAndDisplayMetadata(node, index) }
                         >
 
                         </ListItem>

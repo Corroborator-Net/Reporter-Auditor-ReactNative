@@ -1,72 +1,41 @@
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Log} from "../interfaces/Data";
 //@ts-ignore
-import {AtraApiKey, EtherScanApiKey} from 'react-native-dotenv'
+import {AtraApiKey, InfuraEndpoint, InfuraID, InfuraSecret} from 'react-native-dotenv'
 import fetchWithTimeout, {makeID, prettyPrint} from "./Constants";
 
 export class AtraManager implements BlockchainInterface {
 
     readonly emptyPlaceholder="null";
-    approximateBlockMultiplier:number|null = null;
-
+    HashMapToTimestamp:{[blockHash:string]:number} = {}
 
 
     //TODO: etherscan won't let us get blocktimes for every single log so quickly, we need to space it out or filter
     // what we need somehow
-    async getRecordsFor(logBookAddress:string):Promise<Log[]> {
+    async getRecordsFor(logBookAddress:string, ignoringLogs:Log[]|null):Promise<Log[]> {
         const logs = new Array<Log>();
         const resp = await fetchWithTimeout("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
             headers: {
                 "x-api-key": AtraApiKey
-            }}).catch((error)=>{
-            throw new Error("Getting logs: " + error)
+            }},20000).catch((error)=>{
+            console.log("atra ERROR:", error);
+            throw new Error(error)
         });
         const json = await resp.json();
         if (json["error"]){
-            throw new Error("Getting logs: " + json["error"])
+            console.log("atra ERROR:", json);
+
+            throw new Error(json["error"])
         }
 
         const liveRecords = json["live"];
         let i;
         // start at the end of the list
         for (i = liveRecords.length - 1; i >= 0; i--) {
-            const atraResponse = (liveRecords[i]);
+            const atraResponse = liveRecords[i];
             // prettyPrint("resp:", atraResponse);
             const record = atraResponse["record"];
-            const recordID = atraResponse["atraRecordId"];
-
-            let blockNumber = liveRecords[i]["event"]["blockNumber"];
-
-            // TODO: get an api that gives us more requests than 5/second so we can calculate each blocktime
-            if(!this.approximateBlockMultiplier) {
-                const etherscanResponse = await
-                    fetch("https://api-rinkeby.etherscan.io/api?module=block&action=getblockreward&blockno=" + blockNumber
-                        + "&apikey=" + EtherScanApiKey).catch((error) => {
-                        console.log("ERROR:", etherscanResponse);
-                        throw new Error("Getting blocktime: " + error)
-                    });
-                // console.log("etherscan response:", etherscanResponse);
-                const blockJson = await etherscanResponse.json();
-                const blockTimeStamp = blockJson["result"]["timeStamp"];
-                // make the date look like the one stored on chain
-                // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
-                this.approximateBlockMultiplier = (parseInt(blockTimeStamp)*1000) / blockNumber;
-                //
-                // let date="";
-                // if (isValidDate(preDate)) {
-                //     date = Log.getFormattedDateString(preDate);
-                // } else {
-                //     date = "Pending..."
-                // }
-
-            }
-            blockNumber = parseInt(blockNumber) * this.approximateBlockMultiplier;
-            // console.log("new blocktime:", blockNumber)
-            // const str = JSON.stringify(atraResponse, null, 2); // spacing level = 2
-            // console.log("record from the chain:",str);
-            // console.log("recordid from the chain:",recordID);
-
-
+            const recordIDAndTransactionHash = atraResponse["atraRecordId"];
             const hash = record[0];
             const rootHash = record[1];
             const loggingKey = record[2];
@@ -76,18 +45,69 @@ export class AtraManager implements BlockchainInterface {
             // TODO: do we need to decrypt and mess with the metadata on chain? - perhaps to verify the embedded signature?
             const encryptedMetadata = record[5];
 
+            // ignore logs with the same transaction hash - we have a local timestamp for them already
+            if (ignoringLogs && ignoringLogs.findIndex((ignoreLog)=>{
+                return ignoreLog.currentTransactionHash == recordIDAndTransactionHash
+            })>=0){
+                continue
+            }
+
+            let blockHash = liveRecords[i]["event"]["blockHash"];
+            let blockTimeStamp;
+            if (this.HashMapToTimestamp[blockHash]){
+                blockTimeStamp = this.HashMapToTimestamp[blockHash];
+            }
+            else{
+                const infuraResponse = await fetch(InfuraEndpoint, {
+                    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "jsonrpc":"2.0",
+                        "method":"eth_getBlockByHash",
+                        "id":1,
+                        "params": [blockHash, true]})
+                }).catch((error) => {
+                    console.log("timestamp ERROR:", infuraResponse);
+                    throw new Error(error)
+                });
+
+                const blockJson = await infuraResponse.json();
+                blockTimeStamp = parseInt(blockJson["result"]["timestamp"],16)*1000;
+                this.HashMapToTimestamp[blockHash] = blockTimeStamp;
+
+            }
+
+            // make the date look like the one stored on chain
+            // let preDate = new Date(parseInt(blockTimeStamp) * 1000);
+
+            //
+            // let date="";
+            // if (isValidDate(preDate)) {
+            //     date = Log.getFormattedDateString(preDate);
+            // } else {
+            //     date = "Pending..."
+            // }
+
+            // const str = JSON.stringify(atraResponse, null, 2); // spacing level = 2
+            // console.log("record from the chain:",str);
+            // console.log("recordid from the chain:",recordID);
+
+
+
 
             const newEntry = new Log(
                 logBookAddress,
                 storageLocation,
                 // if it has no root transaction has, it is the root so the current transaction hash is the root txn hash
-                rootTransactionHash == this.emptyPlaceholder ? recordID: rootTransactionHash,
-                recordID,
+                rootTransactionHash == this.emptyPlaceholder ? recordIDAndTransactionHash: rootTransactionHash,
+                recordIDAndTransactionHash,
                 rootHash,
                 hash,
                 encryptedMetadata,
                 loggingKey,
-                blockNumber
+                blockTimeStamp
             );
 
             logs.push(newEntry);

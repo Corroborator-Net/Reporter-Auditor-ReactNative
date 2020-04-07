@@ -1,5 +1,5 @@
 import {LogbookEntry} from "../interfaces/Data";
-import {CorroborateLogsViewNameAndID, UserPreferenceKeys} from "./Constants";
+import {CorroborateLogsViewNameAndID, prettyPrint, UserPreferenceKeys} from "./Constants";
 import {LogbookDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {LogbookAndSection} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
@@ -56,11 +56,9 @@ export default class LogbookStateKeeper {
 
         try {
             // if any of the local logs and bchain logs share the current transaction hash, they're the same entry
-            let uniqueLogsOnChain = (await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID)).filter((log)=>{
-                return localLogs.findIndex((localLog)=>{
-                    return localLog.currentTransactionHash == log.currentTransactionHash
-                })<0
-            });
+            let uniqueLogsOnChain = localLogs.length>0 ? await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID, localLogs)
+                : [];
+            // prettyPrint("logs on chain", uniqueLogsOnChain)
             return [{
                 title: this._CurrentLogbookID,
                 logs:localLogs.concat(uniqueLogsOnChain)
@@ -68,7 +66,7 @@ export default class LogbookStateKeeper {
         }
         catch (e) {
             Alert.alert(
-                "Server Error - Couldn't Get Corroborating Logs", e+"", [{text: 'OK'},],
+                "Couldn't Get Corroborating Logs", e+"", [{text: 'OK'},],
                 { cancelable: false }
             );
             return [{

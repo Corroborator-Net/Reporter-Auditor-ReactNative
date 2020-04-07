@@ -50,7 +50,6 @@ type LogbookEntryAndSection={
 
 export default class SingleLogbookView extends React.PureComponent<Props, State> {
 
-    readonly LogsPerPage = 20;
     readonly LogSize = 120;
     static ShouldUpdateLogbookView = false;
     previousLogbook = "";
@@ -113,7 +112,6 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
 
 
 
-    // TODO: maybe add a callback to the logbook state keeper interface?
     logbookChanged() : boolean{
         return this.previousLogbook != this.props.logbookStateKeeper.CurrentLogbookID
     }
@@ -134,7 +132,6 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
     };
 
 
-    // TODO: implement pages or infinite scroll
     async getLogs(){
 
         this.previousLogbook = this.props.logbookStateKeeper.CurrentLogbookID;
