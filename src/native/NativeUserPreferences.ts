@@ -86,7 +86,7 @@ export default class NativeUserPreferences implements UserPreferenceStorage{
                 // + " AND PublicKey = " user's public key
 
                 if (currentUserPreference.length<1 ){
-                    return this.CurrentUserSettings[key];
+                    return this.CurrentUserSettings[key]?this.CurrentUserSettings[key] : [""];
                 }
                 // get the first user pref with that key
                 const currentUserPreferenceList:string[] =

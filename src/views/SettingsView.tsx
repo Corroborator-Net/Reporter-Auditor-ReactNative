@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Text, CheckBox } from 'react-native-elements';
+import { Input, Text } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScrollView, StyleSheet, View} from "react-native";
 import NativeUserPreferences from "../native/NativeUserPreferences";
@@ -7,7 +7,7 @@ import {UserPreferenceKeys} from "../shared/Constants";
 
 
 type State={
-    syncChecked:boolean
+    UserInfo:{[key:string]:string},
 }
 type Props={
 }
@@ -15,19 +15,26 @@ type Props={
 export default class SettingsView extends React.PureComponent<Props, State> {
 
     state={
-        syncChecked:false
+        UserInfo:{}
     };
 
-    // componentDidMount = async ()  => {
-    //     let shouldSync =
-    //         (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.AutoSyncLogs))[0];
-    //     this.setState({
-    //         syncChecked:(shouldSync == "true")
-    //     })
-    // };
+    componentDidMount = async ()  => {
+        const userName = (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.UsersName))[0];
+        const dept =  (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Department))[0];
+        const imageDescription =  (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.ImageDescription))[0];
+        this.setState({
+            UserInfo:{
+                [UserPreferenceKeys.UsersName]:userName,
+                [UserPreferenceKeys.Department]:dept,
+                [UserPreferenceKeys.ImageDescription]:imageDescription,
+            }
+        });
+
+    };
+
 
     onChangeUserSettings(key:string, value:string){
-        console.log(key,value);
+        // console.log(key,value);
         NativeUserPreferences.Instance.SetNewPersistentUserPreference(key,[value]);
     }
 
@@ -35,39 +42,26 @@ export default class SettingsView extends React.PureComponent<Props, State> {
         return(
             <ScrollView style={styles.container}>
             <Text h4 style={styles.title}> Settings </Text>
-                {this.InputCell("Name","account")}
-                {this.InputCell("Department","account-group")}
+                {this.InputCell(UserPreferenceKeys.UsersName,"account")}
+                {this.InputCell(UserPreferenceKeys.Department,"account-group")}
                 {this.InputCell(UserPreferenceKeys.ImageDescription,"pencil")}
                 {/*{this.InputToggle(UserPreferenceKeys.AutoSyncLogs,"sync", "sync-off")}*/}
             </ScrollView>
         )
     }
 
-    InputToggle (label:string, iconOn:string, iconOff:string) {
-        return (
-            <View style={styles.input}>
-            <CheckBox
-                center
-                title={label + " : " + (this.state.syncChecked? "On":"Off ")}
-                checkedIcon={<Icon name={iconOn} size={15} color={"black"} />}
-                uncheckedIcon={<Icon name={iconOff} size={15} color={"red"} />}
-                checked={this.state.syncChecked}
-                onPress={() => {
-                    this.onChangeUserSettings(label,String(!this.state.syncChecked));
-                    this.setState({syncChecked: !this.state.syncChecked});
-                }}
-            />
-             </View>
-        );
-    }
 
     InputCell (label:string, icon:string) {
         return (
             <View style={styles.input}>
             <Input
                 placeholder={label}
+                //@ts-ignore
+                defaultValue={this.state.UserInfo[label]}
                 label={label}
-                onChangeText={text => {this.onChangeUserSettings(label,text)}}
+                onChangeText={text => {
+                    this.onChangeUserSettings(label,text)
+                }}
                 leftIcon={
                     <Icon
                         name={icon}
@@ -80,6 +74,24 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             </View>
         );
     }
+
+    // InputToggle (label:string, iconOn:string, iconOff:string) {
+        //     return (
+        //         <View style={styles.input}>
+        //         <CheckBox
+        //             center
+        //             title={label + " : " + (this.state.syncChecked? "On":"Off ")}
+        //             checkedIcon={<Icon name={iconOn} size={15} color={"black"} />}
+        //             uncheckedIcon={<Icon name={iconOff} size={15} color={"red"} />}
+        //             checked={this.state.syncChecked}
+        //             onPress={() => {
+        //                 this.onChangeUserSettings(label,String(!this.state.syncChecked));
+        //                 this.setState({syncChecked: !this.state.syncChecked});
+        //             }}
+        //         />
+        //          </View>
+        //     );
+        // }
 
 }
 

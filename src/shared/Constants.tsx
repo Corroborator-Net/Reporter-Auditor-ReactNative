@@ -38,6 +38,8 @@ export const UserPreferenceKeys={
     ImageDescription:"Image Description",
     CurrentLogbook:"Current Logbook",
     Logbooks:"Logbooks",
+    UsersName:"User Name",
+    Department:"Department",
     // AutoSyncLogs:"Auto Sync Logs"
 };
 
