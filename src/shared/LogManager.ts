@@ -2,7 +2,7 @@ import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
 import { PeerCorroborators} from "../interfaces/PeerCorroborators";
 import HashManager from "./HashManager";
-import {HashData, ImageRecord, Log, LogbookEntry} from "../interfaces/Data";
+import {HashData, Log, LogbookEntry} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
 import {NetInfoStateType} from "@react-native-community/netinfo/src/internal/types";
@@ -15,9 +15,9 @@ import {TestHQPEMKey} from "./Constants";
 
 export class LogManager{
 
+    static CurrentlyConnectedToNetwork = false;
     logsToSync:Log[] = [];
     syncingLogs=false;
-    currentlyConnectedToNetwork = false;
     public static Instance:LogManager;
     constructor(public logStorage:LogbookDatabase,
                 public didModule:Identity,
@@ -130,7 +130,7 @@ export class LogManager{
             );
         }
 
-        if (this.currentlyConnectedToNetwork){
+        if (LogManager.CurrentlyConnectedToNetwork){
             this.uploadToBlockchain(newLog, saveToDisk);
         }
     }
@@ -183,14 +183,14 @@ export class LogManager{
             return;
         }
         console.log("Is connected?", state.isConnected);
-        this.startBackgroundUploadManager(state.isConnected, this.currentlyConnectedToNetwork);
-        this.currentlyConnectedToNetwork = state.isConnected;
+        this.startBackgroundUploadManager(state.isConnected, LogManager.CurrentlyConnectedToNetwork);
+        LogManager.CurrentlyConnectedToNetwork = state.isConnected;
     }
 
 
     async uploadToBlockchain(log:Log, onDisk:boolean){
 
-        if (!this.currentlyConnectedToNetwork){
+        if (!LogManager.CurrentlyConnectedToNetwork){
             return ;
         }
         const txn = this.blockchainManager.formTransaction(log);

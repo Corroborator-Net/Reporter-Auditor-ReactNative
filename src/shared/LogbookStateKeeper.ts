@@ -4,6 +4,7 @@ import {LogbookDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {LogbookAndSection} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Alert} from "react-native";
+import {LogManager} from "./LogManager";
 
 
 
@@ -56,8 +57,10 @@ export default class LogbookStateKeeper {
 
         try {
             // if any of the local logs and bchain logs share the current transaction hash, they're the same entry
-            let uniqueLogsOnChain = localLogs.length>0 ? await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID, localLogs)
+            let uniqueLogsOnChain = localLogs.length>0 && LogManager.CurrentlyConnectedToNetwork
+                ? await this.blockchainInterface.getRecordsFor(this._CurrentLogbookID, localLogs)
                 : [];
+
             // prettyPrint("logs on chain", uniqueLogsOnChain)
             return [{
                 title: this._CurrentLogbookID,
