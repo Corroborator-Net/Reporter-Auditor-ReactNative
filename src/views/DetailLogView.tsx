@@ -60,7 +60,7 @@ export default class DetailLogView extends React.Component<Props, State> {
         let i = 1;
         for (const corroLog of node.corroboratingLogs){
             // prettyPrint("corrolog:",corroLog);
-            metadataDictionary["Corroborated " + OrdinalSuffixOf(i)] =
+            metadataDictionary[OrdinalSuffixOf(i) + " Corroborated"] =
                 GetLocalTimeFromSeconds(corroLog.blockTimeOrLocalTime/1000);
             metadataDictionary[OrdinalSuffixOf(i) + " Corroborator"] = corroLog.loggingPublicKey==this.props.identity.PublicPGPKey ?
                 "You" :

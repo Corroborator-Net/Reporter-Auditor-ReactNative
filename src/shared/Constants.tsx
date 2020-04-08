@@ -16,7 +16,7 @@ export const Synced = 'lightgreen';
 
 export const DetailLogViewName = "Details";
 export const LogsViewName = "Logs";
-export const EditLogsViewName = "EditLogs";
+export const EditLogsViewName = "Edit Log(s)";
 export const CorroborateLogsViewNameAndID = "Uploaded Logs";
 
 export const AppButtonTint='#459cff';
