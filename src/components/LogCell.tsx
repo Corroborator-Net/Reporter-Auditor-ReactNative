@@ -1,8 +1,8 @@
 import { LogbookEntry} from "../interfaces/Data";
 import React from "react";
-import {Text} from "react-native-elements";
+import {Image, Text} from "react-native-elements";
 import {ImageBackground, StyleSheet, TouchableOpacity, View} from "react-native";
-import {CorroboratedUnsynced, GetLocalTimeFromSeconds, Synced} from "../shared/Constants";
+import {CorroboratedUnsynced, GetLocalTimeFromSeconds, LocalOnly, Synced} from "../shared/Constants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 
@@ -90,26 +90,29 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
                         }
                         {/* check if head log is corroborated*/}
                         {this.props.item.OrderedRevisionsStartingAtHead[0].corroboratingLogs.length>0 ?
-
-                            <Icon name={"cloud-outline"} size={20} color={"black"}  style={{
-                                width: 30,
-                                backgroundColor: "white",
-                                borderRadius: 10,
-                                right:5,
-                                textAlign:"center",
-                                bottom:5,
-                                position:"absolute",
-                            }}/>
+                            <Image
+                                source={require("../assets/cloud-sync.png") }
+                                containerStyle={{
+                                    width: 30,
+                                    height: 30,
+                                    right:5,
+                                    bottom:5,
+                                    position:"absolute",
+                                }}
+                            />
                             :
-                            <Icon name={"cloud-off-outline"} size={20}  color={"black"} style={{
-                                width: 30,
-                                backgroundColor: "white",
-                                borderRadius: 10,
-                                right:5,
-                                textAlign:"center",
-                                bottom:5,
-                                position:"absolute",
-                            }}/>}
+                            <Image
+                                source={require("../assets/cloud-none.png") }
+                                containerStyle={{
+                                    width: 30,
+                                    height: 30,
+                                    right:5,
+                                    bottom:5,
+                                    position:"absolute",
+                                }}
+                            />
+
+                        }
                     </ImageBackground>
                     :
                     <></>
@@ -156,7 +159,7 @@ export default class LogCell extends React.PureComponent<CellProps,CellState> {
             // }
             // else{
                 // we have multiple signed metadata records
-                return CorroboratedUnsynced;
+                return LocalOnly;
             // }
         }
 
