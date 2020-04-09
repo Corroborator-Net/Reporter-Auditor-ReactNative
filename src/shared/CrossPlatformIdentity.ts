@@ -84,7 +84,7 @@ export default class CrossPlatformIdentity implements Identity{
             const saveResult = await Keychain.setGenericPassword(
                 this._PublicPGPKey,
                 this._PrivatePGPKey,
-
+                //@ts-ignore
                 {
                     accessControl: AC_MAP[0],
                     securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],

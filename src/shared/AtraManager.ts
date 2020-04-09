@@ -3,8 +3,9 @@ import {Log} from "../interfaces/Data";
 //@ts-ignore
 import {AtraApiKey, InfuraEndpoint, InfuraID, InfuraSecret} from 'react-native-dotenv'
 import fetchWithTimeout, {makeID, prettyPrint} from "./Constants";
+import {LogbookDatabase} from "../interfaces/Storage";
 
-export class AtraManager implements BlockchainInterface {
+export class AtraManager implements BlockchainInterface, LogbookDatabase {
 
     readonly emptyPlaceholder="null";
     HashMapToTimestamp:{[blockHash:string]:number} = {}
@@ -190,6 +191,19 @@ export class AtraManager implements BlockchainInterface {
                 return err;
         })
     }
+
+    addNewRecord(newRecord: Log): Promise<string> {
+        //@ts-ignore
+        return undefined;
+    }
+
+    getUnsyncedRecords(): Promise<Log[]> {
+        //@ts-ignore
+        return undefined;
+    }
+
+    updateLogWithTransactionHash(log: Log): void {
+    }
 }
 
 function isValidDate(d:any) {
@@ -198,9 +212,11 @@ function isValidDate(d:any) {
 }
 
 // Example POST method implementation:
+
 async function postAtraData(url = '', data = {}) {
     // Default options are marked with *
     // console.log(AtraApiKey);
+    //@ts-ignore
     const response = await fetch(url, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         mode: 'cors', // no-cors, *cors, same-origin

@@ -61,7 +61,7 @@ export default class NativeEncryptedLogbookStorage implements LogbookDatabase{
     }
 
 
-    getRecordsFor(logBookAddress: string): Promise<Log[]> {
+    getRecordsFor(logBookAddress:string, ignoringLogs:Log[]|null):Promise<Log[]>{
         return Realm.open({schema: RealmSchemas, schemaVersion: StorageSchemaVersion})
             .then(realm => {
                 // Query Realm for all unsynced image hashes

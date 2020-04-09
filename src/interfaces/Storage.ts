@@ -7,7 +7,7 @@ export interface UserPreferenceStorage {
 }
 
 export interface LogbookDatabase {
-    getRecordsFor(logBookAddress:string) : Promise<Log[]>;
+    getRecordsFor(logBookAddress:string, ignoringLogs:Log[]|null):Promise<Log[]>;
     addNewRecord(newRecord:Log) : Promise<string>;
     getUnsyncedRecords():Promise<Log[]>;
 

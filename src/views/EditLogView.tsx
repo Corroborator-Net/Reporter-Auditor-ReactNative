@@ -103,6 +103,8 @@ export default class EditLogView extends React.Component<Props, State> {
         }
 
 
+
+        //@ts-ignore
         details.push(<Input
             key={currentDescription}
             placeholder={currentDescription}

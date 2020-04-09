@@ -52,7 +52,7 @@ export default class LogbookStateKeeper {
         if (this._CurrentLogbookID == CorroborateLogsViewNameAndID){
             return this.LogsToCorroborate
         }
-        let localLogs = await this.logbookStorage.getRecordsFor(this._CurrentLogbookID);
+        let localLogs = await this.logbookStorage.getRecordsFor(this._CurrentLogbookID, null);
 
 
         try {
