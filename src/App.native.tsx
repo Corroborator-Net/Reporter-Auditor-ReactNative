@@ -22,7 +22,7 @@ import {LogManager} from "./shared/LogManager";
 import {Mesh} from "./interfaces/PeerCorroborators";
 import {AtraManager} from "./shared/AtraManager";
 import NativeImageStorage from "./native/NativeImageStorage";
-import CrossPlatformIdentity from "./shared/CrossPlatformIdentity";
+import CrossPlatformIdentity from "./shared/CrossPlatformIdentity.native";
 import NativeUserPreferences from "./native/NativeUserPreferences";
 import DetailLogView from "./views/DetailLogView";
 import {createStackNavigator } from '@react-navigation/stack';

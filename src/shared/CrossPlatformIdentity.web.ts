@@ -1,10 +1,6 @@
 import {Identity} from "../interfaces/Identity";
 // @ts-ignore
 import { RSA,Crypt } from 'hybrid-crypto-js';
-import * as Keychain from 'react-native-keychain';
-import {Platform} from "react-native";
-import {isMobile} from "./Constants";
-
 
 export default class CrossPlatformIdentity implements Identity{
 
@@ -34,14 +30,10 @@ export default class CrossPlatformIdentity implements Identity{
 
     async LoggedIn(){
         // await Keychain.resetGenericPassword();
-        const credentials = await Keychain.getGenericPassword();
-        // console.log("got credentials:", credentials);
-        if (credentials!= false){
-            this._PrivatePGPKey = credentials.password;
-            this._PublicPGPKey = credentials.username;
-            return true;
-        }
-        return false
+
+        this._PrivatePGPKey = "";
+        this._PublicPGPKey = "";
+        return true;
     }
 
 
@@ -55,49 +47,8 @@ export default class CrossPlatformIdentity implements Identity{
         const keyPair = await rsa.generateKeyPairAsync(1024);
         this._PrivatePGPKey = keyPair.privateKey;
         this._PublicPGPKey = keyPair.publicKey;
+        return true
 
-        if (isMobile) {
-
-            const ACCESS_CONTROL_MAP = [
-                Keychain.ACCESS_CONTROL.USER_PRESENCE,
-            ];
-            const ACCESS_CONTROL_MAP_ANDROID = [
-                null,
-                Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-            ];
-            const SECURITY_LEVEL_MAP = [
-                Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
-                Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
-            ];
-
-            const SECURITY_STORAGE_MAP = [
-                null,
-                Keychain.STORAGE_TYPE.FB,
-                Keychain.STORAGE_TYPE.AES,
-                Keychain.STORAGE_TYPE.RSA,
-            ];
-            const AC_MAP =
-                Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
-
-            // TODO: how to save them to browser keychain for web/auditor user - maybe they load their own every time?
-
-            const saveResult = await Keychain.setGenericPassword(
-                this._PublicPGPKey,
-                this._PrivatePGPKey,
-                //@ts-ignore
-                {
-                    accessControl: AC_MAP[0],
-                    securityLevel: Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP[0],
-                    storage: Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP[2],
-                }
-            );
-
-            return saveResult != false;
-        }
-        else{
-            console.log("we need a web version of keychain so the department auditors can sign/encrypt things")
-            return false
-        }
     }
 
 
