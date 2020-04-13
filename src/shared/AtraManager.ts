@@ -213,7 +213,7 @@ function isValidDate(d:any) {
 
 // Example POST method implementation:
 
-async function postAtraData(url = '', data = {}) {
+async function postAtraData(url = '', data:string) {
     // Default options are marked with *
     // console.log(AtraApiKey);
     //@ts-ignore

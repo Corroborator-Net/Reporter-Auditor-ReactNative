@@ -8,8 +8,8 @@
     ],
     "allowJs": true,
     "jsx": "react-native",
-    "noEmit": true,
-    "incremental": true,
+//    "emitDeclarationOnly": true,
+//    "incremental": true,
     "isolatedModules": true,
     "strict": true,
     "moduleResolution": "node",
@@ -18,7 +18,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noEmit": true
   },
   "exclude": [
     "node_modules",

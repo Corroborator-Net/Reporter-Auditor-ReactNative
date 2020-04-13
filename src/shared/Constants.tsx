@@ -1,5 +1,4 @@
-import {Platform} from "react-native";
-import {Button} from "react-native-elements";
+import {ActivityIndicator, ActivityIndicatorComponent, Platform} from "react-native";
 import React from "react";
 
 export const StorageSchemaVersion = 1;
@@ -78,7 +77,7 @@ export function GetPathToCameraRoll(fileName:string, original:boolean){
     return StorageLocation +fileName;
 }
 
-export const LoadingSpinner =  <Button loading={true} type={"clear"} loadingProps={{size:"large"}} />;
+export const LoadingSpinner =  <ActivityIndicator size={"large"} />;
 
 
 export function makeID(length: number): string {

@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-scripts start",
+    "web": "react-scripts start",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
@@ -26,6 +26,15 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "browserify-cipher": "^1.0.1",
+    "create-ecdh": "^4.0.0",
+    "create-hash": "^1.1.0",
+    "create-hmac": "^1.1.0",
+    "diffie-hellman": "^5.0.0",
+    "inherits": "^2.0.1",
+    "pbkdf2": "3.0.8",
+    "public-encrypt": "^4.0.0",
+    "randomfill": "^1.0.3",
     "browserify-zlib": "^0.1.4",
     "buffer": "^4.9.2",
     "dns.js": "^1.0.1",
@@ -39,7 +48,6 @@
     "react": "^16.9.0",
     "react-dom": "^16.13.1",
     "react-native": "0.61.5",
-    "react-native-android-ipfs": "file:./react-native-android-ipfs/",
     "react-native-camera": "^3.18.0",
     "react-native-crypto": "^2.2.0",
     "react-native-device-info": "^5.5.4",
@@ -69,6 +77,9 @@
     "url": "^0.10.3",
     "vm-browserify": "0.0.4"
   },
+  "peerDependencies": {
+    "browserify-sign": "4.0.4"
+  },
   "devDependencies": {
     "@babel/core": "^7.6.2",
     "@babel/runtime": "^7.6.2",
@@ -80,6 +91,7 @@
     "@typescript-eslint/eslint-plugin": "^2.12.0",
     "@typescript-eslint/parser": "^2.12.0",
     "babel-jest": "^24.9.0",
+    "babel-plugin-react-native-web": "^0.12.2",
     "eslint": "^6.5.1",
     "metro-react-native-babel-preset": "^0.56.4",
     "react-native-dotenv": "^0.2.0",

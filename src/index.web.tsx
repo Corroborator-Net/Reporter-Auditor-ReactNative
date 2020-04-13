@@ -1,6 +1,6 @@
 // index.web.js
 
-import App from './App';
+import App from './App.web';
 import React from 'react';
 import { AppRegistry } from 'react-native';
 
