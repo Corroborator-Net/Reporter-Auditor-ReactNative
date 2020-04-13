@@ -8,8 +8,8 @@ import {
     PrependJpegString,
     prettyPrint
 } from "../shared/Constants";
-import {ListItem} from "react-native-elements";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+// import {ListItem} from "react-native-elements";
+// import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
 import {Identity} from "../interfaces/Identity";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
@@ -154,30 +154,30 @@ export default class DetailLogView extends React.Component<Props, State> {
                     :
                     <></>
                 }
-                {this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{
-                    return (<ListItem
-                        onPress={()=>{
-                            let prevInfo = this.state.showInfo;
-                            prevInfo[index] = !prevInfo[index];
-                            this.setState({showInfo:prevInfo})
-                        }}
-                        key={node.log.currentDataMultiHash + index}
-                        title={this.getTitle(node,
-                            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}
-                        containerStyle={styles.title}
-                        badge={{
-                            value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}
-                        }}
-                        chevron={this.state.showInfo[index] ?
-                            <Icon name={"chevron-down"} size={20} color={"black"}/>
-                            :
-                            <Icon name={"chevron-right"} size={20} color={"black"}/>
-                        }
-                        subtitle={this.parseAndDisplayMetadata(node, index) }
-                        >
+                {/*{this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{*/}
+                {/*    return (<ListItem*/}
+                {/*        onPress={()=>{*/}
+                {/*            let prevInfo = this.state.showInfo;*/}
+                {/*            prevInfo[index] = !prevInfo[index];*/}
+                {/*            this.setState({showInfo:prevInfo})*/}
+                {/*        }}*/}
+                {/*        key={node.log.currentDataMultiHash + index}*/}
+                {/*        title={this.getTitle(node,*/}
+                {/*            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}*/}
+                {/*        containerStyle={styles.title}*/}
+                {/*        badge={{*/}
+                {/*            value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}*/}
+                {/*        }}*/}
+                {/*        chevron={this.state.showInfo[index] ?*/}
+                {/*            <Icon name={"chevron-down"} size={20} color={"black"}/>*/}
+                {/*            :*/}
+                {/*            <Icon name={"chevron-right"} size={20} color={"black"}/>*/}
+                {/*        }*/}
+                {/*        subtitle={this.parseAndDisplayMetadata(node, index) }*/}
+                {/*        >*/}
 
-                        </ListItem>
-                            )})
+                {/*        </ListItem>*/}
+                {/*            )})*/}
                 }
 
             </ScrollView>

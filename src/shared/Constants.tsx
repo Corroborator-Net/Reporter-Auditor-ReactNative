@@ -1,4 +1,4 @@
-import {ActivityIndicator, ActivityIndicatorComponent, Platform} from "react-native";
+import {ActivityIndicator, Platform} from "react-native";
 import React from "react";
 
 export const StorageSchemaVersion = 1;
