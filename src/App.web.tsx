@@ -2,10 +2,15 @@ import React from 'react';
 import './web-src/App.css';
 import {Text, View} from "react-native";
 import {AtraManager} from "./shared/AtraManager";
+import WebLogbookAndImageManager from "./web/WebLogbookAndImageManager";
+import HashManager from "./shared/HashManager";
+import CrossPlatformIdentity from "./shared/CrossPlatformIdentity.web";
 
 class App extends React.PureComponent {
     blockchainManager = new AtraManager();
-
+    corroboratedImagesAndLogbookManager = new WebLogbookAndImageManager();
+    hashManager = new HashManager();
+    identity = new CrossPlatformIdentity();
 
     render(){
       return (
