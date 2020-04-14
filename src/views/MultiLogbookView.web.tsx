@@ -4,8 +4,13 @@ import LogbookCell from "../components/LogbookCell";
 import {HashData, ImageRecord, Log, LogbookAndSection} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
-import {CorroborateLogsViewNameAndID, isMobile, LogsViewName, UserPreferenceKeys} from "../shared/Constants";
-import {requestStoragePermission, requestWritePermission} from "../native/RequestPermissions";
+import {
+    CorroborateLogsViewNameAndID,
+    isMobile,
+    LogsViewName,
+    UnfoundLogbookTitle,
+    UserPreferenceKeys
+} from "../shared/Constants";
 import {Identity} from "../interfaces/Identity";
 import HashManager from "../shared/HashManager";
 import {LogManager} from "../shared/LogManager";
@@ -110,13 +115,13 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         let index = 0;
         let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
         let allOnChainLogsInUserUploadedLogTreeByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
+
         // add unfound section
-        const unfoundKey = "Not Found";
         const noLogbookKey = "No Logbook in metadata";
-        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
+        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle] = new Array<Log>();
         for (const res of selectedImages) {
             this.getBase64(res, async (data:string) => {
-
+                if (data.startsWith("data:image/jpeg;base64,")){
                     data = data.slice("data:image/jpeg;base64,".length);
 
                     // load jpeg - this could be from local file system or the cloud
@@ -175,10 +180,10 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             (new Date().getTime() / 1000)
                         );
 
-                        let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey];
+                        let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle];
                         newLogs.push(missingLog);
-                        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = newLogs;
-                        console.log("NO matching log on the blockchain", allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey]);
+                        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle] = newLogs;
+                        console.log("NO matching log on the blockchain", allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle]);
                     }
                     else{
                         // For any log in the tree, get all logs in the tree so the tree can be constructed later
@@ -216,14 +221,16 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             false
                         );
                     }
+                }
 
-                    index+=1;
-                    // console.log(index, selectedImages.length);
-                    if (index == selectedImages.length){
-                        // console.log("all logs to display:",allLogsByLogbookAddress);
-                        this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
-                    }
-                });
+
+                index+=1;
+                // console.log(index, selectedImages.length);
+                if (index == selectedImages.length){
+                    // console.log("all logs to display:",allLogsByLogbookAddress);
+                    this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
+                }
+            });
 
         }
     }

@@ -9,6 +9,8 @@ export const isMobile = Platform.OS == 'android' || Platform.OS == 'ios';
 export const waitMS = ms => new Promise(res => setTimeout(res, ms));
 export function prettyPrint(message:string, data:any) { console.log(message, JSON.stringify(data, null, 2))}
 
+export const UnfoundLogbookTitle = "Not Found";
+
 export const LocalOnly = "orange";
 export const CorroboratedUnsynced = 'yellow';
 export const Synced = 'lightgreen';

@@ -195,6 +195,7 @@ export class LogbookEntry{
 
         // get all logs that have the same root hash
         let trunkLogs = this.getTrunkLogsInOrder(rootLog, allLogsInSameLogbook);
+        console.log(trunkLogs, imageRecordsWithMatchingRootHash);
 
         // pop each image record as we go, the only image records left should be those without a log.
         // order them by most recent and the most recent will be the most recent version of the edited log

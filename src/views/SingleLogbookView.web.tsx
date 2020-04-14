@@ -20,7 +20,7 @@ import {
     AppButtonTint,
     DetailLogViewName,
     EditLogsViewName,
-    PrependJpegString,
+    PrependJpegString, UnfoundLogbookTitle,
     waitMS
 } from "../shared/Constants";
 import { LogManager} from "../shared/LogManager";
@@ -163,7 +163,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                 // console.log("imagerecords:", imageRecords.length);
                 const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
                 const date = logbookEntry.RootImageRecord.timestamp.toDateString();
-                const logbookTitle = date + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));
+                const logbookTitle = (logsByLogbook.title == UnfoundLogbookTitle ? "" : date) + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));
                 if (logsSectionedByDateAndLogbook[logbookTitle]){
                     logsSectionedByDateAndLogbook[logbookTitle].push(logbookEntry)
                 }
@@ -285,8 +285,15 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                     </IconButton>
                 </Paper>
                 <SectionList
+                    style={{
+                        margin:10
+                    }}
                     renderSectionHeader={({ section: { title } }) => (
-                        <Text>{title}</Text>
+                        <Typography variant="h6" className={"title"} style={{
+
+                        }}>
+                            {title}
+                        </Typography>
                     )}
                     // getItemLayout={this.getItemLayout}
                     initialNumToRender={2}
