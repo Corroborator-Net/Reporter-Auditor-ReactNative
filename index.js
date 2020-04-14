@@ -1,8 +1,8 @@
 /**
  * @format
  */
-import './shim.js'
-import crypto from 'crypto'
+// import './shim.js'
+// import crypto from 'crypto'
 import 'react-native-gesture-handler';
 import {AppRegistry} from 'react-native';
 import App from './src/App.native';

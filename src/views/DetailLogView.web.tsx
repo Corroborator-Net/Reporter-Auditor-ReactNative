@@ -119,9 +119,12 @@ export default class DetailLogView extends React.Component<Props, State> {
         Object.keys(metadataDictionary).
         forEach(function eachKey(key)
         {
-            details.push(<ListItemText key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataDictionary[key]}</ListItemText>);
+            details.push(<ListItemText  key={key}
+                                       primary={key}
+                                       secondary={metadataDictionary[key]}>
+            </ListItemText>);
         });
-        return <List>{details}</List>;
+        return <List >{details}</List>;
     }
 
 
@@ -144,7 +147,7 @@ export default class DetailLogView extends React.Component<Props, State> {
     render() {
 
         return (
-            <ScrollView>
+            <ScrollView >
                 {this.state.currentLogBookEntry.HeadImageRecord ?
                     <Image
                         source={{uri: PrependJpegString(this.state.currentLogBookEntry.HeadImageRecord.base64Data)}}
@@ -155,32 +158,57 @@ export default class DetailLogView extends React.Component<Props, State> {
                     <></>
                 }
                 {this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{
-                    return (<ListItem button={true}
-                        onClick={()=>{
-                            let prevInfo = this.state.showInfo;
-                            prevInfo[index] = !prevInfo[index];
-                            this.setState({showInfo:prevInfo})
-                        }}
-                        key={node.log.currentDataMultiHash + index}
-                        title={this.getTitle(node,
-                            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}
-                        // containerStyle={styles.title}
-                        // badge={{
-                        //     value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}
-                        // }}
-
-                        >
-                            <ListItemText primary={"hi"}>
+                    return (
+                        <View style={{
+                            maxWidth:1500,
+                            alignSelf:"center"
+                        }}>
+                        {/*<ListItem*/}
+                        {/*    key={node.log.currentDataMultiHash + index}*/}
+                        {/*    title={this.getTitle(node,*/}
+                        {/*        this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}*/}
+                        {/*    // containerStyle={styles.title}*/}
+                        {/*    // badge={{*/}
+                        {/*    //     value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}*/}
+                        {/*    // }}*/}
+                        {/*    style={{*/}
+                        {/*        margin:50,*/}
+                        {/*        maxWidth:600,*/}
+                        {/*        flex:"1",*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*</ListItem>*/}
+                                <List component={"div"}
+                                style={{
+                                margin:10,
+                                maxWidth:1200,
+                                flex:"1",}}
+                                >
                                 {this.parseAndDisplayMetadata(node, index)}
-                            </ListItemText>
-                            {this.state.showInfo[index] ?
-                                <ExpandLess/>
-                                :
-                                <ExpandMore/>
-                            }
+                                </List>
+
+                            <ListItem
+                                button={true}
+                                onClick={()=>{
+                                    let prevInfo = this.state.showInfo;
+                                    prevInfo[index] = !prevInfo[index];
+                                    this.setState({showInfo:prevInfo})
+                                }}
+                                style={{
+                                    justifyContent:"center"
+                                }}
+                            >
+                                {this.state.showInfo[index] ?
+                                    <ExpandLess/>
+                                    :
+                                    <ExpandMore/>
+                                }
+
+                            </ListItem>
+
+                        </View>
 
 
-                        </ListItem>
                             )})
                 }
 

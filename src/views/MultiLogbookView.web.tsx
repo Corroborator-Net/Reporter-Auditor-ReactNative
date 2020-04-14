@@ -14,6 +14,7 @@ import WebLogbookAndImageManager from "../web/WebLogbookAndImageManager";
 import {Text} from "react-native"
 import PublishIcon from '@material-ui/icons/Publish';
 import Dropzone, {DropEvent} from "react-dropzone";
+import {CircularProgress} from "@material-ui/core";
 
 type State={
     logbooks:string[]
@@ -91,7 +92,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
     }
 
     handleFileUpload(acceptedFiles: File[], rejectedFiles: File[], event: DropEvent){
-        console.log("uploaded file!", acceptedFiles[0].name);
+        // console.log("uploaded file!", acceptedFiles[0].name);
         this.showUploadPrompt(acceptedFiles)
     }
 
@@ -115,7 +116,8 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
         for (const res of selectedImages) {
             this.getBase64(res, async (data:string) => {
-                data = data.slice("data:image/jpeg;base64,".length);
+
+                    data = data.slice("data:image/jpeg;base64,".length);
 
                     // load jpeg - this could be from local file system or the cloud
                     const uploadedImageHash = HashManager.GetHashSync(data);
@@ -142,9 +144,12 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
                                 logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
                                     await this.props.blockchainInterface.getRecordsFor(logbookAddress, null);
+                                console.log("logs at logbook:", logbooksWithLogsToCheckIfHashIsPresent[logbookAddress])
+                                console.log("logbook:",logbookAddress)
                             }
                         }
                         catch (e) {
+                            console.log("ERROR", e)
                             Alert.alert(
                                 'Server Error - Try Again', e+"", [{text: 'OK'},],
                                 { cancelable: false }
@@ -288,9 +293,18 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                                 justifyContent:"center"
                                             }} >
                                                 <input {...getInputProps()} />
-                                                <PublishIcon style={{width:"100%", height:"25%", marginTop:150}}/>
+                                                {this.state.refreshingLogs ?
+                                                    <CircularProgress style={{width: 70, height: 70, marginTop: 150}} />
+                                                    :
+                                                    <PublishIcon
+                                                        style={{width: "100%", height: "25%", marginTop: 150}}/>
+                                                }
+
                                                 <div/>
-                                                <Text style={{width:"100%"}} >Drag files or Click to Upload</Text>
+                                                <Text style={{width:"100%"}} >{this.state.refreshingLogs ? "Loading..."
+                                                    :
+                                                    "Drag files or Click to Upload"
+                                                }</Text>
                                             </div>
                                         </section>
                                     )}

@@ -1,7 +1,7 @@
-import {ImageDatabase, LogbookDatabase} from "../interfaces/Storage";
+import {ImageDatabase} from "../interfaces/Storage";
 import {Identity} from "../interfaces/Identity";
-import { PeerCorroborators} from "../interfaces/PeerCorroborators";
-import HashManager from "./HashManager";
+// import { PeerCorroborators} from "../interfaces/PeerCorroborators";
+// import HashManager from "./HashManager";
 import {HashData, Log, LogbookEntry} from "../interfaces/Data";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 // import NetInfo, {NetInfoState} from "@react-native-community/netinfo";
@@ -19,10 +19,8 @@ export class LogManager{
     logsToSync:Log[] = [];
     syncingLogs=false;
     public static Instance:LogManager;
-    constructor(public logStorage:LogbookDatabase,
+    constructor(
                 public didModule:Identity,
-                public peers:PeerCorroborators,
-                public hashManager:HashManager,
                 public blockchainManager:BlockchainInterface,
                 public logbookStateKeeper:LogbookStateKeeper,
                 public imageDatabase:ImageDatabase,
@@ -122,13 +120,7 @@ export class LogManager{
 
         );
 
-        // log the data after if/we get signatures
-        if (saveToDisk) {
-            this.logStorage.addNewRecord(newLog).then(() => {
-                    SingleLogbookView.ShouldUpdateLogbookView = true
-                }
-            );
-        }
+
 
         if (LogManager.CurrentlyConnectedToNetwork){
             this.uploadToBlockchain(newLog, saveToDisk);
@@ -169,10 +161,10 @@ export class LogManager{
     }
 
     async checkForUnsyncedLogs(){
-        const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
-        if (unsyncedLogs.length>0) {
-            this.syncLogs(unsyncedLogs);
-        }
+        // const unsyncedLogs = await this.logStorage.getUnsyncedRecords();
+        // if (unsyncedLogs.length>0) {
+        //     this.syncLogs(unsyncedLogs);
+        // }
 
     }
 
@@ -202,9 +194,9 @@ export class LogManager{
                     log.rootTransactionHash = recordID;
                 }
                 log.currentTransactionHash = recordID;
-                if (onDisk){
-                    this.logStorage.updateLogWithTransactionHash(log);
-                }
+                // if (onDisk){
+                //     this.logStorage.updateLogWithTransactionHash(log);
+                // }
 
             }).catch((err)=>{
             console.log("error on submit to blockchain:", err);

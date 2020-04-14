@@ -1,7 +1,6 @@
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {Log} from "../interfaces/Data";
-//@ts-ignore
-import {AtraApiKey, InfuraEndpoint, InfuraID, InfuraSecret} from 'react-native-dotenv'
+
 import fetchWithTimeout, {makeID, prettyPrint} from "./Constants";
 import {LogbookDatabase} from "../interfaces/Storage";
 
@@ -17,7 +16,7 @@ export class AtraManager implements BlockchainInterface, LogbookDatabase {
         const logs = new Array<Log>();
         const resp = await fetchWithTimeout("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
             headers: {
-                "x-api-key": AtraApiKey
+                "x-api-key": "vdssu05AWO6yAG4ojL4Sv6I9RkAGCak19hBhTVpm"
             }},20000).catch((error)=>{
             console.log("atra ERROR:", error);
             throw new Error(error)
@@ -25,7 +24,6 @@ export class AtraManager implements BlockchainInterface, LogbookDatabase {
         const json = await resp.json();
         if (json["error"]){
             console.log("atra ERROR:", json);
-
             throw new Error(json["error"])
         }
 
@@ -62,7 +60,7 @@ export class AtraManager implements BlockchainInterface, LogbookDatabase {
                 blockTimeStamp = this.HashMapToTimestamp[blockHash];
             }
             else{
-                const infuraResponse = await fetch(InfuraEndpoint, {
+                const infuraResponse = await fetch("https://rinkeby.infura.io/v3/cf6eff6e2b554d80826e056d5c040587", {
                     method: 'POST', // *GET, POST, PUT, DELETE, etc.
                     headers: {
                         'Content-Type': 'application/json',
@@ -226,7 +224,7 @@ async function postAtraData(url = '', data:string) {
         credentials: 'same-origin', // include, *same-origin, omit
         headers: {
             'Content-Type': 'application/json',
-            'x-api-key':AtraApiKey,
+            'x-api-key':"vdssu05AWO6yAG4ojL4Sv6I9RkAGCak19hBhTVpm",
         },
         body: data // body data type must match "Content-Type" header
     });

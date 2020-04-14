@@ -143,10 +143,10 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
             currentlySelectedLogs:[]
         });
 
-        console.log("loading logs for logbook: ", this.previousLogbook);
         // get all of our reporters' logs - this will either be local storage or blockchain storage
         let logbooksInSectionsWithLogs = (await this.props.logbookStateKeeper.GetAllLogsAndSectionsForCurrentLogbook());
             // .slice(this.state.currentPage, this.LogsPerPage);
+        // console.log("loading logs for logbook: ", logbooksInSectionsWithLogs);
 
 
         const onlyShowingOneLogbook = logbooksInSectionsWithLogs.length == 1;

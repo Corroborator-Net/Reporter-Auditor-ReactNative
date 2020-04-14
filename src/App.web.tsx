@@ -13,6 +13,7 @@ import DetailLogView from "./views/DetailLogView";
 import { BrowserRouter, Route } from 'react-router-dom'
 import {View} from "react-native";
 import TitleBar from "./components/TitleBar";
+import {LogManager} from "./shared/LogManager.web";
 
 
 
@@ -20,6 +21,7 @@ import TitleBar from "./components/TitleBar";
 class App extends React.PureComponent {
     blockchainManager = new AtraManager();
     corroboratedImagesAndLogbookManager = new WebLogbookAndImageManager();
+    // singleton
     hashManager = new HashManager();
     identity = new CrossPlatformIdentity();
     userPreferences = new NativeUserPreferences(this.identity);
@@ -27,6 +29,12 @@ class App extends React.PureComponent {
         this.userPreferences,
         this.blockchainManager ,
         this.blockchainManager);
+    // singleton
+    logManager = new LogManager(
+        this.identity,
+        this.blockchainManager,
+        this.logbookStateKeeper,
+        this.corroboratedImagesAndLogbookManager);
 
     render(){
       return (
