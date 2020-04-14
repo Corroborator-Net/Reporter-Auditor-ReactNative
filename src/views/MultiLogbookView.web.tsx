@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {Alert, FlatList, RefreshControl, SafeAreaView, StyleSheet, View} from "react-native";
 import LogbookCell from "../components/LogbookCell";
 import {HashData, ImageRecord, Log, LogbookAndSection} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
@@ -12,6 +12,8 @@ import {LogManager} from "../shared/LogManager";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
 import WebLogbookAndImageManager from "../web/WebLogbookAndImageManager";
 import {Text} from "react-native"
+import PublishIcon from '@material-ui/icons/Publish';
+import Dropzone, {DropEvent} from "react-dropzone";
 
 type State={
     logbooks:string[]
@@ -23,7 +25,7 @@ type State={
 
 type  Props={
     imageSource:ImageDatabase;
-    navigation: any;
+    history: any;
     logbookStateKeeper:LogbookStateKeeper;
     blockchainInterface:BlockchainInterface;
     userPreferences:UserPreferenceStorage;
@@ -88,10 +90,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         };
     }
 
-    handleFileUpload(event:any){
-        event.preventDefault();
-        console.log("uploaded file!",this.fileInput.current.files[0].name);
-        this.showUploadPrompt(this.fileInput.current.files)
+    handleFileUpload(acceptedFiles: File[], rejectedFiles: File[], event: DropEvent){
+        console.log("uploaded file!", acceptedFiles[0].name);
+        this.showUploadPrompt(acceptedFiles)
     }
 
     async showUploadPrompt(files:File[]){
@@ -114,14 +115,11 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         allOnChainLogsInUserUploadedLogTreeByLogbookAddress[unfoundKey] = new Array<Log>();
         for (const res of selectedImages) {
             this.getBase64(res, async (data:string) => {
-                // idCardBase64 = result;
-        //     });
-        //
-        // .then(async (data) => {
                 data = data.slice("data:image/jpeg;base64,".length);
-                console.log(data);
+
                     // load jpeg - this could be from local file system or the cloud
                     const uploadedImageHash = HashManager.GetHashSync(data);
+                    console.log("hash:",uploadedImageHash);
 
                     const imageRecord = new ImageRecord(
                         new Date(),
@@ -242,7 +240,8 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
         this.props.logbookStateKeeper.LogsToCorroborate =  logbooksPerAddress;
         this.props.logbookStateKeeper.CurrentLogbookID = CorroborateLogsViewNameAndID;
-        this.props.navigation.navigate(CorroborateLogsViewNameAndID, {title:CorroborateLogsViewNameAndID});
+        // this.props.navigation.navigate(CorroborateLogsViewNameAndID, {title:CorroborateLogsViewNameAndID});
+        this.props.history.push("/"+CorroborateLogsViewNameAndID);
 
     }
 
@@ -266,29 +265,37 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     contentContainerStyle={styles.list}
                     renderItem={({item}) =>
                         item == this.state.logbooks[0] ?
-                            <LogbookCell
-                                onLongPress={()=>{}}
-                                title={"Add New Logbook"}
-                                onPress={ ()=>{
-                                    this.setState({refreshingLogs:true},
-                                    this.AddNewLogbook
-                                    )}
-                                }
-                            />
+                            <></>
                             :
                             item == this.state.logbooks[1] ?
-                                // <LogbookCell
-                                //     onLongPress={()=>{}}
-                                //     title={"Check and Corroborate Files"}
-                                //     onPress={ ()=>{
-                                //         this.showUploadPrompt();
-                                //     }}
-                                // />
-                                <form onSubmit={this.handleFileUpload}>
-                                <input type={"file"}
-                                       ref={this.fileInput}/>
-                                   <button type={"submit"}>Submit</button>
-                                </form>
+                                <View style={{
+                                    display:"flex",
+                                    width:500,
+                                    height:500,
+                                    borderWidth:10,
+                                    borderRadius:20,
+                                    borderColor:"black",
+                                }}>
+                                <Dropzone onDrop={this.handleFileUpload} >
+                                    {({getRootProps, getInputProps}) => (
+                                        <section style={{display:"flex",
+                                            height:"100%",
+                                            width:"100%",
+                                        }} >
+                                            <div {...getRootProps()} style={{height:"100%", width:"100%",
+                                                alignItems:"center",
+                                                alignContent:"center",
+                                                justifyContent:"center"
+                                            }} >
+                                                <input {...getInputProps()} />
+                                                <PublishIcon style={{width:"100%", height:"25%", marginTop:150}}/>
+                                                <div/>
+                                                <Text style={{width:"100%"}} >Drag files or Click to Upload</Text>
+                                            </div>
+                                        </section>
+                                    )}
+                                </Dropzone>
+                                </View>
                                 :
                                 <LogbookCell
                                     // src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
@@ -300,8 +307,9 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                     title={this.state.logbookNames.get(item) || ""}
                                     onPress={() => {
                                         this.props.logbookStateKeeper.CurrentLogbookID = item;
-                                        this.props.navigation.navigate(LogsViewName, {
-                                            title:this.state.logbookNames.get(item)});
+                                        // this.props.navigation.navigate(LogsViewName, {
+                                        //     title:this.state.logbookNames.get(item)});
+                                        this.props.history.push("/"+LogsViewName);
                                     }}
                                 />
 

@@ -10,19 +10,11 @@ import MultiLogbookView from "./views/MultiLogbookView";
 import {CorroborateLogsViewNameAndID, DetailLogViewName} from "./shared/Constants";
 import SingleLogbookView from "./views/SingleLogbookView";
 import DetailLogView from "./views/DetailLogView";
-import { BrowserRouter, Route, Link, useHistory } from 'react-router-dom'
-import {View, Text} from "react-native";
+import { BrowserRouter, Route } from 'react-router-dom'
+import {View} from "react-native";
+import TitleBar from "./components/TitleBar";
 
 
-function navigation() {
-
-    const history = useHistory();
-    function navigate(path:string, title:string){
-        console.log("history is!",history, " and path:", path)
-        history.push("/"+path)
-    }
-
-}
 
 
 class App extends React.PureComponent {
@@ -35,7 +27,6 @@ class App extends React.PureComponent {
         this.userPreferences,
         this.blockchainManager ,
         this.blockchainManager);
-    navigation = navigation();
 
     render(){
       return (
@@ -44,16 +35,8 @@ class App extends React.PureComponent {
           <div className="App">
           <div id="root" style={{display:"flex",height:"100%"}}>
               <BrowserRouter>
-                  <View style={{height:500, width:500}}>
-                      {/*<View >*/}
-                      {/*    <Link to="/">*/}
-                      {/*        <Text>Home</Text>*/}
-                      {/*    </Link>*/}
-                      {/*    <Link to="/about">*/}
-                      {/*        <Text>About</Text>*/}
-                      {/*    </Link>*/}
-                      {/*</View>*/}
-
+                  <View style={{display:"flex",height:"100%", width:"100%"}}>
+                      <TitleBar/>
                       <Route exact path="/" render={(props)=>
                           <MultiLogbookView {...props}
                           imageSource={this.corroboratedImagesAndLogbookManager}
@@ -61,15 +44,15 @@ class App extends React.PureComponent {
                           blockchainInterface={this.blockchainManager}
                           userPreferences={this.userPreferences}
                           identity={this.identity}
-                          navigation={this.navigation}
+                          navigation={null}
                           />}
                       />
                       <Route exact path={"/"+CorroborateLogsViewNameAndID} render={(props)=>
                           <SingleLogbookView {...props}
                                  imageSource={this.corroboratedImagesAndLogbookManager}
                                  logbookStateKeeper={this.logbookStateKeeper}
-                                 navigation={this.navigation}
                                  route={{params:{title:"Logbook"}}}
+                                 navigation={null}
                           />}
                       />
                       <Route exact path={"/"+DetailLogViewName} render={(props)=>

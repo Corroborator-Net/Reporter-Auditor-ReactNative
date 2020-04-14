@@ -11,6 +11,9 @@ import {ImageDatabase} from "../interfaces/Storage";
 import {Log, LogbookEntry} from "../interfaces/Data";
 import LogCell from "../components/LogCell";
 import {Button, Text} from "react-native";
+import SearchIcon from '@material-ui/icons/Search';
+
+
 // import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import _ from 'lodash';
 import {
@@ -22,6 +25,8 @@ import {
 } from "../shared/Constants";
 import { LogManager} from "../shared/LogManager";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
+import {AppBar, IconButton, Paper, Toolbar, Typography} from "@material-ui/core";
+import InputBase from "@material-ui/core/InputBase";
 
 type State={
     logbookEntries:LogbookEntryAndSection[]
@@ -39,7 +44,7 @@ type State={
 type Props={
     logbookStateKeeper:LogbookStateKeeper;
     imageSource:ImageDatabase;
-    navigation: any;
+    history: any;
     route:any;
 }
 
@@ -48,12 +53,13 @@ type LogbookEntryAndSection={
     data:LogbookEntry[]
 }
 
+
+
 export default class SingleLogbookView extends React.PureComponent<Props, State> {
 
     readonly LogSize = 120;
     static ShouldUpdateLogbookView = false;
     previousLogbook = "";
-
     state={
         logbookEntries:new Array<LogbookEntryAndSection>(),
         filteredLogbookEntries:new Array<LogbookEntryAndSection>(),
@@ -70,10 +76,6 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
 
     componentDidMount(): void {
         this.getLogs();
-        this.props.navigation.addListener('focus', this.onScreenFocus);
-        this.props.navigation.setOptions({
-            title: this.props.route.params.title
-        });
     }
 
 
@@ -81,7 +83,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
     onEditButtonPressed(){
         this.props.logbookStateKeeper.CurrentSelectedLogs = this.state.currentlySelectedLogs;
         // clear the selection or not? Thinking not in case of user error/fat fingers
-        this.props.navigation.navigate(EditLogsViewName);
+        this.props.history.push("/"+EditLogsViewName);
     }
 
 
@@ -183,8 +185,6 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
 
 
 
-
-
         this.setState({
             logbookEntries:logsAndSections,
             refreshing:false,
@@ -257,18 +257,33 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
 
 
     render() {
+
         return (
             <SafeAreaView style={styles.container}>
-                {/*<SearchBar*/}
-                {/*    containerStyle={{backgroundColor:"transparent"}}*/}
-                {/*    round={true}*/}
-                {/*    lightTheme={true}*/}
-                {/*    placeholder="Search Logs..."*/}
-                {/*    autoCapitalize='none'*/}
-                {/*    autoCorrect={false}*/}
-                {/*    onChangeText={ (text => {this.search(text)})}*/}
-                {/*    value={this.state.searchText}*/}
-                {/*/>*/}
+
+                <Paper component="form" style={{
+                    padding: '2px 4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                }}>
+                    <InputBase
+                        style={{
+                            flex: 1,
+                            marginLeft:10
+                        }}
+                        placeholder="Search Logs"
+                        inputProps={{ 'aria-label': 'search logs' }}
+                        onChange={(text)=> {
+                            text.preventDefault();
+                            this.search(text.target.value);
+                        }}
+                    />
+                    <IconButton type="submit" style={{
+                        padding: 10,
+                    }} aria-label="search">
+                        <SearchIcon />
+                    </IconButton>
+                </Paper>
                 <SectionList
                     renderSectionHeader={({ section: { title } }) => (
                         <Text>{title}</Text>
@@ -319,7 +334,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
     onSelectLog(log:LogbookEntry){
         if (!this.state.selectingMultiple) {
             this.props.logbookStateKeeper.CurrentSelectedLogs = [log]
-            this.props.navigation.navigate(DetailLogViewName);
+            this.props.history.push("/"+DetailLogViewName);
             return
         }
 
@@ -408,6 +423,10 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
 
 
 const styles = StyleSheet.create({
+    divider: {
+        height: 28,
+        margin: 4,
+    },
     container: {
         flex: 1,
         marginTop: 0,

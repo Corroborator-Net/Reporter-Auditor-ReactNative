@@ -30,6 +30,9 @@ export class AtraManager implements BlockchainInterface, LogbookDatabase {
         }
 
         const liveRecords = json["live"];
+        if (!liveRecords){
+            return logs;
+        }
         let i;
         // start at the end of the list
         for (i = liveRecords.length - 1; i >= 0; i--) {

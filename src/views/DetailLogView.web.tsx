@@ -8,12 +8,12 @@ import {
     PrependJpegString,
     prettyPrint
 } from "../shared/Constants";
-// import {ListItem} from "react-native-elements";
-// import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {LogMetadata} from "../shared/LogMetadata";
 import {Identity} from "../interfaces/Identity";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
-
+import {List, ListItem, ListItemText} from "@material-ui/core";
+import ExpandLess from '@material-ui/icons/ExpandLess';
+import ExpandMore from '@material-ui/icons/ExpandMore';
 
 type Props={
     route:any
@@ -119,9 +119,9 @@ export default class DetailLogView extends React.Component<Props, State> {
         Object.keys(metadataDictionary).
         forEach(function eachKey(key)
         {
-            details.push(<Text key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataDictionary[key]}</Text>);
+            details.push(<ListItemText key={key}> <Text style={{fontWeight:"bold"}}>{key}</Text>: {metadataDictionary[key]}</ListItemText>);
         });
-        return <View>{details}</View>;
+        return <List>{details}</List>;
     }
 
 
@@ -154,30 +154,34 @@ export default class DetailLogView extends React.Component<Props, State> {
                     :
                     <></>
                 }
-                {/*{this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{*/}
-                {/*    return (<ListItem*/}
-                {/*        onPress={()=>{*/}
-                {/*            let prevInfo = this.state.showInfo;*/}
-                {/*            prevInfo[index] = !prevInfo[index];*/}
-                {/*            this.setState({showInfo:prevInfo})*/}
-                {/*        }}*/}
-                {/*        key={node.log.currentDataMultiHash + index}*/}
-                {/*        title={this.getTitle(node,*/}
-                {/*            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}*/}
-                {/*        containerStyle={styles.title}*/}
-                {/*        badge={{*/}
-                {/*            value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}*/}
-                {/*        }}*/}
-                {/*        chevron={this.state.showInfo[index] ?*/}
-                {/*            <Icon name={"chevron-down"} size={20} color={"black"}/>*/}
-                {/*            :*/}
-                {/*            <Icon name={"chevron-right"} size={20} color={"black"}/>*/}
-                {/*        }*/}
-                {/*        subtitle={this.parseAndDisplayMetadata(node, index) }*/}
-                {/*        >*/}
+                {this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{
+                    return (<ListItem button={true}
+                        onClick={()=>{
+                            let prevInfo = this.state.showInfo;
+                            prevInfo[index] = !prevInfo[index];
+                            this.setState({showInfo:prevInfo})
+                        }}
+                        key={node.log.currentDataMultiHash + index}
+                        title={this.getTitle(node,
+                            this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}
+                        // containerStyle={styles.title}
+                        // badge={{
+                        //     value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}
+                        // }}
 
-                {/*        </ListItem>*/}
-                {/*            )})*/}
+                        >
+                            <ListItemText primary={"hi"}>
+                                {this.parseAndDisplayMetadata(node, index)}
+                            </ListItemText>
+                            {this.state.showInfo[index] ?
+                                <ExpandLess/>
+                                :
+                                <ExpandMore/>
+                            }
+
+
+                        </ListItem>
+                            )})
                 }
 
             </ScrollView>
