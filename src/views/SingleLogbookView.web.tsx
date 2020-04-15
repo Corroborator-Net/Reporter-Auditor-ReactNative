@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import {ImageDatabase} from "../interfaces/Storage";
 import {Log, LogbookEntry} from "../interfaces/Data";
-import LogCell from "../components/LogCell";
+import LogCell from "../components/LogCell.web";
 import {Button, Text} from "react-native";
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -155,7 +155,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
         for (const logsByLogbook of logbooksInSectionsWithLogs){
 
             let rootLogs = Log.GetRootLogsByFirstLoggedPublicKey(logsByLogbook.logs);
-             // console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
+             console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
 
             for (const log of rootLogs){
                 // Get all records with the same root hash
@@ -163,7 +163,11 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                 // console.log("imagerecords:", imageRecords.length);
                 const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
                 const date = logbookEntry.RootImageRecord.timestamp.toDateString();
-                const logbookTitle = (logsByLogbook.title == UnfoundLogbookTitle ? "" : date) + (onlyShowingOneLogbook ? "" : (" " + logsByLogbook.title));
+                const logbookTitle =
+                    // show date if real logbook
+                    (logsByLogbook.title == UnfoundLogbookTitle ? "" : date)
+                    + (onlyShowingOneLogbook ? "" : (" Logbook: " + logsByLogbook.title));
+
                 if (logsSectionedByDateAndLogbook[logbookTitle]){
                     logsSectionedByDateAndLogbook[logbookTitle].push(logbookEntry)
                 }
@@ -218,6 +222,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
     }
 
 
+
 // select multiple is passed upon every longpress
 
     _renderItem = ({ item }: { item: LogbookEntry }) =>(
@@ -225,7 +230,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                 beginSelectingMultiple={()=>this.beginSelectingMultiple(item)}
                 onSelectLog={()=>this.onSelectLog(item)}
                 selectingMultiple={this.state.selectingMultiple}
-                src={PrependJpegString(item.HeadImageRecord.base64Data)}
+                src={PrependJpegString(item.GetAnyImageFromRevisionNodes().base64Data)}
                 // {"data:image/jpeg;base64,"}
                 // to test local-only storage on auditor side, don't pass an image
                 item={item}
@@ -289,11 +294,14 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                         margin:10
                     }}
                     renderSectionHeader={({ section: { title } }) => (
-                        <Typography variant="h6" className={"title"} style={{
-
-                        }}>
-                            {title}
+                        <View>
+                        <Typography variant="h6" className={"title"} style={{}}>
+                            {title!= "Results" ? title.slice(0, title.indexOf("Logbook:")): "Results"}
                         </Typography>
+                            <Typography variant="h6" className={"title"} style={{}}>
+                            { title!= "Results" ? title.slice(title.indexOf("Logbook:")):""}
+                        </Typography>
+                        </View>
                     )}
                     // getItemLayout={this.getItemLayout}
                     initialNumToRender={2}

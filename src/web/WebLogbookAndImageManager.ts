@@ -7,6 +7,9 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
 
     private CachedRecords:{[imageHash:string]:ImageRecord[]} ={};
 
+    ClearCachedRecords(){
+        this.CachedRecords = {};
+    }
 
      addImageRecordAtRootHash(imageRecord:ImageRecord){
          // console.log("adding image record to hash:", imageRecord.rootMultiHash);
@@ -27,8 +30,9 @@ export default class WebLogbookAndImageManager implements ImageDatabase {
              this.CachedRecords[imageRecord.rootMultiHash] = [imageRecord];
          }
          else{
-             const foundIndex = this.CachedRecords[imageRecord.rootMultiHash]
+             let foundIndex = this.CachedRecords[imageRecord.rootMultiHash]
                  .findIndex(record=>record.currentMultiHash == imageRecord.currentMultiHash);
+             foundIndex = foundIndex==-1 ? this.CachedRecords[imageRecord.rootMultiHash].length : foundIndex;
              this.CachedRecords[imageRecord.rootMultiHash][foundIndex] = imageRecord;
              console.log("replaced:",this.CachedRecords[imageRecord.rootMultiHash][foundIndex].currentMultiHash)
 

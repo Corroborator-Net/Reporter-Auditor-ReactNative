@@ -17,13 +17,13 @@ export class AtraManager implements BlockchainInterface, LogbookDatabase {
         const resp = await fetchWithTimeout("https://api.atra.io/prod/v1/dtables/records?tableId="  + logBookAddress + "&txinfo=true", {
             headers: {
                 "x-api-key": "vdssu05AWO6yAG4ojL4Sv6I9RkAGCak19hBhTVpm"
-            }},20000).catch((error)=>{
-            console.log("atra ERROR:", error);
+            }},30000).catch((error)=>{
+            console.log("atra fetch ERROR:", error);
             throw new Error(error)
         });
         const json = await resp.json();
         if (json["error"]){
-            console.log("atra ERROR:", json);
+            console.log("atra json ERROR:", json);
             throw new Error(json["error"])
         }
 

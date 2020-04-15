@@ -5,11 +5,10 @@ import {HashData, ImageRecord, Log, LogbookAndSection} from "../interfaces/Data"
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
 import {BlockchainInterface} from "../interfaces/BlockchainInterface";
 import {
-    CorroborateLogsViewNameAndID,
-    isMobile,
-    LogsViewName,
+    CorroborateLogsViewNameAndID, getOrientation,
+    LogsViewName, resetOrientation,
     UnfoundLogbookTitle,
-    UserPreferenceKeys
+    UserPreferenceKeys, waitMS
 } from "../shared/Constants";
 import {Identity} from "../interfaces/Identity";
 import HashManager from "../shared/HashManager";
@@ -71,7 +70,6 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
             logbookNames.set(logbookID, logbookName);
         }
 
-
         if (logbooks[0]!="custom0") {
             customButtons = 1;
             logbooks.unshift("custom0");
@@ -112,6 +110,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
             refreshingLogs:true
         });
 
+        WebLogbookAndImageManager.Instance.ClearCachedRecords();
         let index = 0;
         let logbooksWithLogsToCheckIfHashIsPresent:{[logbook:string]:Log[]}= {};
         let allOnChainLogsInUserUploadedLogTreeByLogbookAddress:{[logbookAddress:string]:Log[]} = {};
@@ -120,12 +119,15 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         const noLogbookKey = "No Logbook in metadata";
         allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle] = new Array<Log>();
         for (const res of selectedImages) {
-            this.getBase64(res, async (data:string) => {
-                if (data.startsWith("data:image/jpeg;base64,")){
+            getOrientation(res, (orientation:number)=>{
+                this.getBase64(res, (preData:string) => {
+                    resetOrientation(preData, orientation, async (data:string)=>{
+                // if (data.startsWith("data:image/jpeg;base64,")){
                     data = data.slice("data:image/jpeg;base64,".length);
+                    preData = preData.slice("data:image/jpeg;base64,".length);
 
                     // load jpeg - this could be from local file system or the cloud
-                    const uploadedImageHash = HashManager.GetHashSync(data);
+                    const uploadedImageHash = HashManager.GetHashSync(preData);
                     console.log("hash:",uploadedImageHash);
 
                     const imageRecord = new ImageRecord(
@@ -133,7 +135,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                         res.name,
                         uploadedImageHash,
                         uploadedImageHash,
-                        data,
+                        preData,
                     );
 
                     // look in the image's metadata for a logbook id
@@ -147,18 +149,32 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                         console.log("filling logbooks with logs from blockchain!");
                         try {
                             if (!logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]) {
+                                // set pending
+                                logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] = [];
+                                console.log("requesting logbook:",logbookAddress);
                                 logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] =
                                     await this.props.blockchainInterface.getRecordsFor(logbookAddress, null);
-                                console.log("logs at logbook:", logbooksWithLogsToCheckIfHashIsPresent[logbookAddress])
-                                console.log("logbook:",logbookAddress)
+                                // console.log("logs at logbook:", logbooksWithLogsToCheckIfHashIsPresent[logbookAddress])
+                            }
+                            else if (logbooksWithLogsToCheckIfHashIsPresent[logbookAddress]
+                                && logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].length==0){
+                                while (logbooksWithLogsToCheckIfHashIsPresent[logbookAddress].length==0){
+                                    await waitMS(2000);
+                                    // wait for current call to get the logs at the same logbook address
+                                }
                             }
                         }
                         catch (e) {
+                            //@ts-ignore
+                            logbooksWithLogsToCheckIfHashIsPresent[logbookAddress] = null;
                             console.log("ERROR", e)
                             Alert.alert(
                                 'Server Error - Try Again', e+"", [{text: 'OK'},],
                                 { cancelable: false }
                             );
+                            this.setState({
+                                refreshingLogs:false
+                            });
                             return;
                         }
                         // console.log("logs at logbook",JSON.stringify(logbooksWithLogsToCheckIfHashIsPresent[logbookAddress], null, 2));
@@ -177,7 +193,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             uploadedImageHash,
                             "",
                             "",
-                            (new Date().getTime() / 1000)
+                            (new Date().getTime())
                         );
 
                         let newLogs = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle];
@@ -192,15 +208,11 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
                         // update the root multihash with a trunk log's hash
                         imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
+                        imageRecord.base64Data = data;
                         WebLogbookAndImageManager.Instance.updateImageRecordAtRootHash(imageRecord);
 
-                        if (!allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]) {
-                            allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allLogsInLogTree;
-                        }
-                        else{
-                            allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress]
-                                .concat(allLogsInLogTree);
-                        }
+                        // all logs in log tree are all the logs in the logbook...
+                        allOnChainLogsInUserUploadedLogTreeByLogbookAddress[logbookAddress] = logbooksWithLogsToCheckIfHashIsPresent[logbookAddress];
 
                         // TODO allow corroborations by owners' keys
                         // const metadata = JSON.parse(corroboratedLog.encryptedMetadataJson);
@@ -221,7 +233,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                             false
                         );
                     }
-                }
+                // }
 
 
                 index+=1;
@@ -231,6 +243,11 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                     this.NavigateToCorroboratedLogsView(allOnChainLogsInUserUploadedLogTreeByLogbookAddress)
                 }
             });
+
+                    })
+                })
+            // })
+            // this.getBase64(res, async (data:string) => {
 
         }
     }
@@ -246,6 +263,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                 logs:allLogsByLogbookAddress[logbook]
             })
         }
+
         this.setState({
             refreshingLogs:false
         });

@@ -11,7 +11,7 @@ import {
 import {LogMetadata} from "../shared/LogMetadata";
 import {Identity} from "../interfaces/Identity";
 import LogbookStateKeeper from "../shared/LogbookStateKeeper";
-import {List, ListItem, ListItemText} from "@material-ui/core";
+import {List, ListItem, ListItemText, Typography} from "@material-ui/core";
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 
@@ -33,6 +33,8 @@ export default class DetailLogView extends React.Component<Props, State> {
         currentLogBookEntry:this.props.logbookStateKeeper.CurrentSelectedLogs[0],
         previousLogbookHash:"",
     };
+
+    currentImageHash:string = "";
 
     imageRecordHasBeenLogged(log:Log, imageRecord:ImageRecord):boolean{
         // we might be displaying the most recent image record, in which case the root log will show it hasn't been logged yet
@@ -119,9 +121,13 @@ export default class DetailLogView extends React.Component<Props, State> {
         Object.keys(metadataDictionary).
         forEach(function eachKey(key)
         {
-            details.push(<ListItemText  key={key}
+            details.push(<ListItemText key={key}
                                        primary={key}
-                                       secondary={metadataDictionary[key]}>
+                                       secondary={metadataDictionary[key]}
+                                       style={{
+                                           overflowWrap:"break-word"
+                                       }}
+            >
             </ListItemText>);
         });
         return <List >{details}</List>;
@@ -140,17 +146,22 @@ export default class DetailLogView extends React.Component<Props, State> {
   }
 
   getTitle(node:RevisionNode, index:number):string{
-      return "Log v" + index +" on "+ GetLocalTimeFromSeconds(node.log.blockTimeOrLocalTime)
+        if (node.log.currentTransactionHash == ""){
+            return "Unlogged"
+        }
+      return "Log v" + index +" on "+ GetLocalTimeFromSeconds(node.log.blockTimeOrLocalTime/1000)
+          + (this.currentImageHash == node.imageRecord.currentMultiHash ? " (Shown Above)" : "");
   }
 
 
     render() {
-
+        const currentImage = this.state.currentLogBookEntry.GetAnyImageFromRevisionNodes();
+        this.currentImageHash =currentImage.currentMultiHash;
         return (
             <ScrollView >
                 {this.state.currentLogBookEntry.HeadImageRecord ?
                     <Image
-                        source={{uri: PrependJpegString(this.state.currentLogBookEntry.HeadImageRecord.base64Data)}}
+                        source={{uri: PrependJpegString(currentImage.base64Data)}}
                         resizeMethod={"resize"}
                         style={styles.image}
                     />
@@ -159,25 +170,24 @@ export default class DetailLogView extends React.Component<Props, State> {
                 }
                 {this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.map((node, index)=>{
                     return (
-                        <View style={{
+                        <View
+                            key={node.log.currentDataMultiHash + index}
+                            style={{
                             maxWidth:1500,
-                            alignSelf:"center"
+                            alignSelf:"center",
+                            borderRadius:20,
+                            borderWidth:5,
+                            margin:20,
+                            padding:10,
                         }}>
-                        {/*<ListItem*/}
-                        {/*    key={node.log.currentDataMultiHash + index}*/}
-                        {/*    title={this.getTitle(node,*/}
-                        {/*        this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}*/}
-                        {/*    // containerStyle={styles.title}*/}
+                            <Typography variant="h6" className={"title"} style={{ margin:20}}>
+                                {this.getTitle(node,
+                                    this.state.currentLogBookEntry.OrderedRevisionsStartingAtHead.length - index)}
+                            </Typography>
+
                         {/*    // badge={{*/}
                         {/*    //     value: node.corroboratingLogs.length, textStyle: {color: 'white'}, badgeStyle:{width:50}*/}
-                        {/*    // }}*/}
-                        {/*    style={{*/}
-                        {/*        margin:50,*/}
-                        {/*        maxWidth:600,*/}
-                        {/*        flex:"1",*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*</ListItem>*/}
+
                                 <List component={"div"}
                                 style={{
                                 margin:10,

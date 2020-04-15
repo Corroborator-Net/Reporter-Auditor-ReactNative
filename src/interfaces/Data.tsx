@@ -2,7 +2,7 @@
 import {piexif} from "piexifjs";
 import {LogMetadata} from "../shared/LogMetadata";
 import _ from "lodash";
-import {prettyPrint} from "../shared/Constants";
+import {Alarm, LocalOnly, prettyPrint, Synced} from "../shared/Constants";
 
 
 // TODO: storing the entire image in the base64 property is too inefficient a use of space
@@ -151,7 +151,10 @@ export class LogbookEntry{
             && potentialCorroboratingLog.currentDataMultiHash == log.currentDataMultiHash
 
             // TODO: furthermore, check to make sure the signed hash matches the logging public key
-            && potentialCorroboratingLog.loggingPublicKey != this.OwnersKey);
+            && potentialCorroboratingLog.loggingPublicKey != this.OwnersKey)
+            .sort((log1,log2)=>{
+                return log1.blockTimeOrLocalTime - log2.blockTimeOrLocalTime
+            });
 
         // prettyPrint("corroborating logs found!:", corroboratingLogs);
         return corroboratingLogs;
@@ -195,7 +198,7 @@ export class LogbookEntry{
 
         // get all logs that have the same root hash
         let trunkLogs = this.getTrunkLogsInOrder(rootLog, allLogsInSameLogbook);
-        console.log(trunkLogs, imageRecordsWithMatchingRootHash);
+        // console.log("trunk logs:", trunkLogs, "image records:", imageRecordsWithMatchingRootHash);
 
         // pop each image record as we go, the only image records left should be those without a log.
         // order them by most recent and the most recent will be the most recent version of the edited log
@@ -209,6 +212,7 @@ export class LogbookEntry{
             if (indexOfRecord>-1){
                 imageRecord = imageRecordsArrayToEdit.splice(indexOfRecord,1)[0];
             }
+            // console.log("found a match for:", trunkLog, " with image record:", indexOfRecord>-1);
 
             this.OrderedRevisionsStartingAtHead.unshift(new RevisionNode(
                 trunkLog,
@@ -225,6 +229,18 @@ export class LogbookEntry{
 
     }
 
+    GetAnyImageFromRevisionNodes():ImageRecord{
+        for (let i=0; i < this.OrderedRevisionsStartingAtHead.length;i++){
+            if (this.OrderedRevisionsStartingAtHead[i].imageRecordIsBlank
+                && i!=this.OrderedRevisionsStartingAtHead.length){
+                continue
+            }
+            return this.OrderedRevisionsStartingAtHead[i].imageRecord;
+        }
+        // if no images, return the blank one at the head
+        return this.OrderedRevisionsStartingAtHead[0].imageRecord;
+
+    }
 
     get RootLog():Log{
         return this.rootLog;
@@ -241,6 +257,8 @@ export class LogbookEntry{
         if (this.MostRecentEditedRecord){
             return this.MostRecentEditedRecord
         }
+        console.log("ordered revisions:", this.OrderedRevisionsStartingAtHead);
+        // return the image if the head is not the matching log
         return this.OrderedRevisionsStartingAtHead[0].imageRecord;
     }
 
@@ -249,7 +267,17 @@ export class LogbookEntry{
     }
 
 
-    public IsImageRecordSynced():boolean{
+    GetColorForBorder():string{
+        if (this.IsImageRecordSynced()){
+            return Synced
+        }
+        if (this.rootLog.loggingPublicKey == ""){
+            return Alarm
+        }
+        return LocalOnly;
+    }
+
+    IsImageRecordSynced():boolean{
         // console.log("is synced?", this.Log, "record:", this.ImageRecord.currentMultiHash);
         // if they match then the image record has been logged
         return this.HeadLog.currentDataMultiHash == this.HeadImageRecord.currentMultiHash &&
