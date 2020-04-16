@@ -34,7 +34,6 @@
     "react": "16.9.0",
     "react-dom": "^16.13.1",
     "react-native": "0.61.5",
-    "react-native-android-ipfs": "file:./react-native-android-ipfs/",
     "react-native-camera": "^3.18.0",
     "react-native-crypto": "^2.2.0",
     "react-native-device-info": "^5.5.4",

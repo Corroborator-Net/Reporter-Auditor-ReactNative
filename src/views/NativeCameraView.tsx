@@ -1,5 +1,5 @@
 import {RNCamera} from "react-native-camera";
-import {StyleSheet, TouchableOpacity, View} from "react-native";
+import {Platform, StyleSheet, TouchableOpacity, View} from "react-native";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation, {GeoPosition} from 'react-native-geolocation-service';
 import CameraRoll from "@react-native-community/cameraroll";
@@ -47,16 +47,20 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
 
     }
     async getPermission(){
-        await waitMS(1000);
-        await requestStoragePermission();
-        await requestWritePermission();
-        await requestCameraPermission();
+        if (Platform.OS == "android") {
+            await waitMS(1000);
+            await requestStoragePermission();
+            await requestWritePermission();
+            await requestCameraPermission();
+        }
     }
 
 
     async startWatchingGPS(){
         await waitMS(4000);
-        await requestLocationPermission();
+        if (Platform.OS == "android") {
+            await requestLocationPermission();
+        }
         Geolocation.watchPosition((position => {
             this.setState({position:position})
         }), (error => {
@@ -72,7 +76,9 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
     }
 
     async getStartingGPSCoords(){
-        await requestLocationPermission();
+        if (Platform.OS == "android") {
+            await requestLocationPermission();
+        }
         Geolocation.getCurrentPosition(
           (position) => {
               this.setState({position:position})
@@ -142,7 +148,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
                     </TouchableOpacity>
                 </View>
                 <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center', marginBottom:10, marginTop:-10 }}>
-                    <Text style={{color:"white"}}> Logging to Logbook: {" "}
+                    <Text style={{color:"white"}}> Logging to Case: {" "}
                         {this.state ? this.state.logName : this.props.logbookStateKeeper.LogbookName(this.props.logbookStateKeeper.CurrentLogbookID)}
                     </Text>
                 </View>
@@ -169,6 +175,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         };
 
 
+
         const exifAppend: { [name: string]: any } = {
             [LogMetadata.GPSLat]:this.state.position.coords.latitude,
             [LogMetadata.GPSLong]: this.state.position.coords.longitude,
@@ -180,7 +187,7 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
         // console.log("exif:", exifAppend);
 
         // TODO we can pass doNotSave:boolean if we can just use the base64
-        const options = {quality: 0.2, base64: false, writeExif: exifAppend, exif: true};
+        const options = {quality: 0.2, base64: true, writeExif: exifAppend, exif: true};
         const data = await this.state.camera.takePictureAsync(options);
 
         // Add filename to metadata
@@ -190,31 +197,55 @@ export default class NativeCameraView extends React.PureComponent<Props, State> 
 
         await CameraRoll.save(data.uri, {type:'photo',album:OriginalAlbum});
         // construct image record here
-        const imageData = new ImageRecord(
+        const imageRecord = new ImageRecord(
             new Date(),
             fullPath,
             "",
             "",
             "");
 
-        RNFetchBlob.fs.readFile(imageData.storageLocation, 'base64')
-            .then((data) => {
-                // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
-                // console.log("image saved at:", imageData.storageLocation);
-                const hash = HashManager.GetHashSync(data);
-                imageData.base64Data = data;
-                imageData.currentMultiHash = hash;
-                imageData.rootMultiHash = hash;
-                // just have to do this during our first save as the true exif is only included in the saved file
-                imageData.metadataJSON = ImageRecord.GetMetadataAndExifObject(data)[0];
-                // console.log("imagedata's hash:", imageData.currentMultiHash);
-                this.props.imageDatabase.add(imageData);
-                LogManager.Instance.OnNewHashProduced(
-                    imageData,
-                    this.props.logbookStateKeeper.CurrentLogbookID,
-                    true
-                );
-            })
+        if (Platform.OS == "ios"){
+            const photos = await CameraRoll.getPhotos({first:1, groupName:OriginalAlbum});
+            // console.log("photo at:",photos.edges[0].node.image.uri);
+            imageRecord.storageLocation = photos.edges[0].node.image.uri;
+            // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
+            console.log("image base64:", data.base64.slice(0,50));
+            const hash = HashManager.GetHashSync(data.base64);
+            imageRecord.base64Data = data.base64;
+            imageRecord.currentMultiHash = hash;
+            imageRecord.rootMultiHash = hash;
+            // just have to do this during our first save as the true exif is only included in the saved file
+            imageRecord.metadataJSON = ImageRecord.GetMetadataAndExifObject(data.base64)[0];
+            // console.log("imagedata's hash:", imageData.currentMultiHash);
+            this.props.imageDatabase.add(imageRecord);
+            LogManager.Instance.OnNewHashProduced(
+                imageRecord,
+                this.props.logbookStateKeeper.CurrentLogbookID,
+                true
+            );
+        }
+
+        else if (Platform.OS == "android") {
+
+            RNFetchBlob.fs.readFile(imageRecord.storageLocation, 'base64')
+                .then((base64Data) => {
+                    // https://emn178.github.io/online-tools/sha256_checksum.html produces matching hex hashes
+                    // console.log("image saved at:", imageData.storageLocation);
+                    const hash = HashManager.GetHashSync(base64Data);
+                    imageRecord.base64Data = base64Data;
+                    imageRecord.currentMultiHash = hash;
+                    imageRecord.rootMultiHash = hash;
+                    // just have to do this during our first save as the true exif is only included in the saved file
+                    imageRecord.metadataJSON = ImageRecord.GetMetadataAndExifObject(base64Data)[0];
+                    // console.log("imagedata's hash:", imageData.currentMultiHash);
+                    this.props.imageDatabase.add(imageRecord);
+                    LogManager.Instance.OnNewHashProduced(
+                        imageRecord,
+                        this.props.logbookStateKeeper.CurrentLogbookID,
+                        true
+                    );
+                })
+        }
     }
 
 

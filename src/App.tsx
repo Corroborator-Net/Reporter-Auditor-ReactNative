@@ -121,7 +121,7 @@ class App extends PureComponent{
                     />
                     :
                 <NavigationContainer>
-                    <Tab.Navigator initialRouteName="Logs" tabBarOptions={{activeTintColor: AppButtonTint,}}>
+                    <Tab.Navigator initialRouteName="Cases" tabBarOptions={{activeTintColor: AppButtonTint,}}>
 
                         <Tab.Screen name="Settings" options={{
                             tabBarLabel: 'Settings',
@@ -146,15 +146,15 @@ class App extends PureComponent{
                             />}
                         </Tab.Screen>
 
-                        <Tab.Screen name="Logs" options={{
-                            tabBarLabel: 'Logs',
+                        <Tab.Screen name="Cases" options={{
+                            tabBarLabel: 'Cases',
                             tabBarIcon: (({focused, color, size}) =>
                                     <Icon name={"file-cabinet"} color={color} size={size}/>
                             )
                         }}>
                             {props =>
                                 <Stack.Navigator>
-                                    <Stack.Screen name={"Logbooks"}>
+                                    <Stack.Screen name={"Cases"}>
                                         {(props: any) =>
                                             <MultiLogbookView {...props}
                                                               imageSource={this.imageStorage}
@@ -173,7 +173,7 @@ class App extends PureComponent{
                                             />
                                         }
                                     </Stack.Screen>
-                                    <Stack.Screen name={"Logs"}>
+                                    <Stack.Screen name={"Case"}>
                                         {(props: any) =>
                                             <SingleLogbookView {...props}
                                                                imageSource={this.imageStorage}

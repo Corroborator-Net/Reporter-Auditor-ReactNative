@@ -22,11 +22,14 @@ export default class SettingsView extends React.PureComponent<Props, State> {
         const userName = (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.UsersName))[0];
         const dept =  (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Department))[0];
         const imageDescription =  (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.ImageDescription))[0];
+        const badgeNum =  (await NativeUserPreferences.Instance.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.BadgeNumber))[0];
+
         this.setState({
             UserInfo:{
                 [UserPreferenceKeys.UsersName]:userName,
                 [UserPreferenceKeys.Department]:dept,
                 [UserPreferenceKeys.ImageDescription]:imageDescription,
+                [UserPreferenceKeys.BadgeNumber]:badgeNum,
             }
         });
 
@@ -43,8 +46,9 @@ export default class SettingsView extends React.PureComponent<Props, State> {
             <ScrollView style={styles.container}>
             <Text h4 style={styles.title}> Settings </Text>
                 {this.InputCell(UserPreferenceKeys.UsersName,"account")}
-                {this.InputCell(UserPreferenceKeys.Department,"account-group")}
-                {this.InputCell(UserPreferenceKeys.ImageDescription,"pencil")}
+                {this.InputCell(UserPreferenceKeys.BadgeNumber,"account-box")}
+                {this.InputCell(UserPreferenceKeys.Department,"domain")}
+                {this.InputCell(UserPreferenceKeys.ImageDescription,"image")}
                 {/*{this.InputToggle(UserPreferenceKeys.AutoSyncLogs,"sync", "sync-off")}*/}
             </ScrollView>
         )

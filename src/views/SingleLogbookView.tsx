@@ -263,7 +263,7 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
                     containerStyle={{backgroundColor:"transparent"}}
                     round={true}
                     lightTheme={true}
-                    placeholder="Search Logs..."
+                    placeholder="Search Logs"
                     autoCapitalize='none'
                     autoCorrect={false}
                     onChangeText={ (text => {this.search(text)})}

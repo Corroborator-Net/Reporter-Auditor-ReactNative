@@ -15,7 +15,7 @@ export const CorroboratedUnsynced = 'yellow';
 export const Synced = 'lightgreen';
 
 export const DetailLogViewName = "Details";
-export const LogsViewName = "Logs";
+export const LogsViewName = "Case";
 export const EditLogsViewName = "Edit Log(s)";
 export const CorroborateLogsViewNameAndID = "Uploaded Logs";
 
@@ -40,6 +40,7 @@ export const UserPreferenceKeys={
     Logbooks:"Logbooks",
     UsersName:"User Name",
     Department:"Department",
+    BadgeNumber:"Badge Number",
     // AutoSyncLogs:"Auto Sync Logs"
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, FlatList, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
+import {Alert, FlatList, Platform, RefreshControl, SafeAreaView, StyleSheet} from "react-native";
 import LogbookCell from "../components/LogbookCell";
 import {HashData, ImageRecord, Log, LogbookAndSection, LogbookEntry} from "../interfaces/Data";
 import {ImageDatabase, UserPreferenceStorage} from "../interfaces/Storage";
@@ -57,10 +57,6 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         if (logbooks[0]!="custom0") {
             customButtons = 1;
             logbooks.unshift("custom0");
-        }
-        if (logbooks[1]!="custom1" && DeviceInfo.isEmulatorSync()) {
-            logbooks.splice(1,0,"custom1");
-            customButtons=2;
         }
         this.setState({
             logbooks:logbooks
@@ -233,9 +229,11 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
 
     componentDidMount = async () => {
-        if (isMobile) {
+        if (Platform.OS == "android") {
             await requestStoragePermission();
             await requestWritePermission();
+        }
+        if (isMobile) {
             // get the current saved logbooks in user storage
             await this.props.userPreferences.GetPersistentUserPreferenceOrDefault(UserPreferenceKeys.Logbooks);
             this.props.userPreferences.SetNewPersistentUserPreference("RequireReadWrite", ["GiveMePermission"]);
@@ -259,7 +257,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                         item == this.state.logbooks[0] ?
                             <LogbookCell
                                 onLongPress={()=>{}}
-                                title={"Add New Logbook"}
+                                title={"Add New Case"}
                                 onPress={ ()=>{
                                     this.setState({refreshingLogs:true},
                                     this.AddNewLogbook
@@ -267,15 +265,6 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                                 }
                             />
                             :
-                            item == this.state.logbooks[1] && DeviceInfo.isEmulatorSync() ?
-                                <LogbookCell
-                                    onLongPress={()=>{}}
-                                    title={"Check and Corroborate Files"}
-                                    onPress={ ()=>{
-                                        this.showUploadPrompt();
-                                    }}
-                                />
-                                :
                                 <LogbookCell
                                     // src= { `data:image/jpeg;base64,${this.state.photos.get(item.dataMultiHash)}`}
                                     // {"data:image/jpeg;base64,"} // to test local-only storage on auditor side,
