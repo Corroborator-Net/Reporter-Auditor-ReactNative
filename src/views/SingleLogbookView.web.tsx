@@ -155,11 +155,15 @@ export default class SingleLogbookView extends React.PureComponent<Props, State>
         for (const logsByLogbook of logbooksInSectionsWithLogs){
 
             let rootLogs = Log.GetRootLogsByFirstLoggedPublicKey(logsByLogbook.logs);
-             console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
+             // console.log("rootLogs:", JSON.stringify(rootLogs, null, 2)); // spacing level = 2
 
             for (const log of rootLogs){
                 // Get all records with the same root hash
                 const imageRecords = await this.props.imageSource.getImageRecordsWithMatchingRootHash(log.currentDataMultiHash);
+                // now that we're adding all the logs from the logbook, let's ignore root logs we don't have images for
+                if (!imageRecords){
+                    continue
+                }
                 // console.log("imagerecords:", imageRecords.length);
                 const logbookEntry = new LogbookEntry(log, logsByLogbook.logs, imageRecords);
                 const date = logbookEntry.RootImageRecord.timestamp.toDateString();

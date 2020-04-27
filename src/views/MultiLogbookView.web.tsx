@@ -119,16 +119,17 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
         const noLogbookKey = "No Logbook in metadata";
         allOnChainLogsInUserUploadedLogTreeByLogbookAddress[UnfoundLogbookTitle] = new Array<Log>();
         for (const res of selectedImages) {
-            getOrientation(res, (orientation:number)=>{
-                this.getBase64(res, (preData:string) => {
-                    resetOrientation(preData, orientation, async (data:string)=>{
-                // if (data.startsWith("data:image/jpeg;base64,")){
-                    data = data.slice("data:image/jpeg;base64,".length);
+            // getOrientation(res, (orientation:number)=>{
+                this.getBase64(res, async (preData:string) => {
+                    // resetOrientation(preData, orientation, async (reorientedData:string)=>{
+
+                // looks like the web platform automatically reorients images - android doesn't
+                //     reorientedData = reorientedData.slice("data:image/jpeg;base64,".length);
                     preData = preData.slice("data:image/jpeg;base64,".length);
 
                     // load jpeg - this could be from local file system or the cloud
                     const uploadedImageHash = HashManager.GetHashSync(preData);
-                    console.log("hash:",uploadedImageHash);
+                    // console.log("hash:",uploadedImageHash);
 
                     const imageRecord = new ImageRecord(
                         new Date(),
@@ -208,7 +209,7 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
 
                         // update the root multihash with a trunk log's hash
                         imageRecord.rootMultiHash = originalLog.rootDataMultiHash;
-                        imageRecord.base64Data = data;
+                        // imageRecord.base64Data = reorientedData;
                         WebLogbookAndImageManager.Instance.updateImageRecordAtRootHash(imageRecord);
 
                         // all logs in log tree are all the logs in the logbook...
@@ -244,8 +245,8 @@ export default class MultiLogbookView extends React.PureComponent<Props, State> 
                 }
             });
 
-                    })
-                })
+                    // })
+                // })
             // })
             // this.getBase64(res, async (data:string) => {
 
