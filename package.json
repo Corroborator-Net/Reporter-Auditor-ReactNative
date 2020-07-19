@@ -35,7 +35,7 @@
     "hybrid-crypto-js": "^0.2.2",
     "inherits": "^2.0.1",
     "js-sha256": "^0.9.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "node-libs-react-native": "^1.0.3",
     "pbkdf2": "3.0.8",
     "piexifjs": "^1.0.6",
